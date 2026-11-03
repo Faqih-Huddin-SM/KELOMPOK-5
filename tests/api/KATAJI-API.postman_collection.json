@@ -1,0 +1,4516 @@
+{
+  "info": {
+    "name": "KATAJI Barber API - Automation",
+    "description": "Test otomatis seluruh endpoint API. Jalankan dengan Newman: `npm test` di folder tests/api.\nRequest berurutan dan saling bergantung (ID disimpan di collection variables), jadi jalankan seluruh koleksi, bukan satuan.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "runId",
+      "value": ""
+    },
+    {
+      "key": "today",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Auth",
+      "item": [
+        {
+          "name": "Cek sesi sebelum login (401 UNAUTHORIZED)",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.set('runId', Date.now());",
+                  "pm.collectionVariables.set('today', new Date(Date.now() + 7*3600*1000).toISOString().slice(0,10));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 401', () => pm.response.to.have.status(401));",
+                  "pm.test('Respons berformat JSON', () => pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'));",
+                  "const j = pm.response.json();",
+                  "pm.test('success = false', () => pm.expect(j.success).to.eql(false));",
+                  "pm.test('error_code = UNAUTHORIZED', () => pm.expect(j.error_code).to.eql('UNAUTHORIZED'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/auth/me.php",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "me.php"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Login - method GET ditolak (405)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 405', () => pm.response.to.have.status(405));",
+                  "pm.test('Respons berformat JSON', () => pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'));",
+                  "const j = pm.response.json();",
+                  "pm.test('success = false', () => pm.expect(j.success).to.eql(false));",
+                  "pm.test('error_code = METHOD_NOT_ALLOWED', () => pm.expect(j.error_code).to.eql('METHOD_NOT_ALLOWED'));",
+                  "pm.test('header Allow = POST', () => pm.expect(pm.response.headers.get('Allow')).to.eql('POST'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/auth/login.php",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login.php"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Login - Content-Type bukan JSON (415)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 415', () => pm.response.to.have.status(415));",
+                  "pm.test('Respons berformat JSON', () => pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'));",
+                  "const j = pm.response.json();",
+                  "pm.test('success = false', () => pm.expect(j.success).to.eql(false));",
+                  "pm.test('error_code = UNSUPPORTED_MEDIA_TYPE', () => pm.expect(j.error_code).to.eql('UNSUPPORTED_MEDIA_TYPE'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "text/plain"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/login.php",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login.php"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "username=a&password=b",
+              "options": {
+                "raw": {
+                  "language": "text"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Login - JSON rusak (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 400', () => pm.response.to.have.status(400));",
+                  "pm.test('Respons berformat JSON', () => pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'));",
+                  "const j = pm.response.json();",
+                  "pm.test('success = false', () => pm.expect(j.success).to.eql(false));",
+                  "pm.test('error_code = BAD_REQUEST', () => pm.expect(j.error_code).to.eql('BAD_REQUEST'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/login.php",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login.php"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{bukan json",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Login - username kosong (422)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 422', () => pm.response.to.have.status(422));",
+                  "pm.test('Respons berformat JSON', () => pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'));",
+                  "const j = pm.response.json();",
+                  "pm.test('success = false', () => pm.expect(j.success).to.eql(false));",
+                  "pm.test('error_code = UNPROCESSABLE_ENTITY', () => pm.expect(j.error_code).to.eql('UNPROCESSABLE_ENTITY'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/login.php",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login.php"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"\",\n  \"password\": \"abc\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Login - password salah (401)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 401', () => pm.response.to.have.status(401));",
+                  "pm.test('Respons berformat JSON', () => pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'));",
+                  "const j = pm.response.json();",
+                  "pm.test('success = false', () => pm.expect(j.success).to.eql(false));",
+                  "pm.test('error_code = UNAUTHORIZED', () => pm.expect(j.error_code).to.eql('UNAUTHORIZED'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/login.php",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login.php"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"{{owner_username}}\",\n  \"password\": \"salah-total\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Login - akun nonaktif ditolak (401)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 401', () => pm.response.to.have.status(401));",
+                  "pm.test('Respons berformat JSON', () => pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'));",
+                  "const j = pm.response.json();",
+                  "pm.test('success = false', () => pm.expect(j.success).to.eql(false));",
+                  "pm.test('error_code = UNAUTHORIZED', () => pm.expect(j.error_code).to.eql('UNAUTHORIZED'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/login.php",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login.php"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"{{inactive_username}}\",\n  \"password\": \"{{password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Login Owner (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Respons berformat JSON', () => pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'));",
+                  "const j = pm.response.json();",
+                  "pm.test('success = true', () => pm.expect(j.success).to.eql(true));",
+                  "pm.test('data berisi id_user, username, nama, role', () => pm.expect(j.data).to.include.keys('id_user','username','nama','role'));\npm.test('role = owner', () => pm.expect(j.data.role).to.eql('owner'));\npm.test('cookie sesi PHPSESSID diterima', () => pm.expect(pm.cookies.has('PHPSESSID')).to.be.true);\npm.collectionVariables.set('owner_id', j.data.id_user);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/login.php",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login.php"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"{{owner_username}}\",\n  \"password\": \"{{password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Cek sesi setelah login (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Respons berformat JSON', () => pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'));",
+                  "const j = pm.response.json();",
+                  "pm.test('success = true', () => pm.expect(j.success).to.eql(true));",
+                  "pm.test('role owner', () => pm.expect(j.data.role).to.eql('owner'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/auth/me.php",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "me.php"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Layanan (owner)",
+      "item": [
+        {
+          "name": "Daftar layanan (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Respons berformat JSON', () => pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'));",
+                  "const j = pm.response.json();",
+                  "pm.test('success = true', () => pm.expect(j.success).to.eql(true));",
+                  "pm.test('data berupa array', () => pm.expect(j.data).to.be.an('array'));\nif (j.data.length) pm.test('field layanan lengkap', () => pm.expect(j.data[0]).to.include.keys('id_layanan','nama_layanan','harga','hpp','aktif','icon_layanan'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/layanan/index.php",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "layanan",
+                "index.php"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Tambah layanan - JSON (201)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 201', () => pm.response.to.have.status(201));",
+                  "pm.test('Respons berformat JSON', () => pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'));",
+                  "const j = pm.response.json();",
+                  "pm.test('success = true', () => pm.expect(j.success).to.eql(true));",
+                  "pm.test('layanan aktif & nilai sesuai', () => { pm.expect(j.data.aktif).to.eql(1); pm.expect(j.data.harga).to.eql(40000); pm.expect(j.data.hpp).to.eql(7000); });\npm.collectionVariables.set('layananId', j.data.id_layanan);\npm.collectionVariables.set('layananHarga', j.data.harga);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/layanan/index.php",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "layanan",
+                "index.php"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nama_layanan\": \"Otomasi {{runId}}\",\n  \"harga\": 40000,\n  \"hpp\": 7000\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Tambah layanan - multipart tanpa ikon (201)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 201', () => pm.response.to.have.status(201));",
+                  "pm.test('Respons berformat JSON', () => pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'));",
+                  "const j = pm.response.json();",
+                  "pm.test('success = true', () => pm.expect(j.success).to.eql(true));",
+                  "pm.test('icon_layanan null (tidak upload)', () => pm.expect(j.data.icon_layanan).to.eql(null));\npm.collectionVariables.set('layananFormId', j.data.id_layanan);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/layanan/index.php",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "layanan",
+                "index.php"
+              ]
+            },
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "nama_layanan",
+                  "value": "Otomasi Form {{runId}}",
+                  "type": "text"
+                },
+                {
+                  "key": "harga",
+                  "value": "30000",
+                  "type": "text"
+                },
+                {
+                  "key": "hpp",
+                  "value": "0",
+                  "type": "text"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Tambah layanan - harga 0 (422 INVALID_HARGA)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 422', () => pm.response.to.have.status(422));",
+                  "pm.test('Respons berformat JSON', () => pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'));",
+                  "const j = pm.response.json();",
+                  "pm.test('success = false', () => pm.expect(j.success).to.eql(false));",
+                  "pm.test('error_code = UNPROCESSABLE_ENTITY', () => pm.expect(j.error_code).to.eql('UNPROCESSABLE_ENTITY'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/layanan/index.php",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "layanan",
+                "index.php"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nama_layanan\": \"X\",\n  \"harga\": 0,\n  \"hpp\": 0\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Tambah layanan - hpp negatif (422 INVALID_HPP)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 422', () => pm.response.to.have.status(422));",
+                  "pm.test('Respons berformat JSON', () => pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'));",
+                  "const j = pm.response.json();",
+                  "pm.test('success = false', () => pm.expect(j.success).to.eql(false));",
+                  "pm.test('error_code = UNPROCESSABLE_ENTITY', () => pm.expect(j.error_code).to.eql('UNPROCESSABLE_ENTITY'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/layanan/index.php",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "layanan",
+                "index.php"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nama_layanan\": \"X\",\n  \"harga\": 1000,\n  \"hpp\": -1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Tambah layanan - nama kosong (422)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 422', () => pm.response.to.have.status(422));",
+                  "pm.test('Respons berformat JSON', () => pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'));",
+                  "const j = pm.response.json();",
+                  "pm.test('success = false', () => pm.expect(j.success).to.eql(false));",
+                  "pm.test('error_code = UNPROCESSABLE_ENTITY', () => pm.expect(j.error_code).to.eql('UNPROCESSABLE_ENTITY'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/layanan/index.php",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "layanan",
+                "index.php"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nama_layanan\": \"   \",\n  \"harga\": 1000,\n  \"hpp\": 0\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Tambah layanan - nama > 100 karakter (422)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 422', () => pm.response.to.have.status(422));",
+                  "pm.test('Respons berformat JSON', () => pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'));",
+                  "const j = pm.response.json();",
+                  "pm.test('success = false', () => pm.expect(j.success).to.eql(false));",
+                  "pm.test('error_code = UNPROCESSABLE_ENTITY', () => pm.expect(j.error_code).to.eql('UNPROCESSABLE_ENTITY'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/layanan/index.php",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "layanan",
+                "index.php"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nama_layanan\": \"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\n  \"harga\": 1000,\n  \"hpp\": 0\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Tambah layanan - JSON rusak (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 400', () => pm.response.to.have.status(400));",
+                  "pm.test('Respons berformat JSON', () => pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'));",
+                  "const j = pm.response.json();",
+                  "pm.test('success = false', () => pm.expect(j.success).to.eql(false));",
+                  "pm.test('error_code = BAD_REQUEST', () => pm.expect(j.error_code).to.eql('BAD_REQUEST'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/layanan/index.php",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "layanan",
+                "index.php"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{rusak",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Edit layanan - PUT JSON (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Respons berformat JSON', () => pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'));",
+                  "const j = pm.response.json();",
+                  "pm.test('success = true', () => pm.expect(j.success).to.eql(true));",
+                  "pm.test('nilai baru', () => { pm.expect(j.data.harga).to.eql(45000); pm.expect(j.data.hpp).to.eql(8000); });\npm.collectionVariables.set('layananHarga', j.data.harga);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/layanan/index.php",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "layanan",
+                "index.php"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id_layanan\": \"{{layananId}}\",\n  \"nama_layanan\": \"Otomasi Edit {{runId}}\",\n  \"harga\": 45000,\n  \"hpp\": 8000\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Edit layanan - POST + _method=PUT multipart (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Respons berformat JSON', () => pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'));",
+                  "const j = pm.response.json();",
+                  "pm.test('success = true', () => pm.expect(j.success).to.eql(true));",
+                  "pm.test('harga terupdate', () => pm.expect(j.data.harga).to.eql(31000));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/layanan/index.php",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "layanan",
+                "index.php"
+              ]
+            },
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "_method",
+                  "value": "PUT",
+                  "type": "text"
+                },
+                {
+                  "key": "id_layanan",
+                  "value": "{{layananFormId}}",
+                  "type": "text"
+                },
+                {
+                  "key": "nama_layanan",
+                  "value": "Otomasi Form Edit {{runId}}",
+                  "type": "text"
+                },
+                {
+                  "key": "harga",
+                  "value": "31000",
+                  "type": "text"
+                },
+                {
+                  "key": "hpp",
+                  "value": "100",
+                  "type": "text"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Edit layanan - ID tidak ada (404)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 404', () => pm.response.to.have.status(404));",
+                  "pm.test('Respons berformat JSON', () => pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'));",
+                  "const j = pm.response.json();",
+                  "pm.test('success = false', () => pm.expect(j.success).to.eql(false));",
+                  "pm.test('error_code = NOT_FOUND', () => pm.expect(j.error_code).to.eql('NOT_FOUND'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/layanan/index.php",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "layanan",
+                "index.php"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id_layanan\": 99999999,\n  \"nama_layanan\": \"X\",\n  \"harga\": 1000,\n  \"hpp\": 0\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Edit layanan - ID tidak valid (422)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 422', () => pm.response.to.have.status(422));",
+                  "pm.test('Respons berformat JSON', () => pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'));",
+                  "const j = pm.response.json();",
+                  "pm.test('success = false', () => pm.expect(j.success).to.eql(false));",
+                  "pm.test('error_code = UNPROCESSABLE_ENTITY', () => pm.expect(j.error_code).to.eql('UNPROCESSABLE_ENTITY'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/layanan/index.php",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "layanan",
+                "index.php"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id_layanan\": \"abc\",\n  \"nama_layanan\": \"X\",\n  \"harga\": 1000,\n  \"hpp\": 0\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Nonaktifkan layanan - PATCH (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Respons berformat JSON', () => pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'));",
+                  "const j = pm.response.json();",
+                  "pm.test('success = true', () => pm.expect(j.success).to.eql(true));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/layanan/index.php",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "layanan",
+                "index.php"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id_layanan\": \"{{layananId}}\",\n  \"aktif\": 0\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Verifikasi layanan nonaktif muncul di daftar (aktif=0)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Respons berformat JSON', () => pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'));",
+                  "const j = pm.response.json();",
+                  "pm.test('success = true', () => pm.expect(j.success).to.eql(true));",
+                  "pm.test('layanan uji berstatus aktif 0', () => { const l = j.data.find(x => x.id_layanan == pm.collectionVariables.get('layananId')); pm.expect(l).to.exist; pm.expect(Number(l.aktif)).to.eql(0); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/layanan/index.php",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "layanan",
+                "index.php"
+              ]
+            }
+          }
+        },
+        {
+          "name": "PATCH - nilai aktif tidak valid (422)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 422', () => pm.response.to.have.status(422));",
+                  "pm.test('Respons berformat JSON', () => pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'));",
+                  "const j = pm.response.json();",
+                  "pm.test('success = false', () => pm.expect(j.success).to.eql(false));",
+                  "pm.test('error_code = UNPROCESSABLE_ENTITY', () => pm.expect(j.error_code).to.eql('UNPROCESSABLE_ENTITY'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/layanan/index.php",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "layanan",
+                "index.php"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id_layanan\": \"{{layananId}}\",\n  \"aktif\": 2\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "PATCH - ID tidak ada (404)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 404', () => pm.response.to.have.status(404));",
+                  "pm.test('Respons berformat JSON', () => pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'));",
+                  "const j = pm.response.json();",
+                  "pm.test('success = false', () => pm.expect(j.success).to.eql(false));",
+                  "pm.test('error_code = NOT_FOUND', () => pm.expect(j.error_code).to.eql('NOT_FOUND'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/layanan/index.php",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "layanan",
+                "index.php"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id_layanan\": 99999999,\n  \"aktif\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Edit layanan - nama kosong (422)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 422', () => pm.response.to.have.status(422));",
+                  "pm.test('Respons berformat JSON', () => pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'));",
+                  "const j = pm.response.json();",
+                  "pm.test('success = false', () => pm.expect(j.success).to.eql(false));",
+                  "pm.test('error_code = UNPROCESSABLE_ENTITY', () => pm.expect(j.error_code).to.eql('UNPROCESSABLE_ENTITY'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/layanan/index.php",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "layanan",
+                "index.php"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id_layanan\": \"{{layananId}}\",\n  \"nama_layanan\": \"\",\n  \"harga\": 1,\n  \"hpp\": 0\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Aktifkan kembali layanan - PATCH (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Respons berformat JSON', () => pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'));",
+                  "const j = pm.response.json();",
+                  "pm.test('success = true', () => pm.expect(j.success).to.eql(true));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/layanan/index.php",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "layanan",
+                "index.php"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id_layanan\": \"{{layananId}}\",\n  \"aktif\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Barber",
+      "item": [
+        {
+          "name": "Daftar barber aktif (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Respons berformat JSON', () => pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'));",
+                  "const j = pm.response.json();",
+                  "pm.test('success = true', () => pm.expect(j.success).to.eql(true));",
+                  "pm.test('berisi id_user & nama', () => { pm.expect(j.data).to.be.an('array').that.is.not.empty; pm.expect(j.data[0]).to.have.keys('id_user','nama'); });\npm.test('akun nonaktif tidak ikut', () => pm.expect(j.data.map(x => x.nama)).to.not.include('Barber Off'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/barber/index.php",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "barber",
+                "index.php"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Daftar barber - method POST ditolak (405)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 405', () => pm.response.to.have.status(405));",
+                  "pm.test('Respons berformat JSON', () => pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'));",
+                  "const j = pm.response.json();",
+                  "pm.test('success = false', () => pm.expect(j.success).to.eql(false));",
+                  "pm.test('error_code = METHOD_NOT_ALLOWED', () => pm.expect(j.error_code).to.eql('METHOD_NOT_ALLOWED'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/barber/index.php",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "barber",
+                "index.php"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Transaksi (owner)",
+      "item": [
+        {
+          "name": "Catat transaksi (201) - total dihitung server",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 201', () => pm.response.to.have.status(201));",
+                  "pm.test('Respons berformat JSON', () => pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'));",
+                  "const j = pm.response.json();",
+                  "pm.test('success = true', () => pm.expect(j.success).to.eql(true));",
+                  "const harga = Number(pm.collectionVariables.get('layananHarga'));\npm.test('total_harga = harga x jumlah', () => pm.expect(j.data.total_harga).to.eql(harga * 2));\npm.test('snapshot layanan tersimpan', () => { pm.expect(j.data.layanan).to.have.lengthOf(1); pm.expect(j.data.layanan[0].jumlah).to.eql(2); });\npm.test('tanggal = hari ini WIB', () => pm.expect(j.data.tanggal).to.eql(pm.collectionVariables.get('today')));\npm.collectionVariables.set('trxId', j.data.id_transaksi);\npm.collectionVariables.set('trxTotal', j.data.total_harga);\npm.collectionVariables.set('pelangganId', j.data.id_pelanggan);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/transaksi/index.php",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "transaksi",
+                "index.php"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nama_pelanggan\": \"Pelanggan Otomasi {{runId}}\",\n  \"id_barber\": \"{{owner_id}}\",\n  \"metode_pembayaran\": \"cash\",\n  \"layanan\": [\n    {\n      \"id_layanan\": \"{{layananId}}\",\n      \"jumlah\": 2\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Catat transaksi memakai pelanggan lama (201)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 201', () => pm.response.to.have.status(201));",
+                  "pm.test('Respons berformat JSON', () => pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'));",
+                  "const j = pm.response.json();",
+                  "pm.test('success = true', () => pm.expect(j.success).to.eql(true));",
+                  "pm.test('id_pelanggan sama', () => pm.expect(String(j.data.id_pelanggan)).to.eql(String(pm.collectionVariables.get('pelangganId'))));\npm.collectionVariables.set('trxId2', j.data.id_transaksi);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/transaksi/index.php",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "transaksi",
+                "index.php"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nama_pelanggan\": \"Pelanggan Otomasi {{runId}}\",\n  \"id_barber\": \"{{owner_id}}\",\n  \"metode_pembayaran\": \"qris\",\n  \"layanan\": [\n    {\n      \"id_layanan\": \"{{layananId}}\",\n      \"jumlah\": 2\n    }\n  ],\n  \"id_pelanggan\": \"{{pelangganId}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Catat transaksi - layanan nonaktif/tidak ada (422)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 422', () => pm.response.to.have.status(422));",
+                  "pm.test('Respons berformat JSON', () => pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'));",
+                  "const j = pm.response.json();",
+                  "pm.test('success = false', () => pm.expect(j.success).to.eql(false));",
+                  "pm.test('error_code = UNPROCESSABLE_ENTITY', () => pm.expect(j.error_code).to.eql('UNPROCESSABLE_ENTITY'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/transaksi/index.php",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "transaksi",
+                "index.php"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nama_pelanggan\": \"Pelanggan Otomasi {{runId}}\",\n  \"id_barber\": \"{{owner_id}}\",\n  \"metode_pembayaran\": \"cash\",\n  \"layanan\": [\n    {\n      \"id_layanan\": 99999999,\n      \"jumlah\": 1\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Catat transaksi - owner tanpa id_barber (422)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 422', () => pm.response.to.have.status(422));",
+                  "pm.test('Respons berformat JSON', () => pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'));",
+                  "const j = pm.response.json();",
+                  "pm.test('success = false', () => pm.expect(j.success).to.eql(false));",
+                  "pm.test('error_code = UNPROCESSABLE_ENTITY', () => pm.expect(j.error_code).to.eql('UNPROCESSABLE_ENTITY'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/transaksi/index.php",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "transaksi",
+                "index.php"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nama_pelanggan\": \"Pelanggan Otomasi {{runId}}\",\n  \"metode_pembayaran\": \"cash\",\n  \"layanan\": [\n    {\n      \"id_layanan\": \"{{layananId}}\",\n      \"jumlah\": 2\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Catat transaksi - barber tidak ditemukan (422)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 422', () => pm.response.to.have.status(422));",
+                  "pm.test('Respons berformat JSON', () => pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'));",
+                  "const j = pm.response.json();",
+                  "pm.test('success = false', () => pm.expect(j.success).to.eql(false));",
+                  "pm.test('error_code = UNPROCESSABLE_ENTITY', () => pm.expect(j.error_code).to.eql('UNPROCESSABLE_ENTITY'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/transaksi/index.php",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "transaksi",
+                "index.php"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nama_pelanggan\": \"Pelanggan Otomasi {{runId}}\",\n  \"id_barber\": 99999999,\n  \"metode_pembayaran\": \"cash\",\n  \"layanan\": [\n    {\n      \"id_layanan\": \"{{layananId}}\",\n      \"jumlah\": 2\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Catat transaksi - metode bayar tidak valid (422)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 422', () => pm.response.to.have.status(422));",
+                  "pm.test('Respons berformat JSON', () => pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'));",
+                  "const j = pm.response.json();",
+                  "pm.test('success = false', () => pm.expect(j.success).to.eql(false));",
+                  "pm.test('error_code = UNPROCESSABLE_ENTITY', () => pm.expect(j.error_code).to.eql('UNPROCESSABLE_ENTITY'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/transaksi/index.php",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "transaksi",
+                "index.php"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nama_pelanggan\": \"Pelanggan Otomasi {{runId}}\",\n  \"id_barber\": \"{{owner_id}}\",\n  \"metode_pembayaran\": \"kartu\",\n  \"layanan\": [\n    {\n      \"id_layanan\": \"{{layananId}}\",\n      \"jumlah\": 2\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Catat transaksi - layanan kosong (422)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 422', () => pm.response.to.have.status(422));",
+                  "pm.test('Respons berformat JSON', () => pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'));",
+                  "const j = pm.response.json();",
+                  "pm.test('success = false', () => pm.expect(j.success).to.eql(false));",
+                  "pm.test('error_code = UNPROCESSABLE_ENTITY', () => pm.expect(j.error_code).to.eql('UNPROCESSABLE_ENTITY'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/transaksi/index.php",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "transaksi",
+                "index.php"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nama_pelanggan\": \"Pelanggan Otomasi {{runId}}\",\n  \"id_barber\": \"{{owner_id}}\",\n  \"metode_pembayaran\": \"cash\",\n  \"layanan\": []\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Catat transaksi - nama pelanggan kosong (422)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 422', () => pm.response.to.have.status(422));",
+                  "pm.test('Respons berformat JSON', () => pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'));",
+                  "const j = pm.response.json();",
+                  "pm.test('success = false', () => pm.expect(j.success).to.eql(false));",
+                  "pm.test('error_code = UNPROCESSABLE_ENTITY', () => pm.expect(j.error_code).to.eql('UNPROCESSABLE_ENTITY'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/transaksi/index.php",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "transaksi",
+                "index.php"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nama_pelanggan\": \"  \",\n  \"id_barber\": \"{{owner_id}}\",\n  \"metode_pembayaran\": \"cash\",\n  \"layanan\": [\n    {\n      \"id_layanan\": \"{{layananId}}\",\n      \"jumlah\": 2\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Catat transaksi - jumlah > 100 (422)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 422', () => pm.response.to.have.status(422));",
+                  "pm.test('Respons berformat JSON', () => pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'));",
+                  "const j = pm.response.json();",
+                  "pm.test('success = false', () => pm.expect(j.success).to.eql(false));",
+                  "pm.test('error_code = UNPROCESSABLE_ENTITY', () => pm.expect(j.error_code).to.eql('UNPROCESSABLE_ENTITY'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/transaksi/index.php",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "transaksi",
+                "index.php"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nama_pelanggan\": \"Pelanggan Otomasi {{runId}}\",\n  \"id_barber\": \"{{owner_id}}\",\n  \"metode_pembayaran\": \"cash\",\n  \"layanan\": [\n    {\n      \"id_layanan\": \"{{layananId}}\",\n      \"jumlah\": 101\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Catat transaksi - layanan sama digabung > 100 (422)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 422', () => pm.response.to.have.status(422));",
+                  "pm.test('Respons berformat JSON', () => pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'));",
+                  "const j = pm.response.json();",
+                  "pm.test('success = false', () => pm.expect(j.success).to.eql(false));",
+                  "pm.test('error_code = UNPROCESSABLE_ENTITY', () => pm.expect(j.error_code).to.eql('UNPROCESSABLE_ENTITY'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/transaksi/index.php",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "transaksi",
+                "index.php"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nama_pelanggan\": \"Pelanggan Otomasi {{runId}}\",\n  \"id_barber\": \"{{owner_id}}\",\n  \"metode_pembayaran\": \"cash\",\n  \"layanan\": [\n    {\n      \"id_layanan\": \"{{layananId}}\",\n      \"jumlah\": 60\n    },\n    {\n      \"id_layanan\": \"{{layananId}}\",\n      \"jumlah\": 60\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Catat transaksi - JSON rusak (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 400', () => pm.response.to.have.status(400));",
+                  "pm.test('Respons berformat JSON', () => pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'));",
+                  "const j = pm.response.json();",
+                  "pm.test('success = false', () => pm.expect(j.success).to.eql(false));",
+                  "pm.test('error_code = BAD_REQUEST', () => pm.expect(j.error_code).to.eql('BAD_REQUEST'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/transaksi/index.php",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "transaksi",
+                "index.php"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{rusak",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Daftar transaksi hari ini (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Respons berformat JSON', () => pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'));",
+                  "const j = pm.response.json();",
+                  "pm.test('success = true', () => pm.expect(j.success).to.eql(true));",
+                  "pm.test('memuat transaksi yang baru dibuat', () => pm.expect(j.data.map(x => String(x.id_transaksi))).to.include(String(pm.collectionVariables.get('trxId'))));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/transaksi/index.php",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "transaksi",
+                "index.php"
+              ],
+              "query": [
+                {
+                  "key": "tanggal",
+                  "value": "{{today}}"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Daftar transaksi - format tanggal salah (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 400', () => pm.response.to.have.status(400));",
+                  "pm.test('Respons berformat JSON', () => pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'));",
+                  "const j = pm.response.json();",
+                  "pm.test('success = false', () => pm.expect(j.success).to.eql(false));",
+                  "pm.test('error_code = BAD_REQUEST', () => pm.expect(j.error_code).to.eql('BAD_REQUEST'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/transaksi/index.php",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "transaksi",
+                "index.php"
+              ],
+              "query": [
+                {
+                  "key": "tanggal",
+                  "value": "25-10-2026"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Daftar transaksi - tanggal mustahil 2026-02-31 (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 400', () => pm.response.to.have.status(400));",
+                  "pm.test('Respons berformat JSON', () => pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'));",
+                  "const j = pm.response.json();",
+                  "pm.test('success = false', () => pm.expect(j.success).to.eql(false));",
+                  "pm.test('error_code = BAD_REQUEST', () => pm.expect(j.error_code).to.eql('BAD_REQUEST'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/transaksi/index.php",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "transaksi",
+                "index.php"
+              ],
+              "query": [
+                {
+                  "key": "tanggal",
+                  "value": "2026-02-31"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Detail transaksi (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Respons berformat JSON', () => pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'));",
+                  "const j = pm.response.json();",
+                  "pm.test('success = true', () => pm.expect(j.success).to.eql(true));",
+                  "pm.test('id sesuai', () => pm.expect(String(j.data.id_transaksi)).to.eql(String(pm.collectionVariables.get('trxId'))));\npm.test('subtotal = harga x jumlah', () => j.data.layanan.forEach(l => pm.expect(Number(l.subtotal)).to.eql(Number(l.harga) * Number(l.jumlah))));\npm.test('jumlah subtotal = total_harga', () => pm.expect(j.data.layanan.reduce((a, l) => a + Number(l.subtotal), 0)).to.eql(Number(j.data.total_harga)));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/transaksi/detail.php",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "transaksi",
+                "detail.php"
+              ],
+              "query": [
+                {
+                  "key": "id",
+                  "value": "{{trxId}}"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Detail transaksi - ID tidak ada (404)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 404', () => pm.response.to.have.status(404));",
+                  "pm.test('Respons berformat JSON', () => pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'));",
+                  "const j = pm.response.json();",
+                  "pm.test('success = false', () => pm.expect(j.success).to.eql(false));",
+                  "pm.test('error_code = NOT_FOUND', () => pm.expect(j.error_code).to.eql('NOT_FOUND'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/transaksi/detail.php",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "transaksi",
+                "detail.php"
+              ],
+              "query": [
+                {
+                  "key": "id",
+                  "value": "99999999"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Detail transaksi - ID tidak valid (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 400', () => pm.response.to.have.status(400));",
+                  "pm.test('Respons berformat JSON', () => pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'));",
+                  "const j = pm.response.json();",
+                  "pm.test('success = false', () => pm.expect(j.success).to.eql(false));",
+                  "pm.test('error_code = BAD_REQUEST', () => pm.expect(j.error_code).to.eql('BAD_REQUEST'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/transaksi/detail.php",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "transaksi",
+                "detail.php"
+              ],
+              "query": [
+                {
+                  "key": "id",
+                  "value": "abc"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Detail transaksi - tanpa ID (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 400', () => pm.response.to.have.status(400));",
+                  "pm.test('Respons berformat JSON', () => pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'));",
+                  "const j = pm.response.json();",
+                  "pm.test('success = false', () => pm.expect(j.success).to.eql(false));",
+                  "pm.test('error_code = BAD_REQUEST', () => pm.expect(j.error_code).to.eql('BAD_REQUEST'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/transaksi/detail.php",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "transaksi",
+                "detail.php"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Cari pelanggan (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Respons berformat JSON', () => pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'));",
+                  "const j = pm.response.json();",
+                  "pm.test('success = true', () => pm.expect(j.success).to.eql(true));",
+                  "pm.test('pelanggan hasil transaksi ditemukan', () => pm.expect(j.data.map(x => String(x.id_pelanggan))).to.include(String(pm.collectionVariables.get('pelangganId'))));\npm.test('maksimal 10 hasil', () => pm.expect(j.data.length).to.be.at.most(10));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/pelanggan/index.php",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "pelanggan",
+                "index.php"
+              ],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "Otomasi {{runId}}"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Cari pelanggan - q < 2 karakter -> kosong (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Respons berformat JSON', () => pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'));",
+                  "const j = pm.response.json();",
+                  "pm.test('success = true', () => pm.expect(j.success).to.eql(true));",
+                  "pm.test('array kosong', () => pm.expect(j.data).to.eql([]));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/pelanggan/index.php",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "pelanggan",
+                "index.php"
+              ],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "a"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. Pengeluaran (owner)",
+      "item": [
+        {
+          "name": "Catat pengeluaran (201)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 201', () => pm.response.to.have.status(201));",
+                  "pm.test('Respons berformat JSON', () => pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'));",
+                  "const j = pm.response.json();",
+                  "pm.test('success = true', () => pm.expect(j.success).to.eql(true));",
+                  "pm.test('tanggal default hari ini', () => pm.expect(j.data.tanggal).to.eql(pm.collectionVariables.get('today')));\npm.collectionVariables.set('pengeluaranId', j.data.id_pengeluaran);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/pengeluaran/index.php",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "pengeluaran",
+                "index.php"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"kategori\": \"Otomasi\",\n  \"nominal\": 12345,\n  \"keterangan\": \"Dibuat oleh test otomatis\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Daftar pengeluaran hari ini (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Respons berformat JSON', () => pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'));",
+                  "const j = pm.response.json();",
+                  "pm.test('success = true', () => pm.expect(j.success).to.eql(true));",
+                  "pm.test('berisi pengeluaran uji', () => pm.expect(j.data.pengeluaran.map(x => String(x.id_pengeluaran))).to.include(String(pm.collectionVariables.get('pengeluaranId'))));\npm.test('total_pengeluaran = jumlah nominal', () => pm.expect(j.data.total_pengeluaran).to.eql(j.data.pengeluaran.reduce((a, x) => a + Number(x.nominal), 0)));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/pengeluaran/index.php",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "pengeluaran",
+                "index.php"
+              ],
+              "query": [
+                {
+                  "key": "tanggal",
+                  "value": "{{today}}"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Catat pengeluaran - nominal string angka diterima (201)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 201', () => pm.response.to.have.status(201));",
+                  "pm.test('Respons berformat JSON', () => pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'));",
+                  "const j = pm.response.json();",
+                  "pm.test('success = true', () => pm.expect(j.success).to.eql(true));",
+                  "pm.test('nominal jadi integer', () => pm.expect(j.data.nominal).to.eql(500));\npm.collectionVariables.set('pengeluaranId2', j.data.id_pengeluaran);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/pengeluaran/index.php",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "pengeluaran",
+                "index.php"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"kategori\": \"Otomasi\",\n  \"nominal\": \"500\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Catat pengeluaran - nominal 0 (422)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 422', () => pm.response.to.have.status(422));",
+                  "pm.test('Respons berformat JSON', () => pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'));",
+                  "const j = pm.response.json();",
+                  "pm.test('success = false', () => pm.expect(j.success).to.eql(false));",
+                  "pm.test('error_code = UNPROCESSABLE_ENTITY', () => pm.expect(j.error_code).to.eql('UNPROCESSABLE_ENTITY'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/pengeluaran/index.php",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "pengeluaran",
+                "index.php"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"kategori\": \"Otomasi\",\n  \"nominal\": 0\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Catat pengeluaran - nominal desimal (422)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 422', () => pm.response.to.have.status(422));",
+                  "pm.test('Respons berformat JSON', () => pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'));",
+                  "const j = pm.response.json();",
+                  "pm.test('success = false', () => pm.expect(j.success).to.eql(false));",
+                  "pm.test('error_code = UNPROCESSABLE_ENTITY', () => pm.expect(j.error_code).to.eql('UNPROCESSABLE_ENTITY'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/pengeluaran/index.php",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "pengeluaran",
+                "index.php"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"kategori\": \"Otomasi\",\n  \"nominal\": 10.5\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Catat pengeluaran - nominal melebihi batas int (422)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 422', () => pm.response.to.have.status(422));",
+                  "pm.test('Respons berformat JSON', () => pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'));",
+                  "const j = pm.response.json();",
+                  "pm.test('success = false', () => pm.expect(j.success).to.eql(false));",
+                  "pm.test('error_code = UNPROCESSABLE_ENTITY', () => pm.expect(j.error_code).to.eql('UNPROCESSABLE_ENTITY'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/pengeluaran/index.php",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "pengeluaran",
+                "index.php"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"kategori\": \"Otomasi\",\n  \"nominal\": 2147483648\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Catat pengeluaran - kategori kosong (422)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 422', () => pm.response.to.have.status(422));",
+                  "pm.test('Respons berformat JSON', () => pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'));",
+                  "const j = pm.response.json();",
+                  "pm.test('success = false', () => pm.expect(j.success).to.eql(false));",
+                  "pm.test('error_code = UNPROCESSABLE_ENTITY', () => pm.expect(j.error_code).to.eql('UNPROCESSABLE_ENTITY'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/pengeluaran/index.php",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "pengeluaran",
+                "index.php"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"kategori\": \"\",\n  \"nominal\": 1000\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Catat pengeluaran - tanggal tidak valid (422)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 422', () => pm.response.to.have.status(422));",
+                  "pm.test('Respons berformat JSON', () => pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'));",
+                  "const j = pm.response.json();",
+                  "pm.test('success = false', () => pm.expect(j.success).to.eql(false));",
+                  "pm.test('error_code = UNPROCESSABLE_ENTITY', () => pm.expect(j.error_code).to.eql('UNPROCESSABLE_ENTITY'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/pengeluaran/index.php",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "pengeluaran",
+                "index.php"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"kategori\": \"Otomasi\",\n  \"nominal\": 1000,\n  \"tanggal\": \"2026-13-01\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Catat pengeluaran - JSON rusak (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 400', () => pm.response.to.have.status(400));",
+                  "pm.test('Respons berformat JSON', () => pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'));",
+                  "const j = pm.response.json();",
+                  "pm.test('success = false', () => pm.expect(j.success).to.eql(false));",
+                  "pm.test('error_code = BAD_REQUEST', () => pm.expect(j.error_code).to.eql('BAD_REQUEST'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/pengeluaran/index.php",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "pengeluaran",
+                "index.php"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{rusak",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Daftar pengeluaran - tanggal salah (422)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 422', () => pm.response.to.have.status(422));",
+                  "pm.test('Respons berformat JSON', () => pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'));",
+                  "const j = pm.response.json();",
+                  "pm.test('success = false', () => pm.expect(j.success).to.eql(false));",
+                  "pm.test('error_code = UNPROCESSABLE_ENTITY', () => pm.expect(j.error_code).to.eql('UNPROCESSABLE_ENTITY'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/pengeluaran/index.php",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "pengeluaran",
+                "index.php"
+              ],
+              "query": [
+                {
+                  "key": "tanggal",
+                  "value": "kemarin"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Catat pengeluaran tanggal lampau (201)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 201', () => pm.response.to.have.status(201));",
+                  "pm.test('Respons berformat JSON', () => pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'));",
+                  "const j = pm.response.json();",
+                  "pm.test('success = true', () => pm.expect(j.success).to.eql(true));",
+                  "pm.collectionVariables.set('pengeluaranLampauId', j.data.id_pengeluaran);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/pengeluaran/index.php",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "pengeluaran",
+                "index.php"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"kategori\": \"Otomasi Lampau\",\n  \"nominal\": 1000,\n  \"tanggal\": \"2020-01-01\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Hapus pengeluaran tanggal lampau ditolak (403 DATE_NOT_ALLOWED)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 403', () => pm.response.to.have.status(403));",
+                  "pm.test('Respons berformat JSON', () => pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'));",
+                  "const j = pm.response.json();",
+                  "pm.test('success = false', () => pm.expect(j.success).to.eql(false));",
+                  "pm.test('error_code = FORBIDDEN', () => pm.expect(j.error_code).to.eql('FORBIDDEN'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/pengeluaran/index.php",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "pengeluaran",
+                "index.php"
+              ],
+              "query": [
+                {
+                  "key": "id_pengeluaran",
+                  "value": "{{pengeluaranLampauId}}"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Hapus pengeluaran hari ini - via query (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Respons berformat JSON', () => pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'));",
+                  "const j = pm.response.json();",
+                  "pm.test('success = true', () => pm.expect(j.success).to.eql(true));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/pengeluaran/index.php",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "pengeluaran",
+                "index.php"
+              ],
+              "query": [
+                {
+                  "key": "id_pengeluaran",
+                  "value": "{{pengeluaranId}}"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Hapus pengeluaran hari ini - via body JSON (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Respons berformat JSON', () => pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'));",
+                  "const j = pm.response.json();",
+                  "pm.test('success = true', () => pm.expect(j.success).to.eql(true));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/pengeluaran/index.php",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "pengeluaran",
+                "index.php"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id_pengeluaran\": \"{{pengeluaranId2}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Hapus pengeluaran - sudah terhapus (404)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 404', () => pm.response.to.have.status(404));",
+                  "pm.test('Respons berformat JSON', () => pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'));",
+                  "const j = pm.response.json();",
+                  "pm.test('success = false', () => pm.expect(j.success).to.eql(false));",
+                  "pm.test('error_code = NOT_FOUND', () => pm.expect(j.error_code).to.eql('NOT_FOUND'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/pengeluaran/index.php",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "pengeluaran",
+                "index.php"
+              ],
+              "query": [
+                {
+                  "key": "id_pengeluaran",
+                  "value": "{{pengeluaranId}}"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Hapus pengeluaran - ID tidak valid (422)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 422', () => pm.response.to.have.status(422));",
+                  "pm.test('Respons berformat JSON', () => pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'));",
+                  "const j = pm.response.json();",
+                  "pm.test('success = false', () => pm.expect(j.success).to.eql(false));",
+                  "pm.test('error_code = UNPROCESSABLE_ENTITY', () => pm.expect(j.error_code).to.eql('UNPROCESSABLE_ENTITY'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/pengeluaran/index.php",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "pengeluaran",
+                "index.php"
+              ],
+              "query": [
+                {
+                  "key": "id_pengeluaran",
+                  "value": "abc"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Pengeluaran - method PUT ditolak (405)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 405', () => pm.response.to.have.status(405));",
+                  "pm.test('Respons berformat JSON', () => pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'));",
+                  "const j = pm.response.json();",
+                  "pm.test('success = false', () => pm.expect(j.success).to.eql(false));",
+                  "pm.test('error_code = METHOD_NOT_ALLOWED', () => pm.expect(j.error_code).to.eql('METHOD_NOT_ALLOWED'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/pengeluaran/index.php",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "pengeluaran",
+                "index.php"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "6. Rekap (owner)",
+      "item": [
+        {
+          "name": "Rekap pemasukan hari ini (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Respons berformat JSON', () => pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'));",
+                  "const j = pm.response.json();",
+                  "pm.test('success = true', () => pm.expect(j.success).to.eql(true));",
+                  "pm.test('total mencakup 2 transaksi uji', () => pm.expect(j.data.total_pemasukan).to.be.at.least(Number(pm.collectionVariables.get('trxTotal'))));\npm.test('total = jumlah rincian per barber', () => pm.expect(j.data.total_pemasukan).to.eql(j.data.rincian_per_barber.reduce((a, b) => a + b.total_pemasukan, 0)));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/rekap/pemasukan.php",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "rekap",
+                "pemasukan.php"
+              ],
+              "query": [
+                {
+                  "key": "tanggal",
+                  "value": "{{today}}"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Rekap pemasukan - tanggal salah (422)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 422', () => pm.response.to.have.status(422));",
+                  "pm.test('Respons berformat JSON', () => pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'));",
+                  "const j = pm.response.json();",
+                  "pm.test('success = false', () => pm.expect(j.success).to.eql(false));",
+                  "pm.test('error_code = UNPROCESSABLE_ENTITY', () => pm.expect(j.error_code).to.eql('UNPROCESSABLE_ENTITY'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/rekap/pemasukan.php",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "rekap",
+                "pemasukan.php"
+              ],
+              "query": [
+                {
+                  "key": "tanggal",
+                  "value": "2026-99-99"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Rekap pemasukan - tanggal tanpa transaksi (200, total 0)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Respons berformat JSON', () => pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'));",
+                  "const j = pm.response.json();",
+                  "pm.test('success = true', () => pm.expect(j.success).to.eql(true));",
+                  "pm.test('total 0 & rincian kosong', () => { pm.expect(j.data.total_pemasukan).to.eql(0); pm.expect(j.data.rincian_per_barber).to.eql([]); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/rekap/pemasukan.php",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "rekap",
+                "pemasukan.php"
+              ],
+              "query": [
+                {
+                  "key": "tanggal",
+                  "value": "2000-01-01"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Tren - default 7 hari (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Respons berformat JSON', () => pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'));",
+                  "const j = pm.response.json();",
+                  "pm.test('success = true', () => pm.expect(j.success).to.eql(true));",
+                  "pm.test('periode = 7_hari', () => pm.expect(j.data.periode).to.eql('7_hari'));\npm.test('labels & pemasukan sama panjang (7)', () => { pm.expect(j.data.labels).to.have.lengthOf(7); pm.expect(j.data.pemasukan).to.have.lengthOf(7); });\npm.test('status_tren valid', () => pm.expect(j.data.status_tren).to.be.oneOf(['naik','turun','stabil']));\npm.test('ada_data konsisten dengan pemasukan', () => pm.expect(j.data.ada_data).to.eql(j.data.pemasukan.some(v => v > 0)));\npm.test('total_pemasukan = jumlah pemasukan', () => pm.expect(j.data.total_pemasukan).to.eql(j.data.pemasukan.reduce((a, b) => a + b, 0)));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/rekap/tren.php",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "rekap",
+                "tren.php"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Tren - minggu berjalan (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Respons berformat JSON', () => pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'));",
+                  "const j = pm.response.json();",
+                  "pm.test('success = true', () => pm.expect(j.success).to.eql(true));",
+                  "pm.test('periode = minggu', () => pm.expect(j.data.periode).to.eql('minggu'));\npm.test('labels & pemasukan sama panjang (7)', () => { pm.expect(j.data.labels).to.have.lengthOf(7); pm.expect(j.data.pemasukan).to.have.lengthOf(7); });\npm.test('status_tren valid', () => pm.expect(j.data.status_tren).to.be.oneOf(['naik','turun','stabil']));\npm.test('ada_data konsisten dengan pemasukan', () => pm.expect(j.data.ada_data).to.eql(j.data.pemasukan.some(v => v > 0)));\npm.test('total_pemasukan = jumlah pemasukan', () => pm.expect(j.data.total_pemasukan).to.eql(j.data.pemasukan.reduce((a, b) => a + b, 0)));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/rekap/tren.php",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "rekap",
+                "tren.php"
+              ],
+              "query": [
+                {
+                  "key": "periode",
+                  "value": "minggu"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Tren - bulan (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Respons berformat JSON', () => pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'));",
+                  "const j = pm.response.json();",
+                  "pm.test('success = true', () => pm.expect(j.success).to.eql(true));",
+                  "pm.test('periode = bulan', () => pm.expect(j.data.periode).to.eql('bulan'));\npm.test('labels & pemasukan sama panjang (12)', () => { pm.expect(j.data.labels).to.have.lengthOf(12); pm.expect(j.data.pemasukan).to.have.lengthOf(12); });\npm.test('status_tren valid', () => pm.expect(j.data.status_tren).to.be.oneOf(['naik','turun','stabil']));\npm.test('ada_data konsisten dengan pemasukan', () => pm.expect(j.data.ada_data).to.eql(j.data.pemasukan.some(v => v > 0)));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/rekap/tren.php",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "rekap",
+                "tren.php"
+              ],
+              "query": [
+                {
+                  "key": "periode",
+                  "value": "bulan"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Tren - periode tidak valid (422)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 422', () => pm.response.to.have.status(422));",
+                  "pm.test('Respons berformat JSON', () => pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'));",
+                  "const j = pm.response.json();",
+                  "pm.test('success = false', () => pm.expect(j.success).to.eql(false));",
+                  "pm.test('error_code = UNPROCESSABLE_ENTITY', () => pm.expect(j.error_code).to.eql('UNPROCESSABLE_ENTITY'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/rekap/tren.php",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "rekap",
+                "tren.php"
+              ],
+              "query": [
+                {
+                  "key": "periode",
+                  "value": "tahun"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "7. Hapus transaksi (owner)",
+      "item": [
+        {
+          "name": "hapus.php - method GET ditolak (405)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 405', () => pm.response.to.have.status(405));",
+                  "pm.test('Respons berformat JSON', () => pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'));",
+                  "const j = pm.response.json();",
+                  "pm.test('success = false', () => pm.expect(j.success).to.eql(false));",
+                  "pm.test('error_code = METHOD_NOT_ALLOWED', () => pm.expect(j.error_code).to.eql('METHOD_NOT_ALLOWED'));",
+                  "pm.test('header Allow = DELETE', () => pm.expect(pm.response.headers.get('Allow')).to.eql('DELETE'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/transaksi/hapus.php",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "transaksi",
+                "hapus.php"
+              ]
+            }
+          }
+        },
+        {
+          "name": "hapus.php - ID tidak valid (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 400', () => pm.response.to.have.status(400));",
+                  "pm.test('Respons berformat JSON', () => pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'));",
+                  "const j = pm.response.json();",
+                  "pm.test('success = false', () => pm.expect(j.success).to.eql(false));",
+                  "pm.test('error_code = BAD_REQUEST', () => pm.expect(j.error_code).to.eql('BAD_REQUEST'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/transaksi/hapus.php",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "transaksi",
+                "hapus.php"
+              ],
+              "query": [
+                {
+                  "key": "id_transaksi",
+                  "value": "abc"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "hapus.php - tanpa ID (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 400', () => pm.response.to.have.status(400));",
+                  "pm.test('Respons berformat JSON', () => pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'));",
+                  "const j = pm.response.json();",
+                  "pm.test('success = false', () => pm.expect(j.success).to.eql(false));",
+                  "pm.test('error_code = BAD_REQUEST', () => pm.expect(j.error_code).to.eql('BAD_REQUEST'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/transaksi/hapus.php",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "transaksi",
+                "hapus.php"
+              ]
+            }
+          }
+        },
+        {
+          "name": "hapus.php - ID tidak ada (404)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 404', () => pm.response.to.have.status(404));",
+                  "pm.test('Respons berformat JSON', () => pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'));",
+                  "const j = pm.response.json();",
+                  "pm.test('success = false', () => pm.expect(j.success).to.eql(false));",
+                  "pm.test('error_code = NOT_FOUND', () => pm.expect(j.error_code).to.eql('NOT_FOUND'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/transaksi/hapus.php",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "transaksi",
+                "hapus.php"
+              ],
+              "query": [
+                {
+                  "key": "id_transaksi",
+                  "value": "99999999"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "hapus.php - soft delete via query (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Respons berformat JSON', () => pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'));",
+                  "const j = pm.response.json();",
+                  "pm.test('success = true', () => pm.expect(j.success).to.eql(true));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/transaksi/hapus.php",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "transaksi",
+                "hapus.php"
+              ],
+              "query": [
+                {
+                  "key": "id_transaksi",
+                  "value": "{{trxId2}}"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "DELETE ?id= - ID tidak valid (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 400', () => pm.response.to.have.status(400));",
+                  "pm.test('Respons berformat JSON', () => pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'));",
+                  "const j = pm.response.json();",
+                  "pm.test('success = false', () => pm.expect(j.success).to.eql(false));",
+                  "pm.test('error_code = BAD_REQUEST', () => pm.expect(j.error_code).to.eql('BAD_REQUEST'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/transaksi/index.php",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "transaksi",
+                "index.php"
+              ],
+              "query": [
+                {
+                  "key": "id",
+                  "value": "abc"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "DELETE ?id= - ID tidak ada (404)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 404', () => pm.response.to.have.status(404));",
+                  "pm.test('Respons berformat JSON', () => pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'));",
+                  "const j = pm.response.json();",
+                  "pm.test('success = false', () => pm.expect(j.success).to.eql(false));",
+                  "pm.test('error_code = NOT_FOUND', () => pm.expect(j.error_code).to.eql('NOT_FOUND'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/transaksi/index.php",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "transaksi",
+                "index.php"
+              ],
+              "query": [
+                {
+                  "key": "id",
+                  "value": "99999999"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "DELETE ?id= - soft delete transaksi #1 (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Respons berformat JSON', () => pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'));",
+                  "const j = pm.response.json();",
+                  "pm.test('success = true', () => pm.expect(j.success).to.eql(true));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/transaksi/index.php",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "transaksi",
+                "index.php"
+              ],
+              "query": [
+                {
+                  "key": "id",
+                  "value": "{{trxId}}"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "DELETE ?id= - sudah terhapus (404)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 404', () => pm.response.to.have.status(404));",
+                  "pm.test('Respons berformat JSON', () => pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'));",
+                  "const j = pm.response.json();",
+                  "pm.test('success = false', () => pm.expect(j.success).to.eql(false));",
+                  "pm.test('error_code = NOT_FOUND', () => pm.expect(j.error_code).to.eql('NOT_FOUND'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/transaksi/index.php",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "transaksi",
+                "index.php"
+              ],
+              "query": [
+                {
+                  "key": "id",
+                  "value": "{{trxId}}"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Detail transaksi terhapus tidak bisa dibuka (404)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 404', () => pm.response.to.have.status(404));",
+                  "pm.test('Respons berformat JSON', () => pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'));",
+                  "const j = pm.response.json();",
+                  "pm.test('success = false', () => pm.expect(j.success).to.eql(false));",
+                  "pm.test('error_code = NOT_FOUND', () => pm.expect(j.error_code).to.eql('NOT_FOUND'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/transaksi/detail.php",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "transaksi",
+                "detail.php"
+              ],
+              "query": [
+                {
+                  "key": "id",
+                  "value": "{{trxId}}"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Transaksi terhapus hilang dari daftar (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Respons berformat JSON', () => pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'));",
+                  "const j = pm.response.json();",
+                  "pm.test('success = true', () => pm.expect(j.success).to.eql(true));",
+                  "pm.test('tidak memuat transaksi terhapus', () => pm.expect(j.data.map(x => String(x.id_transaksi))).to.not.include(String(pm.collectionVariables.get('trxId'))));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/transaksi/index.php",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "transaksi",
+                "index.php"
+              ],
+              "query": [
+                {
+                  "key": "tanggal",
+                  "value": "{{today}}"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "8. Hak akses barber (RBAC)",
+      "item": [
+        {
+          "name": "Login Barber (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Respons berformat JSON', () => pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'));",
+                  "const j = pm.response.json();",
+                  "pm.test('success = true', () => pm.expect(j.success).to.eql(true));",
+                  "pm.test('data berisi id_user, username, nama, role', () => pm.expect(j.data).to.include.keys('id_user','username','nama','role'));\npm.test('role = barber', () => pm.expect(j.data.role).to.eql('barber'));\npm.test('cookie sesi PHPSESSID diterima', () => pm.expect(pm.cookies.has('PHPSESSID')).to.be.true);\npm.collectionVariables.set('barber_id', j.data.id_user);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/login.php",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login.php"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"{{barber_username}}\",\n  \"password\": \"{{password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Barber - catat transaksi, id_barber diabaikan (201)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 201', () => pm.response.to.have.status(201));",
+                  "pm.test('Respons berformat JSON', () => pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'));",
+                  "const j = pm.response.json();",
+                  "pm.test('success = true', () => pm.expect(j.success).to.eql(true));",
+                  "pm.test('id_barber dipaksa = id sendiri', () => pm.expect(String(j.data.id_barber)).to.eql(String(pm.collectionVariables.get('barber_id'))));\npm.collectionVariables.set('trxBarberId', j.data.id_transaksi);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/transaksi/index.php",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "transaksi",
+                "index.php"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nama_pelanggan\": \"Pelanggan Barber {{runId}}\",\n  \"id_barber\": \"{{owner_id}}\",\n  \"metode_pembayaran\": \"cash\",\n  \"layanan\": [\n    {\n      \"id_layanan\": \"{{layananId}}\",\n      \"jumlah\": 2\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Barber - daftar transaksi hanya miliknya (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Respons berformat JSON', () => pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'));",
+                  "const j = pm.response.json();",
+                  "pm.test('success = true', () => pm.expect(j.success).to.eql(true));",
+                  "pm.test('semua id_pencatat = barber login', () => j.data.forEach(x => pm.expect(String(x.id_pencatat)).to.eql(String(pm.collectionVariables.get('barber_id')))));\npm.test('berisi transaksi barber', () => pm.expect(j.data.map(x => String(x.id_transaksi))).to.include(String(pm.collectionVariables.get('trxBarberId'))));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/transaksi/index.php",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "transaksi",
+                "index.php"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Barber - detail transaksi sendiri (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Respons berformat JSON', () => pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'));",
+                  "const j = pm.response.json();",
+                  "pm.test('success = true', () => pm.expect(j.success).to.eql(true));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/transaksi/detail.php",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "transaksi",
+                "detail.php"
+              ],
+              "query": [
+                {
+                  "key": "id",
+                  "value": "{{trxBarberId}}"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Barber - detail transaksi owner disembunyikan (404)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 404', () => pm.response.to.have.status(404));",
+                  "pm.test('Respons berformat JSON', () => pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'));",
+                  "const j = pm.response.json();",
+                  "pm.test('success = false', () => pm.expect(j.success).to.eql(false));",
+                  "pm.test('error_code = NOT_FOUND', () => pm.expect(j.error_code).to.eql('NOT_FOUND'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/transaksi/detail.php",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "transaksi",
+                "detail.php"
+              ],
+              "query": [
+                {
+                  "key": "id",
+                  "value": "{{trxId2}}"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Barber - cari pelanggan (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Respons berformat JSON', () => pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'));",
+                  "const j = pm.response.json();",
+                  "pm.test('success = true', () => pm.expect(j.success).to.eql(true));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/pelanggan/index.php",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "pelanggan",
+                "index.php"
+              ],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "Otomasi"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Barber - daftar barber (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Respons berformat JSON', () => pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'));",
+                  "const j = pm.response.json();",
+                  "pm.test('success = true', () => pm.expect(j.success).to.eql(true));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/barber/index.php",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "barber",
+                "index.php"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Barber - hapus transaksi ditolak (403)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 403', () => pm.response.to.have.status(403));",
+                  "pm.test('Respons berformat JSON', () => pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'));",
+                  "const j = pm.response.json();",
+                  "pm.test('success = false', () => pm.expect(j.success).to.eql(false));",
+                  "pm.test('error_code = FORBIDDEN', () => pm.expect(j.error_code).to.eql('FORBIDDEN'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/transaksi/index.php",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "transaksi",
+                "index.php"
+              ],
+              "query": [
+                {
+                  "key": "id",
+                  "value": "{{trxBarberId}}"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Barber - hapus.php ditolak (403)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 403', () => pm.response.to.have.status(403));",
+                  "pm.test('Respons berformat JSON', () => pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'));",
+                  "const j = pm.response.json();",
+                  "pm.test('success = false', () => pm.expect(j.success).to.eql(false));",
+                  "pm.test('error_code = FORBIDDEN', () => pm.expect(j.error_code).to.eql('FORBIDDEN'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/transaksi/hapus.php",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "transaksi",
+                "hapus.php"
+              ],
+              "query": [
+                {
+                  "key": "id_transaksi",
+                  "value": "{{trxBarberId}}"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Barber - tambah layanan ditolak (403)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 403', () => pm.response.to.have.status(403));",
+                  "pm.test('Respons berformat JSON', () => pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'));",
+                  "const j = pm.response.json();",
+                  "pm.test('success = false', () => pm.expect(j.success).to.eql(false));",
+                  "pm.test('error_code = FORBIDDEN', () => pm.expect(j.error_code).to.eql('FORBIDDEN'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/layanan/index.php",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "layanan",
+                "index.php"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nama_layanan\": \"X\",\n  \"harga\": 1000,\n  \"hpp\": 0\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Barber - ubah status layanan ditolak (403)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 403', () => pm.response.to.have.status(403));",
+                  "pm.test('Respons berformat JSON', () => pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'));",
+                  "const j = pm.response.json();",
+                  "pm.test('success = false', () => pm.expect(j.success).to.eql(false));",
+                  "pm.test('error_code = FORBIDDEN', () => pm.expect(j.error_code).to.eql('FORBIDDEN'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/layanan/index.php",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "layanan",
+                "index.php"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id_layanan\": \"{{layananId}}\",\n  \"aktif\": 0\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Barber - hapus layanan ditolak (403)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 403', () => pm.response.to.have.status(403));",
+                  "pm.test('Respons berformat JSON', () => pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'));",
+                  "const j = pm.response.json();",
+                  "pm.test('success = false', () => pm.expect(j.success).to.eql(false));",
+                  "pm.test('error_code = FORBIDDEN', () => pm.expect(j.error_code).to.eql('FORBIDDEN'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/layanan/index.php",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "layanan",
+                "index.php"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id_layanan\": \"{{layananId}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Barber - pengeluaran ditolak (403)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 403', () => pm.response.to.have.status(403));",
+                  "pm.test('Respons berformat JSON', () => pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'));",
+                  "const j = pm.response.json();",
+                  "pm.test('success = false', () => pm.expect(j.success).to.eql(false));",
+                  "pm.test('error_code = FORBIDDEN', () => pm.expect(j.error_code).to.eql('FORBIDDEN'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/pengeluaran/index.php",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "pengeluaran",
+                "index.php"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Barber - rekap pemasukan ditolak (403)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 403', () => pm.response.to.have.status(403));",
+                  "pm.test('Respons berformat JSON', () => pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'));",
+                  "const j = pm.response.json();",
+                  "pm.test('success = false', () => pm.expect(j.success).to.eql(false));",
+                  "pm.test('error_code = FORBIDDEN', () => pm.expect(j.error_code).to.eql('FORBIDDEN'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/rekap/pemasukan.php",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "rekap",
+                "pemasukan.php"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Barber - tren ditolak (403)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 403', () => pm.response.to.have.status(403));",
+                  "pm.test('Respons berformat JSON', () => pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'));",
+                  "const j = pm.response.json();",
+                  "pm.test('success = false', () => pm.expect(j.success).to.eql(false));",
+                  "pm.test('error_code = FORBIDDEN', () => pm.expect(j.error_code).to.eql('FORBIDDEN'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/rekap/tren.php",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "rekap",
+                "tren.php"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "9. Pembersihan",
+      "item": [
+        {
+          "name": "Owner login ulang (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Respons berformat JSON', () => pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'));",
+                  "const j = pm.response.json();",
+                  "pm.test('success = true', () => pm.expect(j.success).to.eql(true));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/login.php",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login.php"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"{{owner_username}}\",\n  \"password\": \"{{password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Hapus transaksi barber (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Respons berformat JSON', () => pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'));",
+                  "const j = pm.response.json();",
+                  "pm.test('success = true', () => pm.expect(j.success).to.eql(true));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/transaksi/index.php",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "transaksi",
+                "index.php"
+              ],
+              "query": [
+                {
+                  "key": "id",
+                  "value": "{{trxBarberId}}"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Buat layanan sementara (201)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 201', () => pm.response.to.have.status(201));",
+                  "pm.test('Respons berformat JSON', () => pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'));",
+                  "const j = pm.response.json();",
+                  "pm.test('success = true', () => pm.expect(j.success).to.eql(true));",
+                  "pm.collectionVariables.set('layananTmpId', j.data.id_layanan);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/layanan/index.php",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "layanan",
+                "index.php"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nama_layanan\": \"Sementara {{runId}}\",\n  \"harga\": 1000,\n  \"hpp\": 0\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Hapus layanan permanen (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Respons berformat JSON', () => pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'));",
+                  "const j = pm.response.json();",
+                  "pm.test('success = true', () => pm.expect(j.success).to.eql(true));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/layanan/index.php",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "layanan",
+                "index.php"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id_layanan\": \"{{layananTmpId}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Hapus layanan - sudah tidak ada (404)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 404', () => pm.response.to.have.status(404));",
+                  "pm.test('Respons berformat JSON', () => pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'));",
+                  "const j = pm.response.json();",
+                  "pm.test('success = false', () => pm.expect(j.success).to.eql(false));",
+                  "pm.test('error_code = NOT_FOUND', () => pm.expect(j.error_code).to.eql('NOT_FOUND'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/layanan/index.php",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "layanan",
+                "index.php"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id_layanan\": \"{{layananTmpId}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Hapus layanan - ID tidak valid (422)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 422', () => pm.response.to.have.status(422));",
+                  "pm.test('Respons berformat JSON', () => pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'));",
+                  "const j = pm.response.json();",
+                  "pm.test('success = false', () => pm.expect(j.success).to.eql(false));",
+                  "pm.test('error_code = UNPROCESSABLE_ENTITY', () => pm.expect(j.error_code).to.eql('UNPROCESSABLE_ENTITY'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/layanan/index.php",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "layanan",
+                "index.php"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id_layanan\": 0\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Nonaktifkan layanan uji (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Respons berformat JSON', () => pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'));",
+                  "const j = pm.response.json();",
+                  "pm.test('success = true', () => pm.expect(j.success).to.eql(true));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/layanan/index.php",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "layanan",
+                "index.php"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id_layanan\": \"{{layananId}}\",\n  \"aktif\": 0\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Nonaktifkan layanan uji form (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Respons berformat JSON', () => pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'));",
+                  "const j = pm.response.json();",
+                  "pm.test('success = true', () => pm.expect(j.success).to.eql(true));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/layanan/index.php",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "layanan",
+                "index.php"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id_layanan\": \"{{layananFormId}}\",\n  \"aktif\": 0\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
