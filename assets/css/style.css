@@ -4558,32 +4558,6 @@ body .pengeluaran-toast[hidden] {
     overflow-wrap: anywhere;
 }
 
-.pengeluaran-change-history {
-    margin-top: 12px;
-    padding-top: 10px;
-    border-top: 1px solid #ececec;
-    font-size: 11px;
-    color: #6b7280;
-}
-
-.pengeluaran-change-history > strong {
-    color: #374151;
-}
-
-.pengeluaran-change-history > div {
-    max-height: 120px;
-    overflow-y: auto;
-    margin-top: 6px;
-}
-
-.pengeluaran-change-history p {
-    margin: 0;
-    padding: 5px 0;
-    color: #374151;
-    border-bottom: 1px solid #f0f0f0;
-    overflow-wrap: anywhere;
-}
-
 .pengeluaran-modal-actions {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -4620,7 +4594,6 @@ body .pengeluaran-toast[hidden] {
     border: none;
     background: #fff;
     color: #dc2626;
-    border: 1px solid #dc2626;
 }
 
 .pengeluaran-edit-field {
