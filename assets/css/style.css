@@ -4558,6 +4558,45 @@ body .pengeluaran-toast[hidden] {
     overflow-wrap: anywhere;
 }
 
+.pengeluaran-change-history {
+    margin-top: 12px;
+    padding-top: 10px;
+    border-top: 1px solid #ececec;
+    font-size: 11px;
+    color: #6b7280;
+}
+
+.pengeluaran-change-history > strong {
+    color: #374151;
+}
+
+.pengeluaran-change-history > div {
+    max-height: 120px;
+    overflow-y: auto;
+    margin-top: 6px;
+}
+
+.pengeluaran-change-history p,
+.pengeluaran-history-item {
+    margin: 0;
+    padding: 5px 0;
+    color: #374151;
+    border-bottom: 1px solid #f0f0f0;
+    overflow-wrap: anywhere;
+}
+
+.pengeluaran-history-item strong {
+    display: block;
+    margin-bottom: 3px;
+    font-weight: 600;
+}
+
+.pengeluaran-history-item > div {
+    margin-top: 0;
+    color: #374151;
+    line-height: 1.45;
+}
+
 .pengeluaran-modal-actions {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -4594,6 +4633,7 @@ body .pengeluaran-toast[hidden] {
     border: none;
     background: #fff;
     color: #dc2626;
+    border: 1px solid #dc2626;
 }
 
 .pengeluaran-edit-field {
@@ -4612,9 +4652,30 @@ body .pengeluaran-toast[hidden] {
     border: 1px solid #d2d2d2;
     border-radius: 6px;
     padding: 9px 10px;
+    background-color: #fff;
+    color: #202020;
     font: inherit;
     font-size: 11px;
     box-sizing: border-box;
+}
+
+.pengeluaran-edit-field select,
+.pengeluaran-edit-field select option {
+    background-color: #fff;
+    color: #202020;
+}
+
+.pengeluaran-edit-label {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.pengeluaran-edit-label small {
+    color:  #1A1A1A;;
+    font-size: 10px;
+    font-weight: 600;
 }
 
 /* Daftar saran nama pelanggan */
