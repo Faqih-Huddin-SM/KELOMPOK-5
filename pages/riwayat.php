@@ -26,7 +26,7 @@ include __DIR__ . '/../includes/header.php';
         <!-- NOTIFIKASI -->
         <div
             id="riwayatNotification"
-            class="transaction-success riwayat-delete-notification"
+            class="transaction-success riwayat-notification"
             hidden
         ></div>
 

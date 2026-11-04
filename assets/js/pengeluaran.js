@@ -183,7 +183,7 @@ document.addEventListener('DOMContentLoaded', () => {
         toast.textContent = pesan;
         toast.className = 'pengeluaran-toast';
 
-        if (jenis === 'gagal' || jenis === 'error') {
+        if (jenis === 'gagal' || jenis === 'error' || jenis === 'hapus') {
             toast.classList.add('gagal');
         } else {
             toast.classList.add('berhasil');
@@ -221,6 +221,113 @@ document.addEventListener('DOMContentLoaded', () => {
         const bagian = tanggal.slice(0, 10).split('-');
         if (bagian.length !== 3) return tanggal;
         return `${bagian[2]}/${bagian[1]}/${bagian[0]}`;
+    }
+
+    function formatTanggalISO(tanggal) {
+        if (!tanggal) return '-';
+        const bagian = String(tanggal).slice(0, 10).split('-');
+        return bagian.length === 3 ? `${bagian[0]}-${bagian[1]}-${bagian[2]}` : String(tanggal);
+    }
+
+    function formatWaktuPengeluaran(waktu) {
+        if (!waktu) return '-';
+        const teks = String(waktu).replace('T', ' ').slice(0, 16);
+        const bagian = teks.match(/^(\d{4}-\d{2}-\d{2})[ T](\d{2}):(\d{2})$/);
+        return bagian ? `${bagian[1]} ${bagian[2]}.${bagian[3]}` : teks;
+    }
+
+    function escapeHtml(teks) {
+        const element = document.createElement('div');
+        element.textContent = String(teks ?? '');
+        return element.innerHTML;
+    }
+
+    function formatRiwayatPengeluaran(keterangan, item = {}) {
+        const riwayat = String(keterangan || '').trim();
+        const baris = riwayat.split('\n').filter(Boolean);
+        const entri = [];
+        const entriDicatat = [];
+
+        for (let indeks = 0; indeks < baris.length; indeks += 1) {
+            const header = baris[indeks];
+            if (!/^\d{4}-\d{2}-\d{2}\s/.test(header)) continue;
+
+            let bagian = header.match(/^(\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2})\.\s*(Diubah oleh|Dicatat oleh)\s+(.+)$/i);
+            if (!bagian) {
+                const lama = header.match(/^(\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2})\s+-\s*.+?\s+oleh\s+(.+?)(?:\..*)?$/i);
+                if (lama) bagian = [header, lama[1], 'Diubah oleh', lama[2]];
+            }
+            if (!bagian) continue;
+
+            const [, waktu, aksi, pengubah] = bagian;
+            const waktuFormat = waktu.replace(/:(\d{2})$/, '.$1');
+            let detail = baris[indeks + 1] || '';
+            if (aksi === 'Diubah oleh' && detail.startsWith(waktu.slice(0, 4))) detail = '';
+            detail = detail.replace(/\.\s*Alasan:\s*.*$/i, '').trim();
+            const labelAksi = aksi.charAt(0).toUpperCase() + aksi.slice(1);
+            const detailFormat = detail
+                ? detail
+                    .split(';')
+                    .map((perubahan) => perubahan.trim())
+                    .filter(Boolean)
+                    .join('; ')
+                : '';
+
+            const entriRiwayat = `
+                <div class="pengeluaran-history-item">
+                    <strong>${escapeHtml(waktuFormat)}. ${escapeHtml(labelAksi)} ${escapeHtml(pengubah)}</strong>
+                    <div>${escapeHtml(detailFormat)}</div>
+                </div>
+            `;
+            if (aksi === 'Dicatat oleh') entriDicatat.push(entriRiwayat);
+            else entri.push(entriRiwayat);
+            if (detail) indeks += 1;
+        }
+
+        if (entri.length || entriDicatat.length) {
+            return [...entri.reverse(), ...entriDicatat].join('');
+        }
+        if (!item || !item.tanggal) return '<span>Belum ada perubahan.</span>';
+
+        const waktu = String(item.dibuat_pada || item.tanggal).slice(0, 16).replace('T', ' ');
+        const pencatat = item.nama_user || 'Pengguna';
+        return `
+            <div class="pengeluaran-history-item">
+                <strong>${escapeHtml(waktu)}. Dicatat oleh ${escapeHtml(pencatat)}</strong>
+                <div>${escapeHtml(item.kategori || '-')} Rp${escapeHtml(formatRupiah(item.nominal).replace('Rp', '').trim())}. Dicatat oleh ${escapeHtml(pencatat)}</div>
+            </div>
+        `;
+    }
+
+    function ambilAlasanPengeluaran(keterangan) {
+        const teks = String(keterangan || '').trim();
+        if (!teks) return '-';
+
+        const baris = teks.split('\n').filter(Boolean);
+        for (let indeks = baris.length - 1; indeks >= 0; indeks -= 1) {
+            const alasan = baris[indeks].match(/(?:^|\. )Alasan:\s*(.*)$/i);
+            if (alasan && alasan[1].trim()) return alasan[1].trim();
+        }
+        return '-';
+    }
+
+    let daftarBarberPengeluaran = null;
+
+    async function muatDaftarBarberPengeluaran() {
+        if (daftarBarberPengeluaran) return daftarBarberPengeluaran;
+
+        const respons = await fetch('/KELOMPOK-5/api/barber/index.php', {
+            method: 'GET',
+            credentials: 'same-origin',
+            headers: { Accept: 'application/json' }
+        });
+        const hasil = await respons.json().catch(() => ({}));
+        if (!respons.ok || hasil.success !== true) {
+            throw new Error(hasil.message || 'Daftar barber gagal dimuat.');
+        }
+
+        daftarBarberPengeluaran = Array.isArray(hasil.data) ? hasil.data : [];
+        return daftarBarberPengeluaran;
     }
 
     function tampilkanStatus(pesan) {
@@ -408,7 +515,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 tampilkanNotifikasi(
                     hasil.message || 'Pengeluaran berhasil dihapus.',
-                    'gagal'
+                    'hapus'
                 );
 
                 await muatPengeluaran();
@@ -500,7 +607,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             tutupModalPengeluaran();
-            tampilkanNotifikasi(hasil.message || 'Pengeluaran berhasil dihapus.', 'gagal');
+            tampilkanNotifikasi(hasil.message || 'Pengeluaran berhasil dihapus.', 'hapus');
             await muatPengeluaran();
             localStorage.setItem('kataji:data-changed', String(Date.now()));
         } catch (error) {
@@ -508,7 +615,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    async function simpanEditPengeluaran(item, kategori, nominal, keterangan) {
+    async function simpanEditPengeluaran(item, kategori, nominal, idDicatatOleh, keterangan) {
         const respons = await fetch(API_URL, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
@@ -517,6 +624,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 id_pengeluaran: item.id_pengeluaran,
                 kategori,
                 nominal,
+                id_user: idDicatatOleh,
                 keterangan
             })
         });
@@ -527,7 +635,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return hasil;
     }
 
-    function bukaEditPengeluaran(item) {
+    async function bukaEditPengeluaran(item) {
         const modal = document.getElementById('modalDetailPengeluaran');
         const judul = modal.querySelector('#judulModalPengeluaran');
         const isi = modal.querySelector('#isiDetailPengeluaran');
@@ -548,14 +656,44 @@ document.addEventListener('DOMContentLoaded', () => {
                 <input type="number" id="editNominalPengeluaran" min="1" step="1">
             </label>
             <label class="pengeluaran-edit-field">
-                <span>Keterangan</span>
-                <textarea id="editKeteranganPengeluaran" maxlength="255" rows="3"></textarea>
+                <span>Dicatat oleh</span>
+                <select id="editDicatatPengeluaran">
+                    <option value="">Ketik disini...</option>
+                </select>
+            </label>
+            <label class="pengeluaran-edit-field">
+                <span class="pengeluaran-edit-label">
+                    <span>Alasan diedit</span>
+                    <small>Wajib diisi</small>
+                </span>
+                <textarea id="editKeteranganPengeluaran" maxlength="255" rows="3" placeholder="Contoh: salah ketik nominal"></textarea>
             </label>
         `;
 
         isi.querySelector('#editKategoriPengeluaran').value = item.kategori || '';
         isi.querySelector('#editNominalPengeluaran').value = Number(item.nominal) || '';
-        isi.querySelector('#editKeteranganPengeluaran').value = item.keterangan || '';
+        isi.querySelector('#editKeteranganPengeluaran').value = '';
+
+        try {
+            const daftarBarber = await muatDaftarBarberPengeluaran();
+            const selectDicatat = isi.querySelector('#editDicatatPengeluaran');
+            daftarBarber.forEach((barber) => {
+                const option = document.createElement('option');
+                option.value = barber.id_user;
+                option.textContent = barber.nama;
+                selectDicatat.appendChild(option);
+            });
+
+            if (item.id_user && !daftarBarber.some((barber) => Number(barber.id_user) === Number(item.id_user))) {
+                const option = document.createElement('option');
+                option.value = item.id_user;
+                option.textContent = item.nama_user || 'Pengguna';
+                selectDicatat.appendChild(option);
+            }
+            selectDicatat.value = String(item.id_user || '');
+        } catch (error) {
+            tampilkanNotifikasi(error.message || 'Daftar dicatat oleh gagal dimuat.', 'gagal');
+        }
 
         const actions = modal.querySelector('.pengeluaran-modal-actions');
         actions.classList.add('edit-mode');
@@ -572,13 +710,18 @@ document.addEventListener('DOMContentLoaded', () => {
         const isi = modal.querySelector('#isiDetailPengeluaran');
         judul.textContent = 'Detail Pengeluaran';
         isi.replaceChildren(
-            tambahBarisDetail('Tanggal', formatTanggal(item.tanggal)),
+            tambahBarisDetail('Tanggal', formatTanggalISO(item.tanggal)),
             tambahBarisDetail('Kategori', item.kategori || '-'),
             tambahBarisDetail('Nominal', formatRupiah(item.nominal)),
-            tambahBarisDetail('Keterangan', item.keterangan || '-'),
             tambahBarisDetail('Dicatat oleh', item.nama_user || '-'),
-            tambahBarisDetail('Waktu dicatat', item.dibuat_pada || '-')
+            tambahBarisDetail('Akun yang login', item.akun_login || '-'),
+            tambahBarisDetail('Waktu dicatat', formatWaktuPengeluaran(item.dibuat_pada)),
+            tambahBarisDetail('Alasan', ambilAlasanPengeluaran(item.keterangan))
         );
+        const riwayat = document.createElement('div');
+        riwayat.className = 'pengeluaran-change-history';
+        riwayat.innerHTML = `<strong>Riwayat perubahan</strong><div>${formatRiwayatPengeluaran(item.keterangan, item)}</div>`;
+        isi.appendChild(riwayat);
         modal.querySelector('.pengeluaran-modal-actions').innerHTML = `
             <button type="button" class="pengeluaran-modal-cancel" data-action="close">Tutup</button>
             <button type="button" class="pengeluaran-modal-edit" data-action="edit">Edit</button>
@@ -602,6 +745,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (action === 'save-edit') {
                 const kategori = isi.querySelector('#editKategoriPengeluaran').value.trim();
                 const nominal = Number(isi.querySelector('#editNominalPengeluaran').value);
+                const idDicatatOleh = Number(isi.querySelector('#editDicatatPengeluaran').value);
                 const keterangan = isi.querySelector('#editKeteranganPengeluaran').value.trim();
 
                 if (!kategori) {
@@ -612,9 +756,30 @@ document.addEventListener('DOMContentLoaded', () => {
                     await tampilkanAlert({ judul: 'Validasi Pengeluaran', pesan: 'Nominal harus berupa angka bulat lebih dari nol.', tipe: 'primary' });
                     return;
                 }
+                if (!Number.isInteger(idDicatatOleh) || idDicatatOleh <= 0) {
+                    await tampilkanAlert({
+                        judul: 'Validasi Pengeluaran',
+                        pesan: 'Nama dicatat oleh wajib dipilih.',
+                        tipe: 'primary'
+                    });
+                    isi.querySelector('#editDicatatPengeluaran').focus();
+                    return;
+                }
+                const adaPerubahan = kategori !== item.kategori ||
+                    nominal !== Number(item.nominal) ||
+                    idDicatatOleh !== Number(item.id_user);
+                if (adaPerubahan && !keterangan) {
+                    await tampilkanAlert({
+                        judul: 'Validasi Pengeluaran',
+                        pesan: 'Alasan diedit wajib diisi.',
+                        tipe: 'primary'
+                    });
+                    isi.querySelector('#editKeteranganPengeluaran').focus();
+                    return;
+                }
 
                 try {
-                    const hasil = await simpanEditPengeluaran(item, kategori, nominal, keterangan);
+                    const hasil = await simpanEditPengeluaran(item, kategori, nominal, idDicatatOleh, keterangan);
                     tutupModalPengeluaran();
                     tampilkanNotifikasi(hasil.message || 'Perubahan pengeluaran berhasil disimpan.', 'berhasil');
                     await muatPengeluaran();
@@ -647,6 +812,7 @@ document.addEventListener('DOMContentLoaded', () => {
             tampilkanKosong('Belum ada pengeluaran pada tanggal ini.');
         } else {
             daftar.forEach((item) => {
+                item.akun_login = data.akun_login || '';
                 const baris = document.createElement('tr');
 
                 baris.appendChild(buatSel(formatTanggal(item.tanggal)));
