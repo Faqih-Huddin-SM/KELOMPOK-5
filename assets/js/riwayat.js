@@ -431,7 +431,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
             tampilkanNotifikasi(
                 result.message || 'Riwayat transaksi berhasil dihapus.',
-                true
+                false
             );
 
             await muatRiwayat();

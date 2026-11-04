@@ -3088,6 +3088,18 @@ body.layanan-modal-open {
     border-color: #F0BABA;
 }
 
+.riwayat-notification.transaction-success {
+    background: #DDF5E7;
+    color: #2E9E5B;
+    border-color: #B9E6C9;
+}
+
+.riwayat-notification.transaction-success.transaction-error {
+    background: #FBEAEA;
+    color: #D64545;
+    border-color: #F0BABA;
+}
+
 .riwayat-delete-notification[hidden] {
     display: none;
 }
@@ -4589,6 +4601,7 @@ body .pengeluaran-toast[hidden] {
     display: block;
     margin-bottom: 3px;
     font-weight: 600;
+    line-height: 1.35;
 }
 
 .pengeluaran-history-item > div {

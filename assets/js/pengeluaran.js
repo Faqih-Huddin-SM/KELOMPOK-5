@@ -183,7 +183,7 @@ document.addEventListener('DOMContentLoaded', () => {
         toast.textContent = pesan;
         toast.className = 'pengeluaran-toast';
 
-        if (jenis === 'gagal' || jenis === 'error') {
+        if (jenis === 'gagal' || jenis === 'error' || jenis === 'hapus') {
             toast.classList.add('gagal');
         } else {
             toast.classList.add('berhasil');
@@ -223,6 +223,19 @@ document.addEventListener('DOMContentLoaded', () => {
         return `${bagian[2]}/${bagian[1]}/${bagian[0]}`;
     }
 
+    function formatTanggalISO(tanggal) {
+        if (!tanggal) return '-';
+        const bagian = String(tanggal).slice(0, 10).split('-');
+        return bagian.length === 3 ? `${bagian[0]}-${bagian[1]}-${bagian[2]}` : String(tanggal);
+    }
+
+    function formatWaktuPengeluaran(waktu) {
+        if (!waktu) return '-';
+        const teks = String(waktu).replace('T', ' ').slice(0, 16);
+        const bagian = teks.match(/^(\d{4}-\d{2}-\d{2})[ T](\d{2}):(\d{2})$/);
+        return bagian ? `${bagian[1]} ${bagian[2]}.${bagian[3]}` : teks;
+    }
+
     function escapeHtml(teks) {
         const element = document.createElement('div');
         element.textContent = String(teks ?? '');
@@ -232,7 +245,8 @@ document.addEventListener('DOMContentLoaded', () => {
     function formatRiwayatPengeluaran(keterangan, item = {}) {
         const riwayat = String(keterangan || '').trim();
         const baris = riwayat.split('\n').filter(Boolean);
-        let hasil = '';
+        const entri = [];
+        const entriDicatat = [];
 
         for (let indeks = 0; indeks < baris.length; indeks += 1) {
             const header = baris[indeks];
@@ -246,21 +260,33 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!bagian) continue;
 
             const [, waktu, aksi, pengubah] = bagian;
+            const waktuFormat = waktu.replace(/:(\d{2})$/, '.$1');
             let detail = baris[indeks + 1] || '';
             if (aksi === 'Diubah oleh' && detail.startsWith(waktu.slice(0, 4))) detail = '';
             detail = detail.replace(/\.\s*Alasan:\s*.*$/i, '').trim();
             const labelAksi = aksi.charAt(0).toUpperCase() + aksi.slice(1);
+            const detailFormat = detail
+                ? detail
+                    .split(';')
+                    .map((perubahan) => perubahan.trim())
+                    .filter(Boolean)
+                    .join('; ')
+                : '';
 
-            hasil += `
+            const entriRiwayat = `
                 <div class="pengeluaran-history-item">
-                    <strong>${escapeHtml(waktu)}. ${escapeHtml(labelAksi)} ${escapeHtml(pengubah)}</strong>
-                    <div>${escapeHtml(detail)}</div>
+                    <strong>${escapeHtml(waktuFormat)}. ${escapeHtml(labelAksi)} ${escapeHtml(pengubah)}</strong>
+                    <div>${escapeHtml(detailFormat)}</div>
                 </div>
             `;
+            if (aksi === 'Dicatat oleh') entriDicatat.push(entriRiwayat);
+            else entri.push(entriRiwayat);
             if (detail) indeks += 1;
         }
 
-        if (hasil) return hasil;
+        if (entri.length || entriDicatat.length) {
+            return [...entri.reverse(), ...entriDicatat].join('');
+        }
         if (!item || !item.tanggal) return '<span>Belum ada perubahan.</span>';
 
         const waktu = String(item.dibuat_pada || item.tanggal).slice(0, 16).replace('T', ' ');
@@ -278,9 +304,11 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!teks) return '-';
 
         const baris = teks.split('\n').filter(Boolean);
-        const barisTerakhir = baris[baris.length - 1] || '';
-        const alasan = barisTerakhir.match(/(?:\. |\.\s*)Alasan:\s*(.*)$/);
-        return alasan ? alasan[1] : teks.split('\n')[0];
+        for (let indeks = baris.length - 1; indeks >= 0; indeks -= 1) {
+            const alasan = baris[indeks].match(/(?:^|\. )Alasan:\s*(.*)$/i);
+            if (alasan && alasan[1].trim()) return alasan[1].trim();
+        }
+        return '-';
     }
 
     let daftarBarberPengeluaran = null;
@@ -487,7 +515,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 tampilkanNotifikasi(
                     hasil.message || 'Pengeluaran berhasil dihapus.',
-                    'gagal'
+                    'hapus'
                 );
 
                 await muatPengeluaran();
@@ -579,7 +607,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             tutupModalPengeluaran();
-            tampilkanNotifikasi(hasil.message || 'Pengeluaran berhasil dihapus.', 'gagal');
+            tampilkanNotifikasi(hasil.message || 'Pengeluaran berhasil dihapus.', 'hapus');
             await muatPengeluaran();
             localStorage.setItem('kataji:data-changed', String(Date.now()));
         } catch (error) {
@@ -682,10 +710,12 @@ document.addEventListener('DOMContentLoaded', () => {
         const isi = modal.querySelector('#isiDetailPengeluaran');
         judul.textContent = 'Detail Pengeluaran';
         isi.replaceChildren(
-            tambahBarisDetail('Tanggal', formatTanggal(item.tanggal)),
+            tambahBarisDetail('Tanggal', formatTanggalISO(item.tanggal)),
             tambahBarisDetail('Kategori', item.kategori || '-'),
             tambahBarisDetail('Nominal', formatRupiah(item.nominal)),
-            tambahBarisDetail('Dicatat', item.nama_user || '-'),
+            tambahBarisDetail('Dicatat oleh', item.nama_user || '-'),
+            tambahBarisDetail('Akun yang login', item.akun_login || '-'),
+            tambahBarisDetail('Waktu dicatat', formatWaktuPengeluaran(item.dibuat_pada)),
             tambahBarisDetail('Alasan', ambilAlasanPengeluaran(item.keterangan))
         );
         const riwayat = document.createElement('div');
