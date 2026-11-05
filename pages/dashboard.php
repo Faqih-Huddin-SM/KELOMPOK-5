@@ -145,7 +145,8 @@ $display_role = ($role === 'owner') ? 'Owner Kataji' : ($nama ?: 'Barber');
                     <tr>
                         <th class="th-barber-nama">Nama Barber</th>
                         <th class="th-barber-trx text-center">Transaksi</th>
-                        <th class="th-barber-total text-start">Total Pemasukkan</th>
+                        <th class="th-barber-total text-center">Total Pemasukkan</th>
+                        <th class="th-barber-spacer"></th>
                     </tr>
                 </thead>
                 <tbody id="tabelPemasukanBody"></tbody>
