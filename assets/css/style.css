@@ -1935,6 +1935,25 @@ body:has(.login-page) main.container {
 }
 
 @media (max-width: 600px) {
+    .dashboard-page .th-barber-nama,
+    .dashboard-page .td-barber-nama {
+        width: 38% !important;
+        min-width: 0 !important;
+    }
+    .dashboard-page .th-barber-trx,
+    .dashboard-page .td-barber-trx {
+        width: 28% !important;
+        min-width: 0 !important;
+    }
+    .dashboard-page .th-barber-total,
+    .dashboard-page .td-barber-total {
+        width: 34% !important;
+        min-width: 0 !important;
+    }
+    .dashboard-page .th-barber-spacer,
+    .dashboard-page .td-barber-spacer {
+        display: none !important;
+    }
 
     .kasir-services {
         grid-template-columns: 1fr;
@@ -2035,20 +2054,20 @@ body:has(.login-page) main.container {
 
     .dashboard-page .rekap-barber-table .data-table th:nth-child(1),
     .dashboard-page .rekap-barber-table .data-table td:nth-child(1) {
-        width: 52%;
+        width: 38%;
         text-align: left;
     }
 
     .dashboard-page .rekap-barber-table .data-table th:nth-child(2),
     .dashboard-page .rekap-barber-table .data-table td:nth-child(2) {
-        width: 18%;
+        width: 30%;
         text-align: center;
     }
 
     .dashboard-page .rekap-barber-table .data-table th:nth-child(3),
     .dashboard-page .rekap-barber-table .data-table td:nth-child(3) {
-        width: 30%;
-        text-align: left;
+        width: 32%;
+        text-align: center;
     }
 
     .dashboard-page .dashboard-chart-grid,
@@ -3105,6 +3124,25 @@ body.layanan-modal-open {
 }
 
 @media (max-width: 600px) {
+    .dashboard-page .th-barber-nama,
+    .dashboard-page .td-barber-nama {
+        width: 38% !important;
+        min-width: 0 !important;
+    }
+    .dashboard-page .th-barber-trx,
+    .dashboard-page .td-barber-trx {
+        width: 28% !important;
+        min-width: 0 !important;
+    }
+    .dashboard-page .th-barber-total,
+    .dashboard-page .td-barber-total {
+        width: 34% !important;
+        min-width: 0 !important;
+    }
+    .dashboard-page .th-barber-spacer,
+    .dashboard-page .td-barber-spacer {
+        display: none !important;
+    }
     .riwayat-card {
         padding: 8px;
     }
@@ -3304,7 +3342,7 @@ body.layanan-modal-open {
 }
 
 .rekap-barber-table {
-    max-width: 620px;
+    width: 100%;
     margin-top: 6px;
     overflow-x: auto;
 }
@@ -3323,6 +3361,25 @@ body.layanan-modal-open {
 }
 
 @media (max-width: 600px) {
+    .dashboard-page .th-barber-nama,
+    .dashboard-page .td-barber-nama {
+        width: 38% !important;
+        min-width: 0 !important;
+    }
+    .dashboard-page .th-barber-trx,
+    .dashboard-page .td-barber-trx {
+        width: 28% !important;
+        min-width: 0 !important;
+    }
+    .dashboard-page .th-barber-total,
+    .dashboard-page .td-barber-total {
+        width: 34% !important;
+        min-width: 0 !important;
+    }
+    .dashboard-page .th-barber-spacer,
+    .dashboard-page .td-barber-spacer {
+        display: none !important;
+    }
     .rekap-barber-section {
         padding: 14px 16px;
     }
@@ -3422,20 +3479,20 @@ body.layanan-modal-open {
 
     .dashboard-page .rekap-barber-table th:nth-child(1),
     .dashboard-page .rekap-barber-table td:nth-child(1) {
-        width: 55%;
+        width: 38%;
         text-align: left;
     }
 
     .dashboard-page .rekap-barber-table th:nth-child(2),
     .dashboard-page .rekap-barber-table td:nth-child(2) {
-        width: 18%;
+        width: 30%;
         text-align: center;
     }
 
     .dashboard-page .rekap-barber-table th:nth-child(3),
     .dashboard-page .rekap-barber-table td:nth-child(3) {
-        width: 27%;
-        text-align: right;
+        width: 32%;
+        text-align: center;
     }
 
     .dashboard-page .dashboard-chart-grid,
@@ -3771,6 +3828,25 @@ body.layanan-modal-open {
 }
 
 @media (max-width: 600px) {
+    .dashboard-page .th-barber-nama,
+    .dashboard-page .td-barber-nama {
+        width: 38% !important;
+        min-width: 0 !important;
+    }
+    .dashboard-page .th-barber-trx,
+    .dashboard-page .td-barber-trx {
+        width: 28% !important;
+        min-width: 0 !important;
+    }
+    .dashboard-page .th-barber-total,
+    .dashboard-page .td-barber-total {
+        width: 34% !important;
+        min-width: 0 !important;
+    }
+    .dashboard-page .th-barber-spacer,
+    .dashboard-page .td-barber-spacer {
+        display: none !important;
+    }
     .pemasukan-page {
         padding: 10px 12px 20px;
     }
@@ -4263,6 +4339,25 @@ body.layanan-modal-open {
    ========================= */
 
 @media (max-width: 600px) {
+    .dashboard-page .th-barber-nama,
+    .dashboard-page .td-barber-nama {
+        width: 38% !important;
+        min-width: 0 !important;
+    }
+    .dashboard-page .th-barber-trx,
+    .dashboard-page .td-barber-trx {
+        width: 28% !important;
+        min-width: 0 !important;
+    }
+    .dashboard-page .th-barber-total,
+    .dashboard-page .td-barber-total {
+        width: 34% !important;
+        min-width: 0 !important;
+    }
+    .dashboard-page .th-barber-spacer,
+    .dashboard-page .td-barber-spacer {
+        display: none !important;
+    }
     .pengeluaran-heading h1 {
         font-size: 27px;
     }
@@ -5171,6 +5266,25 @@ body .pengeluaran-toast[hidden] {
 }
 
 @media (max-width: 600px) {
+    .dashboard-page .th-barber-nama,
+    .dashboard-page .td-barber-nama {
+        width: 38% !important;
+        min-width: 0 !important;
+    }
+    .dashboard-page .th-barber-trx,
+    .dashboard-page .td-barber-trx {
+        width: 28% !important;
+        min-width: 0 !important;
+    }
+    .dashboard-page .th-barber-total,
+    .dashboard-page .td-barber-total {
+        width: 34% !important;
+        min-width: 0 !important;
+    }
+    .dashboard-page .th-barber-spacer,
+    .dashboard-page .td-barber-spacer {
+        display: none !important;
+    }
     .pemasukan-page {
         padding: 14px;
     }
@@ -5268,10 +5382,10 @@ body .pengeluaran-toast[hidden] {
     --dash-card-bg: #FFFFFF;
     --dash-border: #E8EAF2;
     --dash-text-main: #1A1D2C;
-    --dash-text-muted: #8F92A1;
+    --dash-text-muted: #1A1A1A;
     --dash-success-bg: #E8F7EE;
     --dash-success-text: #0E7B3B;
-    --dash-success-icon-bg: #D1F0DE;
+    --dash-success-icon-bg: #FFFFFF;
     --dash-danger-bg: #FEECEB;
     --dash-danger-text: #B42318;
     --dash-color-cash: #17186B;
@@ -5396,8 +5510,8 @@ body .pengeluaran-toast[hidden] {
 }
 
 .dashboard-page .rekap-header h2 {
-    font-size: 18px;
-    font-weight: 700;
+    font-size: 25px;
+    font-weight: 600;
     color: var(--dash-text-main);
     margin: 0;
 }
@@ -5406,17 +5520,20 @@ body .pengeluaran-toast[hidden] {
     display: flex;
     gap: 8px;
     align-items: center;
+    padding: 0;
+    border-radius: 0;
+    background: transparent;
 }
 
 .dashboard-page .periode-pemasukan-btn {
-    border: none !important;
+    border: 2px solid #F3F4FA !important;
     outline: none !important;
-    padding: 6px 18px !important;
+    padding: 7px 17px !important;
     border-radius: 999px !important;
-    font-size: 12px !important;
+    font-size: 17px !important;
     font-weight: 600 !important;
     cursor: pointer !important;
-    background: transparent !important;
+    background: #EEF0 !important;
     color: var(--dash-text-muted) !important;
     transition: all 0.2s ease !important;
 }
@@ -5428,6 +5545,7 @@ body .pengeluaran-toast[hidden] {
 .dashboard-page .periode-pemasukan-btn.active {
     background: var(--dash-primary-navy) !important;
     color: #FFFFFF !important;
+    box-shadow: 0 2px 4px rgba(27, 47, 74, 0.18);
 }
 
 .dashboard-page .rekap-metrics {
@@ -5444,8 +5562,8 @@ body .pengeluaran-toast[hidden] {
 
 .dashboard-page .rekap-metrics .metric-label {
     display: block;
-    font-size: 13px;
-    color: var(--dash-text-muted);
+    font-size: 16px;
+    color: #565556;
     margin-bottom: 6px;
     font-weight: 500;
 }
@@ -5470,26 +5588,26 @@ body .pengeluaran-toast[hidden] {
     font-size: 13px;
 }
 
-.dashboard-page .rekap-barber-table .data-table {
+.dashboard-page .rekap-barber-table {
     width: 100%;
     max-width: 100%;
+    overflow-x: auto;
+}
+
+.dashboard-page .rekap-barber-table .data-table {
+    width: 100%;
     border-collapse: collapse;
+    table-layout: fixed;
 }
 
 .dashboard-page .rekap-barber-table .data-table thead th {
     border: none !important;
-    border-bottom: 1.5px solid #E8EAF2 !important;
-    padding: 10px 8px 14px !important;
-    color: #4A4D5A !important;
-    font-size: 13px !important;
+    border-bottom: 2px solid #1A1A1A !important;
+    padding: 8px 8px 14px !important;
+    color: #1A1D2C !important;
+    font-size: 14px !important;
     font-weight: 600 !important;
     background: transparent !important;
-}
-
-.dashboard-page .rekap-barber-table {
-    width: 100%;
-    max-width: 100%;
-    overflow-x: hidden;
 }
 
 .dashboard-page .rekap-barber-table .data-table tbody tr {
@@ -5502,7 +5620,7 @@ body .pengeluaran-toast[hidden] {
 
 .dashboard-page .rekap-barber-table .data-table tbody td {
     border: none !important;
-    border-bottom: 1px solid #E8EAF2 !important;
+    border-bottom: 1.5px solid #A3A3A3 !important;
     padding: 14px 8px !important;
     color: var(--dash-text-main) !important;
     font-size: 14px !important;
@@ -5510,23 +5628,61 @@ body .pengeluaran-toast[hidden] {
     background: transparent !important;
 }
 
+.dashboard-page .rekap-barber-table .data-table tbody tr:last-child td {
+    border-bottom: none !important;
+}
+
 .dashboard-page .th-barber-nama,
 .dashboard-page .td-barber-nama {
     text-align: left !important;
-    width: 48% !important;
+    width: 250px !important;
+    min-width: 170px !important;
+    padding-left: 0 !important;
 }
 
 .dashboard-page .th-barber-trx,
 .dashboard-page .td-barber-trx {
     text-align: center !important;
-    width: 25% !important;
+    width: 180px !important;
+    min-width: 130px !important;
 }
 
 .dashboard-page .th-barber-total,
 .dashboard-page .td-barber-total {
+    text-align: center !important;
+    width: 260px !important;
+    min-width: 180px !important;
+    font-weight: 500 !important;
+}
+
+.dashboard-page .th-barber-spacer,
+.dashboard-page .td-barber-spacer {
+    width: auto !important;
+    padding: 0 !important;
+}
+
+.dashboard-page .rekap-barber-table .data-table th:nth-child(1),
+.dashboard-page .rekap-barber-table .data-table td:nth-child(1) {
+    width: 250px !important;
     text-align: left !important;
-    width: 27% !important;
-    font-weight: 700 !important;
+    padding-left: 0 !important;
+}
+
+.dashboard-page .rekap-barber-table .data-table th:nth-child(2),
+.dashboard-page .rekap-barber-table .data-table td:nth-child(2) {
+    width: 225px !important;
+    text-align: center !important;
+}
+
+.dashboard-page .rekap-barber-table .data-table th:nth-child(3),
+.dashboard-page .rekap-barber-table .data-table td:nth-child(3) {
+    width: 260px !important;
+    text-align: center !important;
+}
+
+.dashboard-page .rekap-barber-table .data-table th:nth-child(4),
+.dashboard-page .rekap-barber-table .data-table td:nth-child(4) {
+    width: auto !important;
 }
 
 /* Tren Pemasukan (Lebar Penuh) */
@@ -5572,6 +5728,7 @@ body .pengeluaran-toast[hidden] {
     background: transparent !important;
     color: var(--dash-text-muted) !important;
     transition: all 0.2s ease !important;
+    border: 2px solid #F3F4FA !important;
 }
 
 .dashboard-page .trend-pill-btn:hover {
@@ -5762,7 +5919,7 @@ body .pengeluaran-toast[hidden] {
 }
 
 .dashboard-page .layanan-period-btn {
-    border: none !important;
+    border: 2px solid #D8D8D8 !important;
     outline: none !important;
     padding: 5px 14px !important;
     border-radius: 999px !important;
@@ -5803,7 +5960,7 @@ body .pengeluaran-toast[hidden] {
 }
 
 .dashboard-page .layanan-sort-btn {
-    border: none !important;
+    border: 2px solid #D8D8D8 !important;
     outline: none !important;
     padding: 4px 14px !important;
     border-radius: 999px !important;
@@ -6110,6 +6267,25 @@ body .pengeluaran-toast[hidden] {
 }
 
 @media (max-width: 600px) {
+    .dashboard-page .th-barber-nama,
+    .dashboard-page .td-barber-nama {
+        width: 38% !important;
+        min-width: 0 !important;
+    }
+    .dashboard-page .th-barber-trx,
+    .dashboard-page .td-barber-trx {
+        width: 28% !important;
+        min-width: 0 !important;
+    }
+    .dashboard-page .th-barber-total,
+    .dashboard-page .td-barber-total {
+        width: 34% !important;
+        min-width: 0 !important;
+    }
+    .dashboard-page .th-barber-spacer,
+    .dashboard-page .td-barber-spacer {
+        display: none !important;
+    }
     .dashboard-page .dashboard-summary {
         grid-template-columns: 1fr !important;
     }
