@@ -4547,7 +4547,7 @@ body.layanan-modal-open {
 
 /* Hilangkan garis tambahan pada baris data */
 .riwayat-table tbody td {
-    border-bottom: none;
+    border-bottom: 0.5px solid #A3A3A3 !important;
 }
 
 /* Sesuaikan posisi halaman pemasukan dengan Figma */
@@ -5499,14 +5499,14 @@ body .pengeluaran-toast[hidden] {
 
 /* Rekap Keuangan */
 .dashboard-page .rekap-pemasukan {
-    padding: 22px 28px;
+    padding: 12px 28px;
 }
 
 .dashboard-page .rekap-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 20px;
+    margin-bottom: 17px;
 }
 
 .dashboard-page .rekap-header h2 {
@@ -5528,7 +5528,7 @@ body .pengeluaran-toast[hidden] {
 .dashboard-page .periode-pemasukan-btn {
     border: 2px solid #F3F4FA !important;
     outline: none !important;
-    padding: 7px 17px !important;
+    padding: 4px 17px !important;
     border-radius: 999px !important;
     font-size: 17px !important;
     font-weight: 600 !important;
@@ -5621,7 +5621,7 @@ body .pengeluaran-toast[hidden] {
 .dashboard-page .rekap-barber-table .data-table tbody td {
     border: none !important;
     border-bottom: 1.5px solid #A3A3A3 !important;
-    padding: 14px 8px !important;
+    padding: 9px 8px !important;
     color: var(--dash-text-main) !important;
     font-size: 14px !important;
     font-weight: 500 !important;
@@ -5676,7 +5676,7 @@ body .pengeluaran-toast[hidden] {
 
 .dashboard-page .rekap-barber-table .data-table th:nth-child(3),
 .dashboard-page .rekap-barber-table .data-table td:nth-child(3) {
-    width: 260px !important;
+    width: 331px !important;
     text-align: center !important;
 }
 
