@@ -1470,6 +1470,88 @@ paths:
               schema: { $ref: "#/components/schemas/Error" }
         "500": { $ref: "#/components/responses/ServerError" }
 
+  /rekap/laporan_pdf.php:
+    get:
+      tags: [Rekap]
+      summary: Ekspor laporan bulanan ke PDF (owner)
+      description: |
+        Mengembalikan **file PDF** laporan satu bulan kalender: ringkasan total pemasukan, total pengeluaran,
+        dan saldo bersih, lalu rincian pemasukan per barber, layanan terlaris, dan pengeluaran per kategori.
+        Angka pemasukan dan layanan memakai perhitungan yang sama dengan `/rekap/pemasukan.php` dan
+        `/rekap/layanan.php`. Batas bulan dan tanggal pembuatan laporan memakai **WIB**.
+        Nama dan alamat barbershop dibaca dari `config/barbershop.php`.
+
+        **Saldo bersih** = total pemasukan dikurangi total pengeluaran, **tanpa HPP**. Nilainya bisa negatif.
+
+        | Kondisi bulan | Hasil |
+        |---|---|
+        | Ada pemasukan dan/atau pengeluaran | `200` file PDF (bagian yang kosong ditulis `Rp0`) |
+        | Tanpa pemasukan **dan** tanpa pengeluaran | `200` JSON dengan `ada_data: false` (bukan file, bukan error) |
+
+        Transaksi yang sudah dihapus tidak dihitung. Endpoint ini hanya membaca data.
+      operationId: laporanPdfBulanan
+      parameters:
+        - name: bulan
+          in: query
+          required: false
+          description: Bulan laporan, format `YYYY-MM`. Default bulan berjalan (WIB).
+          schema: { type: string, pattern: '^[0-9]{4}-[0-9]{2}$', example: "2026-10" }
+      responses:
+        "200":
+          description: File PDF, atau JSON kosong bila bulan tanpa pemasukan dan pengeluaran
+          headers:
+            Content-Disposition:
+              description: 'Hanya pada respons PDF, mis. `attachment; filename="laporan-keuangan-2026-10.pdf"`'
+              schema: { type: string }
+          content:
+            application/pdf:
+              schema: { type: string, format: binary }
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean, example: true }
+                  message:
+                    {
+                      type: string,
+                      example: Tidak ada pemasukan maupun pengeluaran pada bulan ini.,
+                    }
+                  data:
+                    type: object
+                    properties:
+                      bulan: { type: string, example: "2025-01" }
+                      tanggal_awal: { type: string, format: date, example: "2025-01-01" }
+                      tanggal_akhir: { type: string, format: date, example: "2025-01-31" }
+                      total_pemasukan: { type: integer, example: 0 }
+                      total_pengeluaran: { type: integer, example: 0 }
+                      saldo_bersih: { type: integer, example: 0 }
+                      ada_data: { type: boolean, example: false }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403":
+          description: Bukan owner (`FORBIDDEN`)
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+              example:
+                {
+                  success: false,
+                  message: Anda tidak memiliki izin mengakses halaman ini,
+                  error_code: FORBIDDEN,
+                }
+        "405": { $ref: "#/components/responses/MethodNotAllowed" }
+        "422":
+          description: Format `bulan` tidak valid (`UNPROCESSABLE_ENTITY`)
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "500":
+          description: |
+            Gagal membuat file (`INTERNAL_SERVER_ERROR`), mis. identitas barbershop belum diisi.
+            Tidak ada data yang diubah dan tidak ada file yang terkirim.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+
 # =============================================================================
 components:
   securitySchemes:

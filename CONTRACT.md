@@ -1070,6 +1070,62 @@ Ketentuan:
 - Batas periode dan tanggal default memakai WIB. Transaksi yang sudah dihapus (soft delete) tidak dihitung.
 - Tanpa login `401`; non-owner `403 FORBIDDEN`; method selain `GET` `405 METHOD_NOT_ALLOWED`.
 
+### 5.4 API Laporan Bulanan PDF — Kartu 6.7.3
+
+**Endpoint:** `GET /api/rekap/laporan_pdf.php?bulan=YYYY-MM`
+
+**Akses:** Owner yang sudah login. Barber menerima `403 FORBIDDEN` dengan pesan `Anda tidak memiliki izin mengakses halaman ini`.
+
+**Tujuan:** Mengunduh laporan pemasukan dan pengeluaran satu bulan kalender sebagai file PDF.
+
+| Parameter | Wajib | Keterangan                                      |
+| --------- | ----- | ----------------------------------------------- |
+| `bulan`   | Tidak | Format `YYYY-MM`. Default bulan berjalan (WIB). |
+
+**Isi PDF:** kop (nama dan alamat barbershop dari `config/barbershop.php`), periode, tanggal pembuatan (WIB), ringkasan total pemasukan, total pengeluaran, dan saldo bersih, lalu tabel pemasukan per barber, layanan terlaris, dan pengeluaran per kategori. Angka pemasukan dan layanan memakai perhitungan yang sama dengan `/api/rekap/pemasukan.php` dan `/api/rekap/layanan.php` (fungsi bersama di `api/lib/rekap_data.php`).
+
+**Definisi saldo bersih:** `saldo_bersih = total pemasukan − total pengeluaran`, **tanpa HPP**. Nilainya bisa negatif (ditulis `-Rp...` di PDF).
+
+**Batas bulan:** tanggal 1 sampai hari terakhir bulan itu menurut WIB. Pengeluaran diambil per rentang tanggal tersebut (`tanggal BETWEEN awal AND akhir`).
+
+Berhasil dengan data — `200 OK`:
+
+- `Content-Type: application/pdf`
+- `Content-Disposition: attachment; filename="laporan-keuangan-2026-10.pdf"`
+- Bagian yang kosong (hanya pemasukan atau hanya pengeluaran yang kosong) tetap dibuat dengan `Rp0`.
+
+Bulan tanpa pemasukan **dan** tanpa pengeluaran — `200 OK`, JSON, bukan file:
+
+```json
+{
+  "success": true,
+  "message": "Tidak ada pemasukan maupun pengeluaran pada bulan ini.",
+  "data": {
+    "bulan": "2025-01",
+    "tanggal_awal": "2025-01-01",
+    "tanggal_akhir": "2025-01-31",
+    "total_pemasukan": 0,
+    "total_pengeluaran": 0,
+    "saldo_bersih": 0,
+    "ada_data": false
+  }
+}
+```
+
+Frontend membedakan kedua hasil lewat header `Content-Type` (`application/pdf` atau `application/json`); bila JSON, cek `data.ada_data`.
+
+Penanganan kesalahan:
+
+| Kondisi                                    |  HTTP | `error_code`            |
+| ------------------------------------------ | ----: | ----------------------- |
+| Belum login / sesi habis                   | `401` | `UNAUTHORIZED`          |
+| Bukan owner                                | `403` | `FORBIDDEN`             |
+| Method selain `GET`                        | `405` | `METHOD_NOT_ALLOWED`    |
+| `bulan` bukan `YYYY-MM` yang valid         | `422` | `UNPROCESSABLE_ENTITY`  |
+| Gagal membuat file (mis. identitas kosong) | `500` | `INTERNAL_SERVER_ERROR` |
+
+Pada kegagalan `500` tidak ada file yang terkirim dan tidak ada data yang diubah (endpoint hanya membaca).
+
 ## 6. API Pengeluaran — WBS 4.3
 
 **Base endpoint:** `/api/pengeluaran/`

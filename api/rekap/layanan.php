@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../../config/config.php';
 require_once __DIR__ . '/../middleware/auth.php';
+require_once __DIR__ . '/../lib/rekap_data.php';
 
 header('Content-Type: application/json; charset=utf-8');
 
@@ -111,47 +112,8 @@ try {
     $tanggalAwal = $awal->format('Y-m-d');
     $tanggalAkhir = $akhir->format('Y-m-d');
 
-    $arah = $urutan === 'terbanyak' ? 'DESC' : 'ASC';
-
-    // Dihitung per baris layanan (detail_transaksi), jadi transaksi
-    // multi-layanan menambah hitungan setiap layanan yang ada di dalamnya.
-    // Layanan yang sudah dihapus permanen (id_layanan NULL) dikelompokkan
-    // berdasarkan nama pada saat transaksi.
-    $stmt = $pdo->prepare(
-        "SELECT
-            dt.id_layanan,
-            COALESCE(MAX(l.nama_layanan), MAX(dt.nama_layanan_saat_transaksi)) AS nama_layanan,
-            COUNT(DISTINCT t.id_transaksi) AS jumlah_transaksi,
-            SUM(dt.jumlah) AS total_jumlah
-         FROM transaksi t
-         JOIN detail_transaksi dt ON dt.id_transaksi = t.id_transaksi
-         LEFT JOIN layanan l ON l.id_layanan = dt.id_layanan
-         WHERE t.tanggal BETWEEN :awal AND :akhir
-           AND t.dihapus_pada IS NULL
-         GROUP BY dt.id_layanan,
-                  CASE WHEN dt.id_layanan IS NULL
-                       THEN dt.nama_layanan_saat_transaksi ELSE '' END
-         ORDER BY jumlah_transaksi $arah, total_jumlah $arah, nama_layanan ASC"
-    );
-
-    $stmt->execute([':awal' => $tanggalAwal, ':akhir' => $tanggalAkhir]);
-    $baris = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-    $layanan = [];
-    $peringkat = 0;
-
-    foreach ($baris as $item) {
-        $peringkat++;
-        $layanan[] = [
-            'peringkat' => $peringkat,
-            'id_layanan' => $item['id_layanan'] === null
-                ? null
-                : (int) $item['id_layanan'],
-            'nama_layanan' => $item['nama_layanan'],
-            'jumlah_transaksi' => (int) $item['jumlah_transaksi'],
-            'total_jumlah' => (int) $item['total_jumlah']
-        ];
-    }
+    // Perhitungan dipakai bersama dengan laporan PDF (api/lib/rekap_data.php).
+    $layanan = ambilRekapLayanan($pdo, $tanggalAwal, $tanggalAkhir, $urutan);
 
     // Periode tanpa transaksi tetap 200 dengan daftar kosong.
     kirimJsonRekapLayanan(200, [

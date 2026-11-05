@@ -53,27 +53,32 @@ try {
         ]);
     }
 
-    // Tentukan rentang periode aktif dan periode pembanding.
-    if ($periode === '7_hari') {
-        $awal = $hariIni->modify('-6 days');
-        $akhir = $hariIni;
+        // Tentukan rentang periode aktif dan periode pembanding.
+        if ($periode === '7_hari') {
+        // 7 hari terakhir yang sudah lengkap: kemarin dan 6 hari sebelumnya.
+        // Hari ini belum selesai, jadi tidak dihitung.
+        $awal = $hariIni->modify('-7 days');
+        $akhir = $hariIni->modify('-1 day');
         $awalSebelumnya = $awal->modify('-7 days');
         $akhirSebelumnya = $awal->modify('-1 day');
-        $tipe = 'hari';
+        $pembanding = '7_hari_sebelumnya';
     } elseif ($periode === 'minggu') {
-        // Minggu berjalan: Senin sampai Minggu.
-        $awal = $hariIni->modify('monday this week');
-        $akhir = $awal->modify('+6 days');
-        $awalSebelumnya = $awal->modify('-7 days');
-        $akhirSebelumnya = $awal->modify('-1 day');
-        $tipe = 'hari';
-    } else {
-        // Bulan berjalan dibandingkan bulan sebelumnya.
+        // Bulan berjalan dibagi 4 titik (Minggu 1-4).
+        // Pembanding: seluruh bulan sebelumnya.
         $awal = $hariIni->modify('first day of this month');
         $akhir = $hariIni->modify('last day of this month');
         $awalSebelumnya = $awal->modify('-1 month');
         $akhirSebelumnya = $awal->modify('-1 day');
-        $tipe = 'bulan';
+        $pembanding = 'bulan_lalu';
+    } else {
+        // Tahun berjalan: Januari sampai Desember.
+        // Pembanding: seluruh tahun sebelumnya.
+        $tahun = (int) $hariIni->format('Y');
+        $awal = new DateTimeImmutable($tahun . '-01-01', $zona);
+        $akhir = new DateTimeImmutable($tahun . '-12-31', $zona);
+        $awalSebelumnya = new DateTimeImmutable(($tahun - 1) . '-01-01', $zona);
+        $akhirSebelumnya = new DateTimeImmutable(($tahun - 1) . '-12-31', $zona);
+        $pembanding = 'tahun_lalu';
     }
 
     $awalAktif = $awal->format('Y-m-d');
@@ -118,61 +123,74 @@ try {
 
     $totalSebelumnya = (int) $stmtLama->fetchColumn();
 
-    $labels = [];
+        $labels = [];
     $tanggalTitik = [];
     $nilai = [];
+    $daftarTitik = [];
     $totalAktif = 0;
 
+    // Setiap titik grafik: [label, tanggal awal, tanggal akhir].
+    $titik = [];
+
     if ($periode === 'bulan') {
-        // Grafik bulanan: satu titik untuk setiap bulan.
-        // Saat ini menampilkan 12 bulan terakhir.
-        $awalGrafik = $hariIni->modify('first day of this month')
-            ->modify('-11 months');
+        $namaBulan = [
+            'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+            'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+        ];
 
-        $stmtBulanan = $pdo->prepare(
-            'SELECT DATE_FORMAT(tanggal, "%Y-%m") AS periode,
-                    COALESCE(SUM(total_harga), 0) AS total
-             FROM transaksi
-             WHERE dihapus_pada IS NULL
-               AND tanggal BETWEEN :awal AND :akhir
-             GROUP BY DATE_FORMAT(tanggal, "%Y-%m")'
-        );
-
-        $stmtBulanan->execute([
-            ':awal' => $awalGrafik->format('Y-m-d'),
-            ':akhir' => $akhirAktif
-        ]);
-
-        $hasilBulanan = [];
-        foreach ($stmtBulanan->fetchAll(PDO::FETCH_ASSOC) as $baris) {
-            $hasilBulanan[$baris['periode']] = (int) $baris['total'];
+        for ($m = 1; $m <= 12; $m++) {
+            $awalBulan = new DateTimeImmutable(
+                sprintf('%04d-%02d-01', $tahun, $m),
+                $zona
+            );
+            $titik[] = [
+                $namaBulan[$m - 1],
+                $awalBulan,
+                $awalBulan->modify('last day of this month')
+            ];
         }
+    } elseif ($periode === 'minggu') {
+        // Minggu 1-4: tanggal 1-7, 8-14, 15-21, dan 22 sampai akhir bulan.
+        $batasMinggu = [[1, 7], [8, 14], [15, 21], [22, null]];
 
-        for ($i = 0; $i < 12; $i++) {
-            $bulan = $awalGrafik->modify("+$i months");
-            $key = $bulan->format('Y-m');
-            $jumlah = $hasilBulanan[$key] ?? 0;
-
-            $labels[] = $bulan->format('M Y');
-            $tanggalTitik[] = $key;
-            $nilai[] = $jumlah;
-
-            if ($key >= $awal->format('Y-m') &&
-                $key <= $akhir->format('Y-m')) {
-                $totalAktif += $jumlah;
-            }
+        foreach ($batasMinggu as $i => $batas) {
+            $awalMinggu = $awal->modify('+' . ($batas[0] - 1) . ' days');
+            $akhirMinggu = $batas[1] === null
+                ? $akhir
+                : $awal->modify('+' . ($batas[1] - 1) . ' days');
+            $titik[] = ['Minggu ' . ($i + 1), $awalMinggu, $akhirMinggu];
         }
     } else {
-                for ($i = 0; $i < 7; $i++) {
-            $tanggalObj = $awal->modify("+$i days");
-            $key = $tanggalObj->format('Y-m-d');
-            $jumlah = $totalPerTanggal[$key] ?? 0;
-
-            $labels[] = $tanggalObj->format('l');
-            $tanggalTitik[] = $key;
-            $nilai[] = $jumlah;
-            $totalAktif += $jumlah;
+        for ($i = 0; $i < 7; $i++) {
+            $hari = $awal->modify("+$i days");
+            $titik[] = [$hari->format('l'), $hari, $hari];
         }
+    }
+
+    foreach ($titik as $item) {
+        $a = $item[1]->format('Y-m-d');
+        $b = $item[2]->format('Y-m-d');
+        $jumlah = 0;
+
+        foreach ($totalPerTanggal as $tgl => $total) {
+            if ($tgl >= $a && $tgl <= $b) {
+                $jumlah += $total;
+            }
+        }
+
+        $labels[] = $item[0];
+        $tanggalTitik[] = $periode === 'bulan'
+            ? $item[1]->format('Y-m')
+            : $a;
+        $nilai[] = $jumlah;
+        $totalAktif += $jumlah;
+
+        $daftarTitik[] = [
+            'label' => $item[0],
+            'tanggal_awal' => $a,
+            'tanggal_akhir' => $b,
+            'total_pemasukan' => $jumlah
+        ];
     }
 
     // Hitung perubahan pemasukan.
@@ -192,7 +210,7 @@ try {
         }
     }
 
-    kirimJsonTren(200, [
+        kirimJsonTren(200, [
         'success' => true,
         'data' => [
             'periode' => $periode,
@@ -201,13 +219,17 @@ try {
             'labels' => $labels,
             'tanggal' => $tanggalTitik,
             'pemasukan' => $nilai,
+            'titik' => $daftarTitik,
             'total_pemasukan' => $totalAktif,
+            'pembanding' => $pembanding,
+            'tanggal_awal_sebelumnya' => $awalLama,
+            'tanggal_akhir_sebelumnya' => $akhirLama,
             'total_periode_sebelumnya' => $totalSebelumnya,
             'persentase_perubahan' => $persentase === null
                 ? null : round($persentase, 2),
             'status_tren' => $statusTren,
             'ambang_stabil_persen' => TREN_AMBANG_STABIL_PERSEN,
-            'ada_data' => array_sum($nilai) > 0
+            'ada_data' => $totalAktif > 0
         ]
     ]);
 } catch (Throwable $e) {
