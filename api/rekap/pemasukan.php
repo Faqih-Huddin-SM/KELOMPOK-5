@@ -1,8 +1,8 @@
-
 <?php
 
 require_once __DIR__ . '/../../config/config.php';
 require_once __DIR__ . '/../middleware/auth.php';
+require_once __DIR__ . '/../lib/rekap_data.php';
 
 header('Content-Type: application/json; charset=utf-8');
 
@@ -103,54 +103,12 @@ try {
     $tanggalAwal = $awal->format('Y-m-d');
     $tanggalAkhir = $akhir->format('Y-m-d');
 
-    // Total seluruh pemasukan dalam periode yang dipilih.
-    $stmtTotal = $pdo->prepare(
-        'SELECT
-            COUNT(*) AS jumlah_transaksi,
-            COALESCE(SUM(total_harga), 0) AS total_pemasukan
-         FROM transaksi
-         WHERE tanggal BETWEEN :awal_total AND :akhir_total
-           AND dihapus_pada IS NULL'
-    );
+    // Perhitungan dipakai bersama dengan laporan PDF (api/lib/rekap_data.php).
+    $rekap = ambilRekapPemasukan($pdo, $tanggalAwal, $tanggalAkhir);
 
-    $stmtTotal->execute([
-        ':awal_total' => $tanggalAwal,
-        ':akhir_total' => $tanggalAkhir
-    ]);
-
-    $hasilTotal = $stmtTotal->fetch(PDO::FETCH_ASSOC);
-
-    $jumlahTransaksi = (int) ($hasilTotal['jumlah_transaksi'] ?? 0);
-    $totalPemasukan = (int) ($hasilTotal['total_pemasukan'] ?? 0);
-
-    // Rincian pemasukan untuk setiap barber dalam periode yang sama.
-    $stmtBarber = $pdo->prepare(
-        'SELECT
-            t.id_barber,
-            u.nama AS nama_barber,
-            COUNT(t.id_transaksi) AS jumlah_transaksi,
-            COALESCE(SUM(t.total_harga), 0) AS total_pemasukan
-         FROM transaksi t
-         INNER JOIN users u ON u.id_user = t.id_barber
-         WHERE t.tanggal BETWEEN :awal_barber AND :akhir_barber
-           AND t.dihapus_pada IS NULL
-         GROUP BY t.id_barber, u.nama
-         ORDER BY u.nama ASC'
-    );
-
-    $stmtBarber->execute([
-        ':awal_barber' => $tanggalAwal,
-        ':akhir_barber' => $tanggalAkhir
-    ]);
-
-    $rincianBarber = $stmtBarber->fetchAll(PDO::FETCH_ASSOC);
-
-    foreach ($rincianBarber as &$barber) {
-        $barber['id_barber'] = (int) $barber['id_barber'];
-        $barber['jumlah_transaksi'] = (int) $barber['jumlah_transaksi'];
-        $barber['total_pemasukan'] = (int) $barber['total_pemasukan'];
-    }
-    unset($barber);
+    $jumlahTransaksi = $rekap['jumlah_transaksi'];
+    $totalPemasukan = $rekap['total_pemasukan'];
+    $rincianBarber = $rekap['rincian_per_barber'];
 
     kirimJsonRekap(200, [
         'success' => true,
