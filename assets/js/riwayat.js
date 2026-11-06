@@ -1,459 +1,382 @@
 /**
  * Kataji Barber - Riwayat Transaksi (Frontend)
- * Penyesuaian dengan API backend terbaru & dialog konfirmasi Figma
+ * Sesuai Desain & Fungsionalitas Figma:
+ * - Filter: Pencarian (Cari riwayat...), Metode Pembayaran, Tanggal (dd-mm-yyyy)
+ * - Paginasi dinamis dengan limit per halaman (default 10)
+ * - Badge metode pembayaran dengan skema warna Figma (#17186B, #E6F4EC, #3B3DA8)
+ * - Riwayat transaksi bersifat permanen (tanpa tombol/kolom hapus)
  */
 
 document.addEventListener('DOMContentLoaded', function () {
     const tableBody = document.getElementById('riwayatTableBody');
+    const inputCari = document.getElementById('cariRiwayat');
+    const selectMetode = document.getElementById('filterMetodeRiwayat');
+    const inputTanggal = document.getElementById('filterTanggalRiwayat');
+    const btnClearDate = document.getElementById('btnClearDate');
+    const paginationInfo = document.getElementById('riwayatPaginationInfo');
+    const paginationControls = document.getElementById('riwayatPaginationControls');
+    const selectPerPage = document.getElementById('riwayatPerPage');
     const notification = document.getElementById('riwayatNotification');
-    const filterTanggal = document.getElementById('filterTanggalRiwayat');
-    const pageEl = document.querySelector('.riwayat-page');
-    const userRole = (pageEl?.dataset.role || '').toLowerCase();
 
     const API_TRANSAKSI = '/KELOMPOK-5/api/transaksi/index.php';
     const DETAIL_URL = '/KELOMPOK-5/api/transaksi/detail.php';
 
-    if (!tableBody) {
-        return;
+    if (!tableBody) return;
+
+    let semuaTransaksi = [];
+    let transaksiTerfilter = [];
+    let currentPage = 1;
+    let perPage = 10;
+    let notificationTimer = null;
+
+    // ======================================================
+    // 1. HELPER FORMAT
+    // ======================================================
+
+    function escapeHtml(text) {
+        if (!text) return '';
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
     }
-
-    let notificationTimer;
-
-    // ======================================================
-    // 1. DIALOG KONFIRMASI (SESUAI DESAIN FIGMA KATAJI)
-    // ======================================================
-
-    function konfirmasiTindakan({
-        judul = 'Hapus Riwayat Transaksi?',
-        pesan = 'Apakah Anda yakin ingin menghapus riwayat transaksi ini?',
-        teksBatal = 'Batal',
-        teksKonfirmasi = 'Ya, Hapus',
-        tipe = 'danger'
-    }) {
-        if (typeof window.katajiKonfirmasi === 'function') {
-            return window.katajiKonfirmasi({
-                judul,
-                pesan,
-                teksBatal,
-                teksKonfirmasi,
-                tipe
-            });
-        }
-
-        return new Promise(function (resolve) {
-            let overlay = document.getElementById('katajiModalKonfirmasi');
-
-            if (!overlay) {
-                overlay = document.createElement('div');
-                overlay.id = 'katajiModalKonfirmasi';
-                overlay.className = 'kataji-confirm-overlay';
-                overlay.setAttribute('role', 'dialog');
-                overlay.setAttribute('aria-modal', 'true');
-                overlay.innerHTML = `
-                    <div class="kataji-confirm-box">
-                        <h3 class="kataji-confirm-title" id="katajiConfirmTitle"></h3>
-                        <p class="kataji-confirm-desc" id="katajiConfirmDesc"></p>
-                        <div class="kataji-confirm-actions">
-                            <button type="button" class="btn-confirm-cancel" id="btnConfirmBatal">Batal</button>
-                            <button type="button" class="btn-confirm-danger" id="btnConfirmAksi">Ya</button>
-                        </div>
-                    </div>
-                `;
-                document.body.appendChild(overlay);
-            }
-
-            const titleEl = overlay.querySelector('#katajiConfirmTitle');
-            const descEl = overlay.querySelector('#katajiConfirmDesc');
-            const btnBatal = overlay.querySelector('#btnConfirmBatal');
-            const btnAksi = overlay.querySelector('#btnConfirmAksi');
-
-            titleEl.textContent = judul;
-            descEl.textContent = pesan;
-            btnAksi.textContent = teksKonfirmasi;
-
-            if (!teksBatal) {
-                btnBatal.style.display = 'none';
-                btnAksi.className = 'btn-confirm-primary btn-single-alert';
-            } else {
-                btnBatal.style.display = '';
-                btnBatal.textContent = teksBatal;
-                btnAksi.className = tipe === 'primary'
-                    ? 'btn-confirm-primary'
-                    : 'btn-confirm-danger';
-            }
-
-            function tutup(hasil) {
-                overlay.style.display = 'none';
-                document.body.classList.remove('kataji-confirm-open');
-                btnBatal.onclick = null;
-                btnAksi.onclick = null;
-                overlay.onclick = null;
-                document.removeEventListener('keydown', onKeyDown);
-                resolve(hasil);
-            }
-
-            function onKeyDown(e) {
-                if (e.key === 'Escape') {
-                    tutup(false);
-                }
-            }
-
-            btnBatal.onclick = function () { tutup(false); };
-            btnAksi.onclick = function () { tutup(true); };
-            overlay.onclick = function (e) {
-                if (e.target === overlay) tutup(false);
-            };
-            document.addEventListener('keydown', onKeyDown);
-
-            document.body.classList.add('kataji-confirm-open');
-            overlay.style.display = 'flex';
-            btnAksi.focus();
-        });
-    }
-
-    function tampilkanAlert({
-        judul = 'Perhatian',
-        pesan = '',
-        teksTombol = 'Mengerti',
-        tipe = 'primary'
-    }) {
-        if (typeof window.katajiAlert === 'function') {
-            return window.katajiAlert({ judul, pesan, teksTombol, tipe });
-        }
-        return konfirmasiTindakan({
-            judul,
-            pesan,
-            teksBatal: null,
-            teksKonfirmasi: teksTombol,
-            tipe
-        });
-    }
-
-    // ======================================================
-    // 2. HELPER FORMAT
-    // ======================================================
 
     function formatRupiah(nominal) {
-        return new Intl.NumberFormat('id-ID', {
-            style: 'currency',
-            currency: 'IDR',
+        return 'Rp' + Number(nominal || 0).toLocaleString('id-ID', {
             maximumFractionDigits: 0
-        }).format(Number(nominal) || 0);
+        });
     }
 
-    function tanggalHariIni() {
-        const sekarang = new Date();
-        const tahun = sekarang.getFullYear();
-        const bulan = String(sekarang.getMonth() + 1).padStart(2, '0');
-        const hari = String(sekarang.getDate()).padStart(2, '0');
+    // Format tanggal ke DD-MM-YYYY sesuai Figma
+    function formatTanggal(tanggal) {
+        if (!tanggal) return '-';
+        const raw = String(tanggal).slice(0, 10);
+        const parts = raw.split('-');
+        if (parts.length === 3) {
+            // YYYY-MM-DD -> DD-MM-YYYY
+            return `${parts[2]}-${parts[1]}-${parts[0]}`;
+        }
+        return tanggal;
+    }
+
+    function tanggalLokal(tanggal = new Date()) {
+        const tahun = tanggal.getFullYear();
+        const bulan = String(tanggal.getMonth() + 1).padStart(2, '0');
+        const hari = String(tanggal.getDate()).padStart(2, '0');
         return `${tahun}-${bulan}-${hari}`;
     }
 
-    function formatTanggal(tanggal) {
-        if (!tanggal) return '-';
-        const bagian = String(tanggal).slice(0, 10).split('-');
-        if (bagian.length !== 3) return tanggal;
-        return `${bagian[2]}-${bagian[1]}-${bagian[0]}`;
-    }
-
-    function formatMetodePembayaran(metode) {
-        const daftar = {
-            cash: 'Tunai',
-            qris: 'QRIS',
-            transfer: 'Transfer'
-        };
-        return daftar[String(metode || '').toLowerCase()] || '-';
-    }
-
-    // ======================================================
-    // 3. NOTIFIKASI
-    // ======================================================
-
-    function tampilkanNotifikasi(pesan, berhasil = true) {
-        if (!notification) {
-            return;
+    function getMetodeInfo(metode) {
+        const m = String(metode || '').toLowerCase().trim();
+        if (m === 'cash' || m === 'tunai') {
+            return { label: 'Tunai', cssClass: 'badge-tunai' };
         }
-
-        clearTimeout(notificationTimer);
-
-        notification.textContent = pesan;
-        notification.hidden = false;
-
-        notification.classList.toggle('transaction-success', berhasil);
-        notification.classList.toggle('transaction-error', !berhasil);
-
-        requestAnimationFrame(() => {
-            notification.classList.add('show');
-        });
-
-        notificationTimer = setTimeout(() => {
-            notification.classList.remove('show');
-            setTimeout(() => {
-                notification.hidden = true;
-            }, 300);
-        }, 3000);
+        if (m === 'qris') {
+            return { label: 'QRIS', cssClass: 'badge-qris' };
+        }
+        if (m === 'transfer') {
+            return { label: 'Transfer', cssClass: 'badge-transfer' };
+        }
+        return { label: escapeHtml(metode || '-'), cssClass: 'badge-tunai' };
     }
 
     function tampilkanPesan(pesan) {
-        tableBody.replaceChildren();
-
-        const row = document.createElement('tr');
-        const cell = document.createElement('td');
-        cell.colSpan = 7;
-        cell.textContent = pesan;
-
-        row.appendChild(cell);
-        tableBody.appendChild(row);
+        tableBody.innerHTML = `
+            <tr>
+                <td colspan="7" class="text-center py-4 text-muted">${escapeHtml(pesan)}</td>
+            </tr>
+        `;
+        if (paginationInfo) paginationInfo.textContent = 'Menampilkan 0 riwayat';
+        if (paginationControls) paginationControls.innerHTML = '';
     }
 
     // ======================================================
-    // 4. MEMUAT DETAIL & DAFTAR TRANSAKSI
+    // 2. MEMUAT DATA DARI API
     // ======================================================
 
     async function muatDetailTransaksi(idTransaksi) {
-        const response = await fetch(
-            `${DETAIL_URL}?id=${encodeURIComponent(idTransaksi)}`,
-            {
-                method: 'GET',
-                headers: {
-                    'Accept': 'application/json'
-                },
-                credentials: 'same-origin'
-            }
-        );
-
+        const response = await fetch(`${DETAIL_URL}?id=${encodeURIComponent(idTransaksi)}`, {
+            method: 'GET',
+            headers: { 'Accept': 'application/json' },
+            credentials: 'same-origin'
+        });
         const result = await response.json();
-
         if (!response.ok || !result.success) {
-            throw new Error(
-                result.message || 'Detail transaksi gagal dimuat.'
-            );
+            throw new Error(result.message || 'Detail gagal dimuat');
         }
-
         return result.data;
     }
 
-    async function muatRiwayat() {
+    async function muatData() {
         tampilkanPesan('Memuat riwayat transaksi...');
 
         try {
             const response = await fetch(API_TRANSAKSI, {
                 method: 'GET',
-                headers: {
-                    'Accept': 'application/json'
-                },
+                headers: { 'Accept': 'application/json' },
                 credentials: 'same-origin'
             });
 
             const result = await response.json();
 
             if (!response.ok || !result.success) {
-                throw new Error(
-                    result.message || 'Riwayat transaksi gagal dimuat.'
-                );
+                throw new Error(result.message || 'Riwayat transaksi gagal dimuat.');
             }
 
-            const semuaTransaksi = Array.isArray(result.data) ? result.data : [];
-            const tanggalDipilih = filterTanggal?.value || '';
-            const transaksiTampil = tanggalDipilih
-                ? semuaTransaksi.filter(function (transaksi) {
-                    return String(transaksi.tanggal || '').slice(0, 10) === tanggalDipilih;
-                })
-                : semuaTransaksi;
+            semuaTransaksi = Array.isArray(result.data) ? result.data : [];
 
-            if (transaksiTampil.length === 0) {
-                tampilkanPesan(
-                    tanggalDipilih
-                        ? 'Belum ada riwayat transaksi pada tanggal ini.'
-                        : 'Belum ada riwayat transaksi.'
-                );
-                return;
-            }
-
-            tableBody.replaceChildren();
-
-            const transaksiDenganDetail = await Promise.all(
-                transaksiTampil.map(async function (transaksi) {
+            // Jika transaksi belum memiliki layanan_teks dari backend, siapkan fallback
+            const missingDetails = semuaTransaksi.filter(t => !t.layanan_teks && t.id_transaksi);
+            if (missingDetails.length > 0) {
+                // Ambil detail secara background
+                Promise.all(missingDetails.map(async t => {
                     try {
-                        const detail = await muatDetailTransaksi(
-                            transaksi.id_transaksi
-                        );
-
-                        return {
-                            ...transaksi,
-                            layanan: detail.layanan || []
-                        };
-                    } catch (error) {
-                        return {
-                            ...transaksi,
-                            layanan: null
-                        };
+                        const detail = await muatDetailTransaksi(t.id_transaksi);
+                        if (detail && Array.isArray(detail.layanan)) {
+                            t.layanan_teks = detail.layanan.map(l => {
+                                const qty = Number(l.jumlah) || 1;
+                                return qty > 1 ? `${l.nama_layanan} (${qty}x)` : l.nama_layanan;
+                            }).join(', ');
+                        }
+                    } catch (e) {
+                        t.layanan_teks = '-';
                     }
-                })
-            );
+                })).then(() => {
+                    terapkanFilter();
+                });
+            }
 
-            transaksiDenganDetail.forEach(function (transaksi) {
-                const row = document.createElement('tr');
-                row.dataset.idTransaksi = transaksi.id_transaksi;
+            terapkanFilter();
 
-                // Barber
-                const barber = document.createElement('td');
-                barber.textContent = transaksi.nama_barber || '-';
-
-                // Nama Pelanggan
-                const nama = document.createElement('td');
-                nama.textContent = transaksi.nama_pelanggan || '-';
-
-                // Tanggal
-                const tanggal = document.createElement('td');
-                tanggal.textContent = formatTanggal(transaksi.tanggal);
-
-                // Layanan
-                const layanan = document.createElement('td');
-                if (transaksi.layanan === null) {
-                    layanan.textContent = 'Gagal memuat';
-                } else if (transaksi.layanan.length === 0) {
-                    layanan.textContent = '-';
-                } else {
-                    layanan.textContent = transaksi.layanan.map(function (item) {
-                        const jumlah = Number(item.jumlah) || 1;
-                        return jumlah > 1
-                            ? `${item.nama_layanan} (${jumlah}x)`
-                            : item.nama_layanan;
-                    }).join(', ');
-                }
-
-                // Nominal
-                const nominal = document.createElement('td');
-                nominal.textContent = formatRupiah(transaksi.total_harga);
-
-                // Metode Pembayaran
-                const pembayaran = document.createElement('td');
-                pembayaran.textContent = formatMetodePembayaran(
-                    transaksi.metode_pembayaran
-                );
-
-                // Aksi (Hanya owner yang berhak menghapus)
-                const aksi = document.createElement('td');
-
-                if (userRole === 'owner') {
-                    const tombolHapus = document.createElement('button');
-                    tombolHapus.type = 'button';
-                    tombolHapus.className = 'riwayat-delete-btn';
-                    tombolHapus.textContent = '×';
-                    tombolHapus.setAttribute('aria-label', 'Hapus riwayat transaksi');
-                    tombolHapus.dataset.idTransaksi = transaksi.id_transaksi;
-                    aksi.appendChild(tombolHapus);
-                } else {
-                    aksi.textContent = '-';
-                }
-
-                row.append(
-                    barber,
-                    nama,
-                    tanggal,
-                    layanan,
-                    nominal,
-                    pembayaran,
-                    aksi
-                );
-
-                tableBody.appendChild(row);
-            });
         } catch (error) {
             console.error('Gagal memuat riwayat:', error);
-            tampilkanPesan(
-                error.message || 'Riwayat transaksi gagal dimuat.'
-            );
+            tampilkanPesan(error.message || 'Riwayat transaksi gagal dimuat.');
         }
     }
 
     // ======================================================
-    // 5. HAPUS RIWAYAT TRANSAKSI (DELETE API DENGAN KONFIRMASI)
+    // 3. FILTERING & PENCARIAN
     // ======================================================
 
-    tableBody.addEventListener('click', async function (event) {
-        const tombol = event.target.closest('.riwayat-delete-btn');
-        if (!tombol) return;
+    function terapkanFilter() {
+        const kataKunci = (inputCari?.value || '').toLowerCase().trim();
+        const metodeDipilih = (selectMetode?.value || '').toLowerCase().trim();
+        const tanggalDipilih = (inputTanggal?.value || '').trim(); // Format YYYY-MM-DD
 
-        const idTransaksi = tombol.dataset.idTransaksi;
-        if (!idTransaksi) {
-            tampilkanNotifikasi('ID transaksi tidak ditemukan.', false);
-            await tampilkanAlert({
-                judul: 'Validasi Riwayat',
-                pesan: 'ID transaksi tidak ditemukan.',
-                tipe: 'danger'
-            });
-            return;
+        // Tampilkan/sembunyikan tombol clear tanggal
+        if (btnClearDate) {
+            btnClearDate.hidden = !tanggalDipilih;
         }
 
-        const yakin = await konfirmasiTindakan({
-            judul: 'Hapus Riwayat Transaksi?',
-            pesan: 'Apakah Anda yakin ingin menghapus riwayat transaksi ini? Data yang dihapus tidak akan ditampilkan lagi.',
-            teksBatal: 'Batal',
-            teksKonfirmasi: 'Ya, Hapus',
-            tipe: 'danger'
+        transaksiTerfilter = semuaTransaksi.filter(trx => {
+            // 1. Filter Tanggal
+            if (tanggalDipilih) {
+                const tglTrx = String(trx.tanggal || '').slice(0, 10);
+                if (tglTrx !== tanggalDipilih) return false;
+            }
+
+            // 2. Filter Metode Pembayaran
+            if (metodeDipilih) {
+                const mTrx = String(trx.metode_pembayaran || '').toLowerCase().trim();
+                const mapMetode = (mTrx === 'tunai') ? 'cash' : mTrx;
+                const mapDipilih = (metodeDipilih === 'tunai') ? 'cash' : metodeDipilih;
+                if (mapMetode !== mapDipilih) return false;
+            }
+
+            // 3. Filter Pencarian Teks
+            if (kataKunci) {
+                const barber = String(trx.nama_barber || '').toLowerCase();
+                const pelanggan = String(trx.nama_pelanggan || '').toLowerCase();
+                const layanan = String(trx.layanan_teks || '').toLowerCase();
+                const nominal = String(trx.total_harga || '').toLowerCase();
+                const tglFormat = formatTanggal(trx.tanggal).toLowerCase();
+                const metodeInfo = getMetodeInfo(trx.metode_pembayaran);
+                const metode = metodeInfo.label.toLowerCase();
+
+                const cocok = barber.includes(kataKunci) ||
+                              pelanggan.includes(kataKunci) ||
+                              layanan.includes(kataKunci) ||
+                              nominal.includes(kataKunci) ||
+                              tglFormat.includes(kataKunci) ||
+                              metode.includes(kataKunci);
+
+                if (!cocok) return false;
+            }
+
+            return true;
         });
 
-        if (!yakin) {
+        currentPage = 1;
+        renderTabelDanPaginasi();
+    }
+
+    // ======================================================
+    // 4. RENDERING TABEL & PAGINASI (SESUAI FIGMA)
+    // ======================================================
+
+    function renderTabelDanPaginasi() {
+        const totalItems = transaksiTerfilter.length;
+
+        if (totalItems === 0) {
+            tampilkanPesan('Belum ada Riwayat Hari ini');
             return;
         }
 
-        tombol.disabled = true;
-
-        try {
-            // Sesuai kontrak backend: DELETE /api/transaksi/index.php?id={id_transaksi}
-            const response = await fetch(
-                `${API_TRANSAKSI}?id=${encodeURIComponent(idTransaksi)}`,
-                {
-                    method: 'DELETE',
-                    credentials: 'same-origin',
-                    headers: {
-                        'Accept': 'application/json'
-                    }
-                }
-            );
-
-            let result;
-            try {
-                result = await response.json();
-            } catch (jsonErr) {
-                throw new Error('Respons server bukan JSON yang valid.');
-            }
-
-            if (!response.ok || !result.success) {
-                throw new Error(
-                    result.message || 'Gagal menghapus riwayat transaksi.'
-                );
-            }
-
-            localStorage.setItem('kataji:data-changed', String(Date.now()));
-
-            tampilkanNotifikasi(
-                result.message || 'Riwayat transaksi berhasil dihapus.',
-                false
-            );
-
-            await muatRiwayat();
-        } catch (error) {
-            console.error('Gagal menghapus transaksi:', error);
-            tampilkanNotifikasi(
-                error.message || 'Gagal menghapus riwayat transaksi.',
-                false
-            );
-            await tampilkanAlert({
-                judul: 'Gagal Menghapus',
-                pesan: error.message || 'Gagal menghapus riwayat transaksi.',
-                tipe: 'danger'
-            });
-            tombol.disabled = false;
+        const totalPages = Math.max(1, Math.ceil(totalItems / perPage));
+        if (currentPage > totalPages) {
+            currentPage = totalPages;
         }
-    });
 
-    if (filterTanggal) {
-        filterTanggal.value = tanggalHariIni();
-        filterTanggal.addEventListener('change', muatRiwayat);
+        const startIndex = (currentPage - 1) * perPage;
+        const endIndex = Math.min(startIndex + perPage, totalItems);
+        const itemHalaman = transaksiTerfilter.slice(startIndex, endIndex);
+
+        // Render Baris Tabel
+        tableBody.innerHTML = itemHalaman.map((trx, index) => {
+            const no = startIndex + index + 1;
+            const barber = escapeHtml(trx.nama_barber || '-');
+            const nama = escapeHtml(trx.nama_pelanggan || '-');
+            const tgl = formatTanggal(trx.tanggal);
+            const layanan = escapeHtml(trx.layanan_teks || '-');
+            const nominal = formatRupiah(trx.total_harga);
+            const metodeInfo = getMetodeInfo(trx.metode_pembayaran);
+
+            return `
+                <tr>
+                    <td class="td-no">${no}</td>
+                    <td class="td-barber">${barber}</td>
+                    <td class="td-nama">${nama}</td>
+                    <td class="td-tanggal">${tgl}</td>
+                    <td class="td-layanan">${layanan}</td>
+                    <td class="td-nominal">${nominal}</td>
+                    <td class="td-metode text-center">
+                        <span class="riwayat-badge ${metodeInfo.cssClass}">
+                            ${metodeInfo.label}
+                        </span>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+
+        // Render Info Paginasi
+        if (paginationInfo) {
+            paginationInfo.textContent = `Menampilkan ${startIndex + 1}-${endIndex} dari ${totalItems} riwayat`;
+        }
+
+        // Render Tombol Paginasi
+        renderTombolPaginasi(totalPages);
     }
 
-    muatRiwayat();
+    function renderTombolPaginasi(totalPages) {
+        if (!paginationControls) return;
+
+        let html = '';
+
+        // Tombol Sebelumnya
+        const prevDisabled = currentPage <= 1 ? 'disabled' : '';
+        html += `
+            <button type="button" class="btn-page-nav btn-page-prev" ${prevDisabled} data-page="${currentPage - 1}">
+                &lt; Sebelumnya
+            </button>
+        `;
+
+        // Nomor Halaman
+        let pageNumbers = [];
+        if (totalPages <= 5) {
+            for (let i = 1; i <= totalPages; i++) pageNumbers.push(i);
+        } else {
+            if (currentPage <= 3) {
+                pageNumbers = [1, 2, 3, 4, '...', totalPages];
+            } else if (currentPage >= totalPages - 2) {
+                pageNumbers = [1, '...', totalPages - 3, totalPages - 2, totalPages - 1, totalPages];
+            } else {
+                pageNumbers = [1, '...', currentPage - 1, currentPage, currentPage + 1, '...', totalPages];
+            }
+        }
+
+        pageNumbers.forEach(p => {
+            if (p === '...') {
+                html += `<span class="page-ellipsis">&hellip;</span>`;
+            } else {
+                const isActive = p === currentPage ? 'active' : '';
+                html += `
+                    <button type="button" class="btn-page-num ${isActive}" data-page="${p}">
+                        ${p}
+                    </button>
+                `;
+            }
+        });
+
+        // Tombol Selanjutnya
+        const nextDisabled = currentPage >= totalPages ? 'disabled' : '';
+        html += `
+            <button type="button" class="btn-page-nav btn-page-next" ${nextDisabled} data-page="${currentPage + 1}">
+                Selanjutnya &gt;
+            </button>
+        `;
+
+        paginationControls.innerHTML = html;
+    }
+
+    // ======================================================
+    // 5. EVENT LISTENERS
+    // ======================================================
+
+    // Filter Pencarian
+    if (inputCari) {
+        inputCari.addEventListener('input', function () {
+            terapkanFilter();
+        });
+    }
+
+    // Filter Metode Pembayaran
+    if (selectMetode) {
+        selectMetode.addEventListener('change', function () {
+            terapkanFilter();
+        });
+    }
+
+    // Filter Tanggal
+    if (inputTanggal) {
+        inputTanggal.addEventListener('change', function () {
+            terapkanFilter();
+        });
+    }
+
+    // Clear Tanggal
+    if (btnClearDate) {
+        btnClearDate.addEventListener('click', function () {
+            if (inputTanggal) inputTanggal.value = '';
+            terapkanFilter();
+        });
+    }
+
+    // Limit Per Halaman
+    if (selectPerPage) {
+        selectPerPage.addEventListener('change', function () {
+            perPage = Number(selectPerPage.value) || 10;
+            currentPage = 1;
+            renderTabelDanPaginasi();
+        });
+    }
+
+    // Klik Tombol Paginasi
+    if (paginationControls) {
+        paginationControls.addEventListener('click', function (e) {
+            const btn = e.target.closest('[data-page]');
+            if (!btn || btn.disabled) return;
+
+            const targetPage = Number(btn.dataset.page);
+            if (targetPage && targetPage !== currentPage) {
+                currentPage = targetPage;
+                renderTabelDanPaginasi();
+            }
+        });
+    }
+
+    // Mulai memuat data
+    if (inputTanggal && !inputTanggal.value) {
+        inputTanggal.value = tanggalLokal();
+        btnClearDate.hidden = false;
+    }
+    muatData();
 });
