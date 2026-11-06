@@ -38,7 +38,7 @@ unset($_SESSION['login_notification']);
     <!-- Custom Style -->
     <link
         rel="stylesheet"
-        href="/KELOMPOK-5/assets/css/style.css?v=22"
+        href="/KELOMPOK-5/assets/css/style.css?v=23"
     >
 </head>
 
