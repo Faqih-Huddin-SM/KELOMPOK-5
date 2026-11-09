@@ -5,6 +5,8 @@
 
 document.addEventListener('DOMContentLoaded', () => {
     const API_URL = '/KELOMPOK-5/api/pengeluaran/index.php';
+    const DASHBOARD_API_URL = '/KELOMPOK-5/api/rekap/dashboard.php';
+    let periodeAktif = 'hari';
 
     // Elemen form dan input
     const form = document.getElementById('formPengeluaranHarian');
@@ -850,9 +852,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
         try {
             const tanggal = tanggalInput.value || tanggalLokal();
+            const params = new URLSearchParams({
+                tanggal,
+                periode: periodeAktif
+            });
 
             const respons = await fetch(
-                `${API_URL}?tanggal=${encodeURIComponent(tanggal)}`,
+                `${API_URL}?${params.toString()}`,
                 {
                     method: 'GET',
                     credentials: 'same-origin',
@@ -877,6 +883,50 @@ document.addEventListener('DOMContentLoaded', () => {
             tampilkanStatus(
                 error.message || 'Terjadi kesalahan saat memuat data.'
             );
+        }
+    }
+
+    async function muatRingkasan() {
+        const respons = await fetch(
+            `${DASHBOARD_API_URL}?periode=${encodeURIComponent(periodeAktif)}&tanggal=${encodeURIComponent(tanggalLokal())}&limit=1`,
+            {
+                method: 'GET',
+                credentials: 'same-origin',
+                headers: { 'Accept': 'application/json' }
+            }
+        );
+        const hasil = await respons.json();
+        if (!respons.ok || hasil.success !== true) {
+            throw new Error(hasil.message || 'Ringkasan pengeluaran gagal dimuat.');
+        }
+
+        const keuangan = hasil.data?.keuangan || {};
+        const ringkasanHpp = document.getElementById('ringkasanHppLayanan');
+        const ringkasanOperasional = document.getElementById('totalRingkasanPengeluaran');
+        const ringkasanBahan = document.getElementById('ringkasanPembelianBahan');
+        const daftarHpp = document.getElementById('daftarHppLayanan');
+
+        if (ringkasanHpp) ringkasanHpp.textContent = formatRupiah(keuangan.hpp || 0);
+        if (ringkasanOperasional) ringkasanOperasional.textContent = formatRupiah(keuangan.biaya_operasional || 0);
+        if (ringkasanBahan) ringkasanBahan.textContent = formatRupiah(keuangan.pembelian_bahan || 0);
+
+        if (daftarHpp) {
+            const layanan = Array.isArray(keuangan.hpp_layanan) ? keuangan.hpp_layanan : [];
+            daftarHpp.replaceChildren();
+            if (layanan.length === 0) {
+                const baris = document.createElement('tr');
+                baris.innerHTML = '<td colspan="4" class="pengeluaran-hpp-empty">Data HPP belum tersedia.</td>';
+                daftarHpp.appendChild(baris);
+            } else {
+                layanan.forEach((item) => {
+                    const baris = document.createElement('tr');
+                    baris.appendChild(buatSel(item.nama_layanan || '-'));
+                    baris.appendChild(buatSel(item.jumlah_terjual || 0));
+                    baris.appendChild(buatSel(formatRupiah(item.pendapatan || 0)));
+                    baris.appendChild(buatSel(formatRupiah(item.hpp || 0)));
+                    daftarHpp.appendChild(baris);
+                });
+            }
         }
     }
 
@@ -969,10 +1019,40 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     tanggalInput.value = tanggalLokal();
-    tanggalInput.addEventListener('change', muatPengeluaran);
+    tanggalInput.addEventListener('change', async () => {
+        periodeAktif = 'hari';
+        document.querySelectorAll('.pengeluaran-period-options [data-periode]').forEach((item) => {
+            const aktif = item.dataset.periode === 'hari';
+            item.classList.toggle('active', aktif);
+            item.setAttribute('aria-pressed', String(aktif));
+        });
+        await muatPengeluaran();
+        await muatRingkasan();
+    });
+
+    document.querySelectorAll('.pengeluaran-period-options [data-periode]').forEach((tombol) => {
+        tombol.addEventListener('click', async () => {
+            periodeAktif = tombol.dataset.periode || 'hari';
+            document.querySelectorAll('.pengeluaran-period-options [data-periode]').forEach((item) => {
+                const aktif = item === tombol;
+                item.classList.toggle('active', aktif);
+                item.setAttribute('aria-pressed', String(aktif));
+            });
+
+            if (periodeAktif === 'hari') {
+                tanggalInput.value = tanggalLokal();
+                await muatPengeluaran();
+            } else {
+                tanggalInput.value = '';
+                await muatPengeluaran();
+            }
+            await muatRingkasan();
+        });
+    });
 
     bersihkanError(kategoriInput, errorKategori);
     bersihkanError(nominalInput, errorNominal);
 
     muatPengeluaran();
+    muatRingkasan().catch((error) => tampilkanStatus(error.message));
 });
