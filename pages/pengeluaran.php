@@ -196,6 +196,6 @@ include __DIR__ . '/../includes/header.php';
 
 </main>
 
-<script src="/KELOMPOK-5/assets/js/pengeluaran.js?v=7"></script>
+<script src="/KELOMPOK-5/assets/js/pengeluaran.js?v=8"></script>
 
 <?php include __DIR__ . '/../includes/footer.php'; ?>
