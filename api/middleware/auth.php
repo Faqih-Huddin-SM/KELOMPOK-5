@@ -1,10 +1,31 @@
-
 <?php
+require_once __DIR__ . '/../../config/config.php';
 
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
+
+function hancurkanSesiLogin(): void
+{
+    $_SESSION = [];
+
+    if (ini_get('session.use_cookies')) {
+        $params = session_get_cookie_params();
+
+        setcookie(
+            session_name(),
+            '',
+            time() - 42000,
+            $params['path'],
+            $params['domain'],
+            $params['secure'],
+            $params['httponly']
+        );
+    }
+
+    session_destroy();
+}
 function apiWajibLogin(): void
 {
     header('Content-Type: application/json; charset=utf-8');
@@ -51,6 +72,39 @@ function apiWajibLogin(): void
         ], JSON_UNESCAPED_UNICODE);
         exit;
     }
+        // Akun yang dinonaktifkan (atau sudah tidak ada) tidak boleh melanjutkan sesi lama.
+    global $pdo;
+
+    try {
+        $stmtAkun = $pdo->prepare('SELECT role, aktif FROM users WHERE id_user = ? LIMIT 1');
+        $stmtAkun->execute([(int) $idUser]);
+        $akun = $stmtAkun->fetch(PDO::FETCH_ASSOC);
+    } catch (Throwable $e) {
+        error_log('Middleware auth: ' . $e->getMessage());
+
+        http_response_code(500);
+        echo json_encode([
+            'success' => false,
+            'message' => 'Terjadi kesalahan pada server.',
+            'error_code' => 'INTERNAL_SERVER_ERROR'
+        ], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+
+    if (!$akun || (int) $akun['aktif'] !== 1) {
+        hancurkanSesiLogin();
+
+        http_response_code(401);
+        echo json_encode([
+            'success' => false,
+            'message' => 'Akun Anda tidak aktif. Silakan hubungi owner.',
+            'error_code' => 'UNAUTHORIZED'
+        ], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+
+    // Role selalu mengikuti data terbaru di database.
+    $_SESSION['role'] = $akun['role'];
 
     // Perbarui waktu aktivitas pengguna.
     $_SESSION['last_activity'] = time();

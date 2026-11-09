@@ -114,6 +114,7 @@ Pengujian dilakukan menggunakan Postman pada server lokal.
 - **Endpoint:** `/KELOMPOK-5/api/auth/me.php`
 - **Autentikasi:** Wajib login (role `owner` atau `barber`).
 - **Tujuan:** Memeriksa apakah sesi masih valid dan mengambil identitas pengguna dari sesi.
+- **Akun nonaktif:** setiap request ke endpoint yang dilindungi juga memeriksa bahwa akun masih aktif. Akun yang dinonaktifkan owner mendapat `401 UNAUTHORIZED` ("Akun Anda tidak aktif. Silakan hubungi owner.") dan sesinya diakhiri.
 
 Berhasil — `200 OK`:
 
@@ -252,7 +253,7 @@ Respons kesalahan berisi `success: false`, `message`, dan `error_code` yang meng
 
 ### Catatan Implementasi
 
-- Tabel `layanan` memiliki kolom `hpp INT NULL` dan `icon_layanan VARCHAR(255) NULL` (lihat bagian 9, Skema Database).
+- Tabel `layanan` memiliki kolom `hpp INT NULL` dan `icon_layanan VARCHAR(255) NULL` (lihat bagian 11, Skema Database).
 - Upload ikon menerima JPG/JPEG, PNG, dan WebP dengan ukuran maksimal 2 MB.
 - Folder `uploads/layanan/` harus dapat ditulisi oleh PHP.
 - Permintaan perubahan data memerlukan autentikasi owner melalui sesi yang digunakan proyek.
@@ -842,11 +843,11 @@ Format respons rekap mingguan dan bulanan sudah dikonfirmasi cocok dengan pemaka
 | --------- | ----- | --------------------------------------------------------------------- |
 | `periode` | Tidak | `7_hari` (default), `minggu`, atau `bulan`. Nilai lain ditolak `422`. |
 
-| `periode` | Rentang aktif                       | Pembanding        | Label grafik                   |
-| --------- | ----------------------------------- | ----------------- | ------------------------------ |
-| `7_hari`  | 7 hari terakhir (termasuk hari ini) | 7 hari sebelumnya | Nama hari (`Monday`, …)        |
-| `minggu`  | Senin–Minggu minggu berjalan        | Minggu lalu       | Nama hari (`Monday`, …)        |
-| `bulan`   | Bulan berjalan                      | Bulan lalu        | 12 bulan terakhir (`Oct 2026`) |
+| `periode` | Rentang aktif                                                                        | Pembanding         | Label grafik              |
+| --------- | ------------------------------------------------------------------------------------ | ------------------ | ------------------------- |
+| `7_hari`  | 7 hari lengkap, berakhir kemarin (hari ini tidak dihitung)                           | 7 hari sebelumnya  | Nama hari (`Thursday`, …) |
+| `minggu`  | Bulan berjalan, 4 titik: Minggu 1 (tgl 1–7), 2 (8–14), 3 (15–21), 4 (22–akhir bulan) | Seluruh bulan lalu | `Minggu 1` … `Minggu 4`   |
+| `bulan`   | Tahun berjalan, 12 titik                                                             | Tahun lalu         | `Januari` … `Desember`    |
 
 **Asumsi:** awal minggu adalah hari **Senin** (minggu = Senin sampai Minggu). Sudah dikonfirmasi ke tim.
 
@@ -857,8 +858,8 @@ Contoh respons (`200 OK`):
   "success": true,
   "data": {
     "periode": "7_hari",
-    "tanggal_awal": "2026-10-22",
-    "tanggal_akhir": "2026-10-28",
+    "tanggal_awal": "2026-10-29",
+    "tanggal_akhir": "2026-11-04",
     "labels": [
       "Thursday",
       "Friday",
@@ -869,18 +870,29 @@ Contoh respons (`200 OK`):
       "Wednesday"
     ],
     "tanggal": [
-      "2026-10-22",
-      "2026-10-23",
-      "2026-10-24",
-      "2026-10-25",
-      "2026-10-26",
-      "2026-10-27",
-      "2026-10-28"
+      "2026-10-29",
+      "2026-10-30",
+      "2026-10-31",
+      "2026-11-01",
+      "2026-11-02",
+      "2026-11-03",
+      "2026-11-04"
     ],
-    "pemasukan": [120000, 95000, 0, 210000, 175000, 300000, 150000],
+    "pemasukan": [150000, 150000, 100000, 0, 200000, 150000, 300000],
+    "titik": [
+      {
+        "label": "Thursday",
+        "tanggal_awal": "2026-10-29",
+        "tanggal_akhir": "2026-10-29",
+        "total_pemasukan": 150000
+      }
+    ],
     "total_pemasukan": 1050000,
-    "total_periode_sebelumnya": 900000,
-    "persentase_perubahan": 16.67,
+    "pembanding": "7_hari_sebelumnya",
+    "tanggal_awal_sebelumnya": "2026-10-22",
+    "tanggal_akhir_sebelumnya": "2026-10-28",
+    "total_periode_sebelumnya": 750000,
+    "persentase_perubahan": 40,
     "status_tren": "naik",
     "ambang_stabil_persen": 5,
     "ada_data": true
@@ -898,16 +910,17 @@ Ketentuan:
 - Transaksi yang sudah dihapus tidak dihitung. Tanggal mengikuti zona waktu WIB.
 - Non-owner ditolak `403 FORBIDDEN`; method selain `GET` ditolak `405 METHOD_NOT_ALLOWED`.
 - Periode tanpa transaksi mengembalikan `200` dengan seluruh `pemasukan` bernilai `0`, `total_pemasukan` `0`, `ada_data: false`, dan `status_tren: stabil` (bukan error).
+- `titik` berisi satu objek per label (`label`, `tanggal_awal`, `tanggal_akhir`, `total_pemasukan`); `tanggal` memakai `YYYY-MM` untuk `bulan` dan `YYYY-MM-DD` untuk periode lainnya.
 
 #### Data contoh demo (7 hari terakhir)
 
 File `database/migrations/demo_tren.sql` mengisi transaksi 14 hari terakhir (tanggal relatif terhadap hari ini WIB) untuk demo grafik. Setelah diimpor, `GET /api/rekap/tren.php?periode=7_hari` menghasilkan:
 
-| Hari ke-  |     -6 |     -5 |  -4 |     -3 |     -2 |     -1 | hari ini |
-| --------- | -----: | -----: | --: | -----: | -----: | -----: | -------: |
-| Pemasukan | 150000 | 100000 |   0 | 200000 | 150000 | 300000 |   150000 |
+| Hari ke- | -7 | -6 | -5 | -4 | -3 | -2 | -1 |
+| Pemasukan | 150000 | 150000 | 100000 | 0 | 200000 | 150000 | 300000 |
 
-`total_pemasukan` = 1.050.000, `total_periode_sebelumnya` = 900.000, `persentase_perubahan` = 16.67, `status_tren` = `naik`. Semua baris demo memakai pelanggan bernama `Demo Tren`. Mengimpor ulang file yang sama membersihkan data demo lama lebih dulu, jadi aman diulang. Data demo ikut terhitung di rekap dan dashboard, jadi hapus bila tidak diperlukan.
+`total_pemasukan` = 1.050.000, `total_periode_sebelumnya` = 750.000, `persentase_perubahan` = 40,
+`status_tren` = `naik`. Semua baris demo memakai pelanggan bernama `Demo Tren`. Mengimpor ulang file yang sama membersihkan data demo lama lebih dulu, jadi aman diulang. Data demo ikut terhitung di rekap dan dashboard, jadi hapus bila tidak diperlukan.
 
 ### 5.2 API Dashboard Owner
 
@@ -1125,6 +1138,7 @@ Penanganan kesalahan:
 | Gagal membuat file (mis. identitas kosong) | `500` | `INTERNAL_SERVER_ERROR` |
 
 Pada kegagalan `500` tidak ada file yang terkirim dan tidak ada data yang diubah (endpoint hanya membaca).
+Pesan `500`: `Gagal membuat file laporan PDF. Data tidak diubah, silakan coba lagi.`
 
 ## 6. API Pengeluaran — WBS 4.3
 
@@ -1460,13 +1474,109 @@ Contoh respons (`200 OK`):
 
 Method selain `GET` ditolak `405 METHOD_NOT_ALLOWED` (header `Allow: GET`). Belum login → `401 UNAUTHORIZED`.
 
-## 10. Skema Database
+Akun yang dinonaktifkan tidak muncul di daftar ini. Pengelolaan akun barber (tambah, ubah profil, aktif/nonaktif, reset password) ada di bagian 10.
+
+## 10. API Kelola Akun Barber — Kartu 3.4.3
+
+**Akses:** hanya owner. Barber menerima `403 FORBIDDEN` dengan pesan `Anda tidak memiliki izin mengakses halaman ini`. Semua body memakai JSON.
+
+### 10.1 Daftar akun barber
+
+`GET /api/barber/akun.php` → `200`, berisi semua akun `role = barber` (termasuk yang nonaktif), urut nama A–Z.
+
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id_user": 2,
+      "username": "sandi",
+      "nama": "Sandi",
+      "spesialisasi": "Fade & Beard",
+      "role": "barber",
+      "aktif": 1
+    }
+  ]
+}
+```
+
+### 10.2 Tambah akun barber
+
+`POST /api/barber/akun.php`
+
+```json
+{
+  "nama": "Budi",
+  "username": "budi",
+  "password": "rahasia1",
+  "spesialisasi": "Coloring"
+}
+```
+
+| Field          | Wajib | Aturan                                        |
+| -------------- | ----- | --------------------------------------------- |
+| `nama`         | Ya    | Maksimal 100 karakter                         |
+| `username`     | Ya    | Unik, maksimal 50 karakter                    |
+| `password`     | Ya    | Minimal 6 karakter, disimpan sebagai hash     |
+| `spesialisasi` | Tidak | Maksimal 100 karakter; kosong disimpan `null` |
+
+Berhasil `201`: `data` berisi `id_user`, `username`, `nama`, `spesialisasi`, `role` (`barber`), `aktif` (`1`). Password tidak pernah ikut di respons. Username sudah dipakai atau data tidak valid → `422`.
+
+### 10.3 Ubah profil
+
+`PUT /api/barber/akun.php`
+
+```json
+{ "id_user": 7, "nama": "Budi Santoso", "spesialisasi": "" }
+```
+
+Memperbarui akun yang ada (aktif maupun nonaktif); username tidak berubah dan tidak ada akun baru. `spesialisasi` dikirim kosong → dikosongkan (`null`); tidak dikirim → tidak diubah. Berhasil `200` dengan `data` akun terbaru. `id_user` tidak valid atau nama kosong → `422`; akun barber tidak ada → `404`.
+
+### 10.4 Aktifkan / nonaktifkan
+
+`PATCH /api/barber/akun.php`
+
+```json
+{ "id_user": 7, "aktif": 0 }
+```
+
+`aktif` wajib `0` atau `1`. Berhasil `200` dengan `data: { id_user, aktif }`. Akun owner tidak dapat dinonaktifkan → `403 FORBIDDEN` ("Akun owner tidak dapat dinonaktifkan."). Akun yang dinonaktifkan:
+
+- ditolak saat login (`401`);
+- sesi yang sedang berjalan ditolak pada permintaan berikutnya (`401`, "Akun Anda tidak aktif. Silakan hubungi owner.");
+- tidak muncul di pilihan Nama Barber (`GET /api/barber/index.php`), tetapi riwayat transaksinya tetap tersimpan.
+
+### 10.5 Reset password
+
+`PUT /api/barber/reset_password.php`
+
+```json
+{ "id_user": 7, "password_baru": "rahasia2" }
+```
+
+`password_baru` minimal 6 karakter (`422`). Password lama tidak berlaku lagi. Akun yang tidak ada atau tidak aktif → `404` dengan pesan `Akun tidak ditemukan atau tidak aktif`. Berhasil `200`.
+
+### 10.6 Kode respons
+
+| HTTP  | Keterangan                                                         |
+| ----- | ------------------------------------------------------------------ |
+| `200` | Berhasil (daftar, ubah profil, status, reset password)             |
+| `201` | Akun barber ditambahkan                                            |
+| `400` | Body bukan JSON (`BAD_REQUEST`)                                    |
+| `401` | Belum login, sesi habis, atau akun tidak aktif (`UNAUTHORIZED`)    |
+| `403` | Bukan owner, atau mencoba menonaktifkan owner (`FORBIDDEN`)        |
+| `404` | Akun tidak ditemukan (`NOT_FOUND`)                                 |
+| `405` | Method tidak didukung (`METHOD_NOT_ALLOWED`, header `Allow`)       |
+| `422` | Validasi gagal (`UNPROCESSABLE_ENTITY`); penyebab ada di `message` |
+| `500` | Kesalahan server (`INTERNAL_SERVER_ERROR`)                         |
+
+## 11. Skema Database
 
 Database: `kataji_barber` (MySQL/MariaDB, `utf8mb4`). File skema lengkap beserta data awal: `database/kataji_barber.sql`. Tanggal bertipe `DATE`, waktu bertipe `TIME`, dan seluruh nilai uang berupa bilangan bulat rupiah (`INT`).
 
 | Tabel              | Kolom utama                                                                                                                                                                                            | Keterangan                                      |
 | ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------- |
-| `users`            | `id_user` PK, `username` (unik), `password_hash`, `nama`, `role` (`owner`/`barber`), `aktif`, `dibuat_pada`                                                                                            | Akun login. Hanya `aktif = 1` yang dapat login. |
+| `users`            | `id_user` PK, `username` (unik), `password_hash`, `nama`, `role` (`owner`/`barber`), `spesialisasi` (NULL, maks 100 karakter), `aktif`, `dibuat_pada`                                                  | Akun login. Hanya `aktif = 1` yang dapat login. |
 | `layanan`          | `id_layanan` PK, `nama_layanan`, `harga` (> 0), `hpp` (NULL atau ≥ 0), `icon_layanan` (NULL), `aktif`, `dibuat_pada`                                                                                   | `aktif = 0` berarti nonaktif.                   |
 | `pelanggan`        | `id_pelanggan` PK, `nama`, `no_hp` (NULL), `dibuat_pada`, `dihapus_pada` (NULL)                                                                                                                        | Soft delete lewat `dihapus_pada`.               |
 | `transaksi`        | `id_transaksi` PK, `id_pencatat` FK, `id_barber` FK, `id_pelanggan` FK (NULL), `tanggal`, `waktu`, `total_harga`, `metode_pembayaran` (`cash`/`qris`/`transfer`), `dibuat_pada`, `dihapus_pada` (NULL) | Soft delete lewat `dihapus_pada`.               |
