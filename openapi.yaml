@@ -17,6 +17,8 @@ info:
     3. Sesi **berakhir otomatis setelah 30 menit tanpa aktivitas**
        (`401` dengan `error_code: UNAUTHORIZED`). Setiap request yang berhasil
        memperpanjang sesi.
+    4. Akun yang dinonaktifkan owner tidak bisa login, dan sesinya yang sedang
+       berjalan ditolak (`401`) pada permintaan berikutnya.
 
     ## Role
     | Role | Hak akses |
@@ -77,6 +79,8 @@ tags:
     description: Pencarian dan penghapusan (soft delete) pelanggan
   - name: Barber
     description: Daftar barber aktif
+  - name: Akun Barber
+    description: Kelola akun dan profil barber (khusus owner)
   - name: Pengeluaran
     description: Pencatatan pengeluaran harian (khusus owner)
   - name: Rekap
@@ -585,7 +589,7 @@ paths:
       description: |
         Mengisi `dihapus_pada` pada transaksi (data tidak benar-benar dihapus).
         ID dikirim lewat **query string** `?id=`.
-                Setara dengan `DELETE /transaksi/hapus.php`.
+        Setara dengan `DELETE /transaksi/hapus.php`.
       operationId: deleteTransaksi
       parameters:
         - name: id
@@ -972,7 +976,7 @@ paths:
     get:
       tags: [Barber]
       summary: Daftar barber aktif
-      description: Pengguna aktif dengan role `barber` atau `owner`, urut nama A–Z. Dipakai owner untuk memilih barber saat mencatat transaksi.
+      description: Pengguna aktif dengan role `barber` atau `owner`, urut nama A–Z. Akun yang dinonaktifkan tidak muncul. Dipakai owner untuk memilih barber saat mencatat transaksi.
       operationId: listBarber
       responses:
         "200":
@@ -992,6 +996,297 @@ paths:
                         nama: { type: string, example: Budi }
         "401": { $ref: "#/components/responses/Unauthorized" }
         "405": { $ref: "#/components/responses/MethodNotAllowed" }
+        "500": { $ref: "#/components/responses/ServerError" }
+
+  # ===========================================================================
+  # AKUN BARBER (kartu 3.4.3)
+  # ===========================================================================
+  /barber/akun.php:
+    get:
+      tags: [Akun Barber]
+      summary: Daftar akun barber, termasuk nonaktif (owner)
+      description: Semua akun dengan role `barber`, urut nama A–Z. Barber menerima 403 "Anda tidak memiliki izin mengakses halaman ini".
+      operationId: listAkunBarber
+      responses:
+        "200":
+          description: Daftar akun barber
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean, example: true }
+                  data:
+                    type: array
+                    items: { $ref: "#/components/schemas/AkunBarber" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/ForbiddenAkses" }
+        "405": { $ref: "#/components/responses/MethodNotAllowed" }
+        "500": { $ref: "#/components/responses/ServerError" }
+
+    post:
+      tags: [Akun Barber]
+      summary: Tambah akun barber (owner)
+      description: |
+        Membuat akun dengan role `barber` dan status awal **aktif**. Password disimpan sebagai hash
+        dan tidak pernah ikut di respons.
+
+        Validasi: `nama` wajib (maks 100), `username` wajib dan unik (maks 50),
+        `password` wajib (minimal 6 karakter), `spesialisasi` opsional (maks 100).
+      operationId: createAkunBarber
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/AkunBarberInput" }
+            example:
+              {
+                nama: Budi,
+                username: budi,
+                password: rahasia1,
+                spesialisasi: Coloring,
+              }
+      responses:
+        "201":
+          description: Akun dibuat
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean, example: true }
+                  message:
+                    { type: string, example: Akun barber berhasil ditambahkan. }
+                  data: { $ref: "#/components/schemas/AkunBarber" }
+        "400":
+          description: Body bukan JSON yang valid (`BAD_REQUEST`)
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/ForbiddenAkses" }
+        "405": { $ref: "#/components/responses/MethodNotAllowed" }
+        "422":
+          description: |
+            Validasi gagal (`UNPROCESSABLE_ENTITY`): kolom wajib kosong, password kurang dari 6 karakter,
+            username sudah digunakan, atau nama/spesialisasi lebih dari 100 karakter.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+              example:
+                {
+                  success: false,
+                  message: Username sudah digunakan.,
+                  error_code: UNPROCESSABLE_ENTITY,
+                }
+        "500": { $ref: "#/components/responses/ServerError" }
+
+    put:
+      tags: [Akun Barber]
+      summary: Ubah profil barber (owner)
+      description: |
+        Mengubah `nama` dan `spesialisasi` akun yang sudah ada (aktif maupun nonaktif).
+        Username tidak berubah dan tidak membuat akun baru.
+
+        `spesialisasi` dikirim kosong (`""` atau `null`) berarti dikosongkan; bila field tidak dikirim, nilainya tidak berubah.
+      operationId: updateAkunBarber
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [id_user, nama]
+              properties:
+                id_user: { type: integer, minimum: 1, example: 7 }
+                nama: { type: string, maxLength: 100, example: Budi Santoso }
+                spesialisasi:
+                  type: string
+                  nullable: true
+                  maxLength: 100
+                  example: Coloring
+      responses:
+        "200":
+          description: Profil diperbarui
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean, example: true }
+                  message:
+                    {
+                      type: string,
+                      example: Profil barber berhasil diperbarui.,
+                    }
+                  data: { $ref: "#/components/schemas/AkunBarber" }
+        "400":
+          description: Body bukan JSON yang valid (`BAD_REQUEST`)
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/ForbiddenAkses" }
+        "404":
+          description: Akun barber tidak ditemukan (`NOT_FOUND`)
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "405": { $ref: "#/components/responses/MethodNotAllowed" }
+        "422":
+          description: ID, nama, atau spesialisasi tidak valid (`UNPROCESSABLE_ENTITY`)
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "500": { $ref: "#/components/responses/ServerError" }
+
+    patch:
+      tags: [Akun Barber]
+      summary: Aktifkan / nonaktifkan akun barber (owner)
+      description: |
+        `aktif` wajib `0` atau `1`. Akun yang dinonaktifkan:
+        - ditolak saat login (`401`);
+        - sesi yang sedang berjalan ditolak pada permintaan berikutnya (`401`);
+        - tidak muncul di pilihan Nama Barber (`GET /barber/index.php`), tetapi riwayat transaksinya tetap tersimpan.
+
+        Akun owner tidak dapat dinonaktifkan (`403`).
+      operationId: statusAkunBarber
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [id_user, aktif]
+              properties:
+                id_user: { type: integer, minimum: 1, example: 7 }
+                aktif:
+                  type: integer
+                  enum: [0, 1]
+                  description: "`1` aktif, `0` nonaktif"
+                  example: 0
+      responses:
+        "200":
+          description: Status diubah
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean, example: true }
+                  message:
+                    {
+                      type: string,
+                      example: Akun barber berhasil dinonaktifkan.,
+                    }
+                  data:
+                    type: object
+                    properties:
+                      id_user: { type: integer, example: 7 }
+                      aktif: { type: integer, example: 0 }
+        "400":
+          description: Body bukan JSON yang valid (`BAD_REQUEST`)
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403":
+          description: Bukan owner, atau mencoba menonaktifkan akun owner (`FORBIDDEN`)
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+              examples:
+                bukanOwner:
+                  summary: Dipanggil barber
+                  value:
+                    {
+                      success: false,
+                      message: Anda tidak memiliki izin mengakses halaman ini,
+                      error_code: FORBIDDEN,
+                    }
+                nonaktifkanOwner:
+                  summary: Menonaktifkan owner
+                  value:
+                    {
+                      success: false,
+                      message: Akun owner tidak dapat dinonaktifkan.,
+                      error_code: FORBIDDEN,
+                    }
+        "404":
+          description: Akun tidak ditemukan (`NOT_FOUND`)
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "405": { $ref: "#/components/responses/MethodNotAllowed" }
+        "422":
+          description: "`id_user` atau `aktif` tidak valid (`UNPROCESSABLE_ENTITY`)"
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "500": { $ref: "#/components/responses/ServerError" }
+
+  /barber/reset_password.php:
+    put:
+      tags: [Akun Barber]
+      summary: Reset password barber (owner)
+      description: |
+        Mengganti password akun barber yang **aktif**; password lama tidak berlaku lagi.
+        Akun yang tidak ada, bukan barber, atau tidak aktif ditolak dengan `404` dan pesan
+        `Akun tidak ditemukan atau tidak aktif`.
+      operationId: resetPasswordBarber
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [id_user, password_baru]
+              properties:
+                id_user: { type: integer, minimum: 1, example: 7 }
+                password_baru:
+                  type: string
+                  format: password
+                  minLength: 6
+                  example: rahasia2
+      responses:
+        "200":
+          description: Password direset
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean, example: true }
+                  message:
+                    { type: string, example: Password barber berhasil direset. }
+                  data:
+                    type: object
+                    properties:
+                      id_user: { type: integer, example: 7 }
+        "400":
+          description: Body bukan JSON yang valid (`BAD_REQUEST`)
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/ForbiddenAkses" }
+        "404":
+          description: Akun tidak ditemukan atau tidak aktif (`NOT_FOUND`)
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+              example:
+                {
+                  success: false,
+                  message: Akun tidak ditemukan atau tidak aktif,
+                  error_code: NOT_FOUND,
+                }
+        "405": { $ref: "#/components/responses/MethodNotAllowed" }
+        "422":
+          description: Password baru kurang dari 6 karakter atau `id_user` tidak valid (`UNPROCESSABLE_ENTITY`)
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
         "500": { $ref: "#/components/responses/ServerError" }
 
   # ===========================================================================
@@ -1097,7 +1392,7 @@ paths:
                   error_code: UNPROCESSABLE_ENTITY,
                 }
         "500": { $ref: "#/components/responses/ServerError" }
-        put:
+    put:
       tags: [Pengeluaran]
       summary: Ubah pengeluaran hari ini (owner)
       description: |
@@ -1121,9 +1416,19 @@ paths:
                 id_pengeluaran: { type: integer, minimum: 1, example: 123 }
                 kategori: { type: string, maxLength: 100, example: Operasional }
                 nominal:
-                  { type: integer, minimum: 1, maximum: 2147483647, example: 50000 }
+                  {
+                    type: integer,
+                    minimum: 1,
+                    maximum: 2147483647,
+                    example: 50000,
+                  }
                 keterangan:
-                  { type: string, nullable: true, maxLength: 255, example: Pembelian sabun }
+                  {
+                    type: string,
+                    nullable: true,
+                    maxLength: 255,
+                    example: Pembelian sabun,
+                  }
       responses:
         "200":
           description: Perubahan disimpan
@@ -1134,7 +1439,10 @@ paths:
                 properties:
                   success: { type: boolean, example: true }
                   message:
-                    { type: string, example: Perubahan pengeluaran berhasil disimpan. }
+                    {
+                      type: string,
+                      example: Perubahan pengeluaran berhasil disimpan.,
+                    }
                   data:
                     type: object
                     properties:
@@ -1143,7 +1451,12 @@ paths:
                         { type: string, format: date, example: "2026-11-03" }
                       kategori: { type: string, example: Operasional }
                       nominal: { type: integer, example: 50000 }
-                      keterangan: { type: string, nullable: true, example: Pembelian sabun }
+                      keterangan:
+                        {
+                          type: string,
+                          nullable: true,
+                          example: Pembelian sabun,
+                        }
         "400":
           description: Body bukan JSON yang valid (`BAD_REQUEST`)
           content:
@@ -1171,7 +1484,7 @@ paths:
             application/json:
               schema: { $ref: "#/components/schemas/Error" }
         "500": { $ref: "#/components/responses/ServerError" }
-        
+
     delete:
       tags: [Pengeluaran]
       summary: Hapus pengeluaran hari ini (owner)
@@ -1328,13 +1641,16 @@ paths:
 
         | `periode` | Rentang aktif | Pembanding | Label grafik |
         |---|---|---|---|
-        | `7_hari` | 7 hari terakhir (termasuk hari ini) | 7 hari sebelumnya | Nama hari (Monday, …) |
-        | `minggu` | Senin–Minggu minggu berjalan | Minggu lalu | Nama hari (Monday, …) |
-        | `bulan` | Bulan berjalan | Bulan lalu | 12 bulan terakhir (mis. `Oct 2026`) |
+        | `7_hari` | 7 hari lengkap, berakhir kemarin (hari ini tidak dihitung) | 7 hari sebelumnya | Nama hari (`Thursday`, …) |
+        | `minggu` | Bulan berjalan, 4 titik: Minggu 1 (tgl 1–7), 2 (8–14), 3 (15–21), 4 (22–akhir bulan) | Seluruh bulan lalu | `Minggu 1` … `Minggu 4` |
+        | `bulan` | Tahun berjalan, 12 titik | Tahun lalu | `Januari` … `Desember` |
+
+        `titik` berisi satu objek per label (`label`, `tanggal_awal`, `tanggal_akhir`, `total_pemasukan`).
 
         `status_tren`: `naik`, `turun`, atau `stabil` (selisih kurang dari `ambang_stabil_persen`, saat ini 5%).
-         `Periode tanpa transaksi mengembalikan `200` dengan semua nilai 0, `ada_data: false`, dan `status_tren: stabil`.
-        `persentase_perubahan` bernilai `null` bila periode sebelumnya 0 tetapi periode ini ada pemasukan.
+        Periode tanpa transaksi mengembalikan `200` dengan semua nilai 0, `ada_data: false`, dan `status_tren: stabil`.
+        `persentase_perubahan` bernilai `null` bila periode sebelumnya 0 tetapi periode ini ada pemasukan
+        (`status_tren` = `naik`).
       operationId: trenPemasukan
       parameters:
         - name: periode
@@ -1495,7 +1811,8 @@ paths:
           in: query
           required: false
           description: Bulan laporan, format `YYYY-MM`. Default bulan berjalan (WIB).
-          schema: { type: string, pattern: '^[0-9]{4}-[0-9]{2}$', example: "2026-10" }
+          schema:
+            { type: string, pattern: "^[0-9]{4}-[0-9]{2}$", example: "2026-10" }
       responses:
         "200":
           description: File PDF, atau JSON kosong bila bulan tanpa pemasukan dan pengeluaran
@@ -1520,8 +1837,10 @@ paths:
                     type: object
                     properties:
                       bulan: { type: string, example: "2025-01" }
-                      tanggal_awal: { type: string, format: date, example: "2025-01-01" }
-                      tanggal_akhir: { type: string, format: date, example: "2025-01-31" }
+                      tanggal_awal:
+                        { type: string, format: date, example: "2025-01-01" }
+                      tanggal_akhir:
+                        { type: string, format: date, example: "2025-01-31" }
                       total_pemasukan: { type: integer, example: 0 }
                       total_pengeluaran: { type: integer, example: 0 }
                       saldo_bersih: { type: integer, example: 0 }
@@ -1546,11 +1865,17 @@ paths:
               schema: { $ref: "#/components/schemas/Error" }
         "500":
           description: |
-            Gagal membuat file (`INTERNAL_SERVER_ERROR`), mis. identitas barbershop belum diisi.
+            Gagal membuat file (`INTERNAL_SERVER_ERROR`), mis. konfigurasi identitas atau library PDF bermasalah.
             Tidak ada data yang diubah dan tidak ada file yang terkirim.
           content:
             application/json:
               schema: { $ref: "#/components/schemas/Error" }
+              example:
+                {
+                  success: false,
+                  message: "Gagal membuat file laporan PDF. Data tidak diubah, silakan coba lagi.",
+                  error_code: INTERNAL_SERVER_ERROR,
+                }
 
 # =============================================================================
 components:
@@ -1577,7 +1902,8 @@ components:
   responses:
     Unauthorized:
       description: |
-        Belum login (`UNAUTHORIZED`) atau sesi habis setelah 30 menit tidak aktif (`UNAUTHORIZED`).
+        Belum login (`UNAUTHORIZED`), sesi habis setelah 30 menit tidak aktif (`UNAUTHORIZED`),
+        atau akun sudah dinonaktifkan (`UNAUTHORIZED`).
       content:
         application/json:
           schema: { $ref: "#/components/schemas/Error" }
@@ -1598,6 +1924,14 @@ components:
                   message: Sesi login telah berakhir. Silakan login kembali.,
                   error_code: UNAUTHORIZED,
                 }
+            akunNonaktif:
+              summary: Akun dinonaktifkan
+              value:
+                {
+                  success: false,
+                  message: Akun Anda tidak aktif. Silakan hubungi owner.,
+                  error_code: UNAUTHORIZED,
+                }
     ForbiddenOwner:
       description: Akses hanya untuk owner (`FORBIDDEN`)
       content:
@@ -1607,6 +1941,17 @@ components:
             {
               success: false,
               message: Akses hanya untuk owner.,
+              error_code: FORBIDDEN,
+            }
+    ForbiddenAkses:
+      description: Bukan owner (`FORBIDDEN`)
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+          example:
+            {
+              success: false,
+              message: Anda tidak memiliki izin mengakses halaman ini,
               error_code: FORBIDDEN,
             }
     MethodNotAllowed:
@@ -1711,6 +2056,39 @@ components:
       properties:
         id_pelanggan: { type: integer, example: 7 }
         nama: { type: string, example: Andi }
+
+    AkunBarber:
+      type: object
+      properties:
+        id_user: { type: integer, example: 7 }
+        username: { type: string, example: budi }
+        nama: { type: string, example: Budi }
+        spesialisasi: { type: string, nullable: true, example: Coloring }
+        role: { type: string, example: barber }
+        aktif: { type: integer, enum: [0, 1], example: 1 }
+
+    AkunBarberInput:
+      type: object
+      required: [nama, username, password]
+      properties:
+        nama: { type: string, maxLength: 100, example: Budi }
+        username:
+          type: string
+          maxLength: 50
+          description: Unik
+          example: budi
+        password:
+          type: string
+          format: password
+          minLength: 6
+          description: Minimal 6 karakter, disimpan sebagai hash
+          example: rahasia1
+        spesialisasi:
+          type: string
+          nullable: true
+          maxLength: 100
+          description: Opsional; string kosong disimpan sebagai `null`
+          example: Coloring
 
     RiwayatPelanggan:
       type: object
@@ -1988,39 +2366,58 @@ components:
       properties:
         periode:
           { type: string, enum: [7_hari, minggu, bulan], example: 7_hari }
-        tanggal_awal: { type: string, format: date, example: "2026-10-19" }
-        tanggal_akhir: { type: string, format: date, example: "2026-10-25" }
+        tanggal_awal: { type: string, format: date, example: "2026-10-29" }
+        tanggal_akhir: { type: string, format: date, example: "2026-11-04" }
         labels:
           type: array
+          description: "`7_hari`: nama hari; `minggu`: `Minggu 1`–`Minggu 4`; `bulan`: `Januari`–`Desember`"
           items: { type: string }
           example:
-            [Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday]
+            [Thursday, Friday, Saturday, Sunday, Monday, Tuesday, Wednesday]
         tanggal:
           type: array
-          description: "Tanggal ISO tiap label (`YYYY-MM-DD` untuk 7_hari/minggu, `YYYY-MM` untuk bulan), urutan sama dengan `labels`"
+          description: "Tanggal awal tiap label (`YYYY-MM-DD` untuk 7_hari/minggu, `YYYY-MM` untuk bulan), urutan sama dengan `labels`"
           items: { type: string }
           example:
             [
-              "2026-10-19",
-              "2026-10-20",
-              "2026-10-21",
-              "2026-10-22",
-              "2026-10-23",
-              "2026-10-24",
-              "2026-10-25",
+              "2026-10-29",
+              "2026-10-30",
+              "2026-10-31",
+              "2026-11-01",
+              "2026-11-02",
+              "2026-11-03",
+              "2026-11-04",
             ]
         pemasukan:
           type: array
           description: Nilai pemasukan, urutan sama dengan `labels`
           items: { type: integer }
-          example: [120000, 95000, 0, 210000, 175000, 300000, 150000]
+          example: [150000, 150000, 100000, 0, 200000, 150000, 300000]
+        titik:
+          type: array
+          description: Rincian satu objek per label
+          items:
+            type: object
+            properties:
+              label: { type: string, example: Thursday }
+              tanggal_awal: { type: string, example: "2026-10-29" }
+              tanggal_akhir: { type: string, example: "2026-10-29" }
+              total_pemasukan: { type: integer, example: 150000 }
         total_pemasukan: { type: integer, example: 1050000 }
-        total_periode_sebelumnya: { type: integer, example: 900000 }
+        pembanding:
+          type: string
+          enum: [7_hari_sebelumnya, bulan_lalu, tahun_lalu]
+          example: 7_hari_sebelumnya
+        tanggal_awal_sebelumnya:
+          { type: string, format: date, example: "2026-10-22" }
+        tanggal_akhir_sebelumnya:
+          { type: string, format: date, example: "2026-10-28" }
+        total_periode_sebelumnya: { type: integer, example: 750000 }
         persentase_perubahan:
           type: number
           nullable: true
           description: "`null` bila periode sebelumnya 0 sementara periode ini > 0"
-          example: 16.67
+          example: 40
         status_tren:
           { type: string, enum: [naik, turun, stabil], example: naik }
         ambang_stabil_persen:
@@ -2028,8 +2425,6 @@ components:
           description: "Ambang persen status `stabil` yang dipakai server (saat ini 5, menunggu konfirmasi Erik). Diubah lewat konstanta `TREN_AMBANG_STABIL_PERSEN` di `api/rekap/tren.php`"
           example: 5
         ada_data:
-          {
-            type: boolean,
-            description: "`false` bila seluruh nilai pemasukan 0",
-            example: true,
-          }
+          type: boolean
+          description: "`false` bila seluruh nilai pemasukan 0"
+          example: true
