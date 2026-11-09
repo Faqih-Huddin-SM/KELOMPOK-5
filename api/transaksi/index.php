@@ -1,4 +1,3 @@
-
 <?php
 
 require_once __DIR__ . '/../../config/config.php';
@@ -130,6 +129,165 @@ try {
             }
         }
 
+        // ------------------------------------------------------
+        // Filter tambahan untuk halaman Riwayat (semua opsional)
+        // ------------------------------------------------------
+        $q = $_GET['q'] ?? '';
+        $metodeFilter = $_GET['metode_pembayaran'] ?? '';
+
+        if (!is_string($q) || !is_string($metodeFilter)) {
+            kirimJson(400, [
+                'success' => false,
+                'message' => 'Parameter pencarian atau metode pembayaran tidak valid.',
+                'error_code' => 'BAD_REQUEST'
+            ]);
+        }
+
+        $q = trim($q);
+        if (mb_strlen($q) > 100) {
+            kirimJson(400, [
+                'success' => false,
+                'message' => 'Kata kunci pencarian maksimal 100 karakter.',
+                'error_code' => 'BAD_REQUEST'
+            ]);
+        }
+
+        if (
+            $metodeFilter !== '' &&
+            !in_array($metodeFilter, ['cash', 'qris', 'transfer'], true)
+        ) {
+            kirimJson(400, [
+                'success' => false,
+                'message' => 'Metode pembayaran harus cash, qris, atau transfer.',
+                'error_code' => 'BAD_REQUEST'
+            ]);
+        }
+
+        $idBarberFilter = null;
+        $idLayananFilter = null;
+        foreach (['id_barber', 'id_layanan'] as $namaFilter) {
+            $nilaiFilter = $_GET[$namaFilter] ?? '';
+            if ($nilaiFilter === '') {
+                continue;
+            }
+            $angka = is_string($nilaiFilter)
+                ? filter_var(
+                    $nilaiFilter,
+                    FILTER_VALIDATE_INT,
+                    ['options' => ['min_range' => 1]]
+                )
+                : false;
+            if ($angka === false) {
+                kirimJson(400, [
+                    'success' => false,
+                    'message' => "Parameter {$namaFilter} harus berupa angka positif.",
+                    'error_code' => 'BAD_REQUEST'
+                ]);
+            }
+            if ($namaFilter === 'id_barber') {
+                $idBarberFilter = $angka;
+            } else {
+                $idLayananFilter = $angka;
+            }
+        }
+
+        // Paginasi hanya aktif bila page atau per_page dikirim.
+        // Tanpa keduanya, semua data dikembalikan (perilaku lama).
+        $pakaiPaginasi = isset($_GET['page']) || isset($_GET['per_page']);
+        $halaman = 1;
+        $perHalaman = 10;
+
+        if ($pakaiPaginasi) {
+            $halamanRaw = $_GET['page'] ?? '1';
+            $perHalamanRaw = $_GET['per_page'] ?? '10';
+
+            $halaman = is_string($halamanRaw)
+                ? filter_var(
+                    $halamanRaw,
+                    FILTER_VALIDATE_INT,
+                    ['options' => ['min_range' => 1]]
+                )
+                : false;
+            $perHalaman = is_string($perHalamanRaw)
+                ? filter_var(
+                    $perHalamanRaw,
+                    FILTER_VALIDATE_INT,
+                    ['options' => ['min_range' => 1, 'max_range' => 100]]
+                )
+                : false;
+
+            if ($halaman === false || $perHalaman === false) {
+                kirimJson(400, [
+                    'success' => false,
+                    'message' => 'page harus angka minimal 1 dan per_page antara 1 sampai 100.',
+                    'error_code' => 'BAD_REQUEST'
+                ]);
+            }
+        }
+
+        // ------------------------------------------------------
+        // Susun kondisi WHERE (dipakai untuk data dan total)
+        // ------------------------------------------------------
+        $dariSql = "
+            FROM transaksi t
+            JOIN users u
+                ON u.id_user = t.id_barber
+            LEFT JOIN pelanggan p
+                ON p.id_pelanggan = t.id_pelanggan
+        ";
+        $where = " WHERE t.dihapus_pada IS NULL";
+        $stmtParams = [];
+
+        // Barber hanya melihat transaksi yang dicatat oleh akunnya.
+        if ($role === 'barber') {
+            $where .= " AND t.id_pencatat = :id_user";
+            $stmtParams[':id_user'] = $idUser;
+        }
+
+        // Filter tanggal berlaku untuk barber dan owner.
+        if ($tanggal !== null && $tanggal !== '') {
+            $where .= " AND t.tanggal = :tanggal";
+            $stmtParams[':tanggal'] = $tanggal;
+        }
+
+        if ($idBarberFilter !== null) {
+            $where .= " AND t.id_barber = :id_barber_filter";
+            $stmtParams[':id_barber_filter'] = $idBarberFilter;
+        }
+
+        if ($metodeFilter !== '') {
+            $where .= " AND t.metode_pembayaran = :metode_filter";
+            $stmtParams[':metode_filter'] = $metodeFilter;
+        }
+
+        if ($idLayananFilter !== null) {
+            $where .= " AND EXISTS (
+                SELECT 1 FROM detail_transaksi df
+                WHERE df.id_transaksi = t.id_transaksi
+                  AND df.id_layanan = :id_layanan_filter
+            )";
+            $stmtParams[':id_layanan_filter'] = $idLayananFilter;
+        }
+
+        // Pencarian: nama pelanggan (mengandung) atau ID transaksi (persis).
+        if ($q !== '') {
+            $where .= " AND (p.nama LIKE :q_nama OR t.id_transaksi = :q_id)";
+            $stmtParams[':q_nama'] = '%' . addcslashes($q, '\\%_') . '%';
+            $stmtParams[':q_id'] = ctype_digit(ltrim($q, '#'))
+                ? (int) ltrim($q, '#')
+                : 0;
+        }
+
+        // ------------------------------------------------------
+        // Total data (untuk "Menampilkan 1-10 dari N riwayat")
+        // ------------------------------------------------------
+        $stmtTotal = $pdo->prepare("SELECT COUNT(*) " . $dariSql . $where);
+        $stmtTotal->execute($stmtParams);
+        $total = (int) $stmtTotal->fetchColumn();
+
+        // ------------------------------------------------------
+        // Data
+        // ------------------------------------------------------
         $sql = "
             SELECT
                 t.id_transaksi,
@@ -142,36 +300,28 @@ try {
                 t.waktu,
                 t.total_harga,
                 t.metode_pembayaran,
-                t.dibuat_pada
-            FROM transaksi t
-            JOIN users u
-                ON u.id_user = t.id_barber
-            LEFT JOIN pelanggan p
-                ON p.id_pelanggan = t.id_pelanggan
-            WHERE t.dihapus_pada IS NULL
-        ";
-
-        $stmtParams = [];
-
-        // Barber hanya melihat transaksi yang dicatat oleh akunnya.
-        if ($role === 'barber') {
-            $sql .= " AND t.id_pencatat = :id_user";
-            $stmtParams[':id_user'] = $idUser;
-        }
-
-        // Filter tanggal berlaku untuk barber dan owner.
-        if ($tanggal !== null && $tanggal !== '') {
-            $sql .= " AND t.tanggal = :tanggal";
-            $stmtParams[':tanggal'] = $tanggal;
-        }
-
-        // Transaksi terbaru ditampilkan lebih dahulu.
-        $sql .= "
+                t.dibuat_pada,
+                (
+                    SELECT GROUP_CONCAT(
+                        CASE WHEN d.jumlah > 1
+                            THEN CONCAT(d.nama_layanan_saat_transaksi, ' (', d.jumlah, 'x)')
+                            ELSE d.nama_layanan_saat_transaksi
+                        END
+                        ORDER BY d.id_detail SEPARATOR ', '
+                    )
+                    FROM detail_transaksi d
+                    WHERE d.id_transaksi = t.id_transaksi
+                ) AS layanan_teks
+        " . $dariSql . $where . "
             ORDER BY
                 t.tanggal DESC,
                 t.waktu DESC,
                 t.id_transaksi DESC
         ";
+
+        if ($pakaiPaginasi) {
+            $sql .= " LIMIT :batas OFFSET :mulai";
+        }
 
         $stmt = $pdo->prepare($sql);
 
@@ -179,9 +329,16 @@ try {
             $stmt->bindValue(
                 $namaParam,
                 $nilaiParam,
-                $namaParam === ':id_user'
-                    ? PDO::PARAM_INT
-                    : PDO::PARAM_STR
+                is_int($nilaiParam) ? PDO::PARAM_INT : PDO::PARAM_STR
+            );
+        }
+
+        if ($pakaiPaginasi) {
+            $stmt->bindValue(':batas', $perHalaman, PDO::PARAM_INT);
+            $stmt->bindValue(
+                ':mulai',
+                ($halaman - 1) * $perHalaman,
+                PDO::PARAM_INT
             );
         }
 
@@ -189,7 +346,15 @@ try {
 
         kirimJson(200, [
             'success' => true,
-            'data' => $stmt->fetchAll(PDO::FETCH_ASSOC)
+            'data' => $stmt->fetchAll(PDO::FETCH_ASSOC),
+            'meta' => [
+                'page' => $halaman,
+                'per_page' => $pakaiPaginasi ? $perHalaman : $total,
+                'total' => $total,
+                'total_pages' => $pakaiPaginasi
+                    ? max(1, (int) ceil($total / $perHalaman))
+                    : 1
+            ]
         ]);
     }
 
