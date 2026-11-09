@@ -309,6 +309,27 @@ Contoh nilai di atas bukan data tetap. Transaksi lama yang belum memiliki pelang
 
 Query parameter `tanggal` (opsional, `YYYY-MM-DD`): owner tanpa `tanggal` melihat semua tanggal, barber tanpa `tanggal` otomatis melihat hari ini (WIB). Transaksi yang sudah dihapus (soft delete) tidak ditampilkan. Format `tanggal` yang tidak valid ditolak `400 BAD_REQUEST`. Daftar diurutkan dari tanggal, waktu, dan ID terbaru.
 
+Query parameter tambahan untuk halaman Riwayat (semua opsional, bisa digabung):
+
+| Parameter           | Keterangan                                                                                                           |
+| ------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| `q`                 | Pencarian: nama pelanggan mengandung kata itu, atau `id_transaksi` persis sama (`12` atau `#12`). Maks 100 karakter. |
+| `id_barber`         | Hanya transaksi barber tersebut.                                                                                     |
+| `id_layanan`        | Hanya transaksi yang memuat layanan tersebut.                                                                        |
+| `metode_pembayaran` | `cash`, `qris`, atau `transfer`.                                                                                     |
+| `page`              | Nomor halaman, minimal 1 (default 1).                                                                                |
+| `per_page`          | Jumlah baris per halaman, 1–100 (default 10).                                                                        |
+
+Paginasi aktif bila `page` atau `per_page` dikirim. Tanpa keduanya semua data dikembalikan. Parameter yang tidak valid ditolak `400 BAD_REQUEST`. Barber tetap hanya melihat transaksi yang dicatatnya sendiri.
+
+Setiap baris data memuat `layanan_teks`: nama layanan dipisah koma, layanan berjumlah lebih dari satu ditulis `Nama (3x)`, contoh `Potong rambut reguler, Creambath (3x)`. Respons juga memuat `meta`:
+
+```json
+"meta": { "page": 1, "per_page": 10, "total": 23, "total_pages": 3 }
+```
+
+Halaman yang melebihi `total_pages` mengembalikan `data: []` dengan status 200.
+
 ### 4.2 POST — Menambahkan Transaksi
 
 **Endpoint:** `POST /api/transaksi/`

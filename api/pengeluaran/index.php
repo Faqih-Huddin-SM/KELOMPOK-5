@@ -1,8 +1,8 @@
-
 <?php
 
 require_once __DIR__ . '/../../config/config.php';
 require_once __DIR__ . '/../middleware/auth.php';
+require_once __DIR__ . '/../lib/rekap_data.php';
 
 header('Content-Type: application/json; charset=utf-8');
 
@@ -39,8 +39,20 @@ function tanggalHariIniWIBPengeluaran(): string
 
 try {
     // GET: daftar dan total pengeluaran per tanggal.
+        // GET: daftar, total, dan rincian pengeluaran per periode.
     if ($method === 'GET') {
+        $periode = $_GET['periode'] ?? 'hari';
         $tanggal = $_GET['tanggal'] ?? tanggalHariIniWIBPengeluaran();
+
+        if (!is_string($periode) ||
+            !in_array($periode, ['hari', 'minggu', 'bulan', 'semua'], true)) {
+            kirimJsonPengeluaran(422, [
+                'success' => false,
+                'message' => 'Periode harus hari, minggu, bulan, atau semua.',
+                'error_code' => 'UNPROCESSABLE_ENTITY'
+            ]);
+        }
+
         if (!tanggalValidPengeluaran($tanggal)) {
             kirimJsonPengeluaran(422, [
                 'success' => false,
@@ -49,37 +61,77 @@ try {
             ]);
         }
 
-                $stmt = $pdo->prepare(
+        // Batas periode memakai WIB. Minggu dimulai Senin.
+        $tanggalObj = new DateTimeImmutable(
+            $tanggal,
+            new DateTimeZone('Asia/Jakarta')
+        );
+
+        if ($periode === 'hari') {
+            $tanggalAwal = $tanggal;
+            $tanggalAkhir = $tanggal;
+        } elseif ($periode === 'minggu') {
+            $awal = $tanggalObj->modify('monday this week');
+            $tanggalAwal = $awal->format('Y-m-d');
+            $tanggalAkhir = $awal->modify('+6 days')->format('Y-m-d');
+        } elseif ($periode === 'bulan') {
+            $tanggalAwal = $tanggalObj->modify('first day of this month')
+                ->format('Y-m-d');
+            $tanggalAkhir = $tanggalObj->modify('last day of this month')
+                ->format('Y-m-d');
+        } else {
+            // "semua": rentang selebar mungkin untuk kolom DATE.
+            $tanggalAwal = '1000-01-01';
+            $tanggalAkhir = '9999-12-31';
+        }
+
+        $param = [':awal' => $tanggalAwal, ':akhir' => $tanggalAkhir];
+
+        $stmt = $pdo->prepare(
             'SELECT p.id_pengeluaran, p.kategori, p.nominal, p.tanggal,
                     p.keterangan, p.dibuat_pada, p.id_user,
                     u.nama AS nama_user
              FROM pengeluaran p
              LEFT JOIN users u ON u.id_user = p.id_user
-             WHERE p.tanggal = :tanggal
-             ORDER BY p.id_pengeluaran DESC'
+             WHERE p.tanggal BETWEEN :awal AND :akhir
+             ORDER BY p.tanggal DESC, p.id_pengeluaran DESC'
         );
-
-        $stmt->execute(['tanggal' => $tanggal]);
+        $stmt->execute($param);
         $daftar = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-        $stmtTotal = $pdo->prepare(
-            'SELECT COALESCE(SUM(nominal), 0)
-             FROM pengeluaran
-             WHERE tanggal = :tanggal'
-        );
+        // Total + rincian per kategori (fungsi bersama dengan laporan PDF).
+        $rekap = ambilRekapPengeluaran($pdo, $tanggalAwal, $tanggalAkhir);
 
-        $stmtTotal->execute(['tanggal' => $tanggal]);
+        // HPP layanan dari snapshot saat transaksi (sama dengan dashboard).
+        $stmtHpp = $pdo->prepare(
+            'SELECT
+                COALESCE(SUM(COALESCE(dt.hpp_saat_transaksi, 0) * dt.jumlah), 0)
+                    AS hpp,
+                COALESCE(SUM(dt.hpp_saat_transaksi IS NULL), 0) AS item_tanpa_hpp
+             FROM detail_transaksi dt
+             INNER JOIN transaksi t ON t.id_transaksi = dt.id_transaksi
+             WHERE t.dihapus_pada IS NULL
+               AND t.tanggal BETWEEN :awal AND :akhir'
+        );
+        $stmtHpp->execute($param);
+        $hppRow = $stmtHpp->fetch(PDO::FETCH_ASSOC);
 
         kirimJsonPengeluaran(200, [
             'success' => true,
             'data' => [
+                'periode' => $periode,
                 'tanggal' => $tanggal,
+                'tanggal_awal' => $periode === 'semua' ? null : $tanggalAwal,
+                'tanggal_akhir' => $periode === 'semua' ? null : $tanggalAkhir,
                 'pengeluaran' => $daftar,
-                'total_pengeluaran' => (int) $stmtTotal->fetchColumn()
+                'total_pengeluaran' => $rekap['total_pengeluaran'],
+                'jumlah_catatan' => $rekap['jumlah_catatan'],
+                'rincian_per_kategori' => $rekap['rincian_per_kategori'],
+                'hpp_layanan' => (int) $hppRow['hpp'],
+                'hpp_lengkap' => (int) $hppRow['item_tanpa_hpp'] === 0
             ]
         ]);
     }
-
     // POST: simpan pengeluaran baru.
     if ($method === 'POST') {
         $input = json_decode(file_get_contents('php://input'), true);
