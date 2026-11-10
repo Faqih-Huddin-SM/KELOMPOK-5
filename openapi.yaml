@@ -795,7 +795,7 @@ paths:
         Bila `q` diisi (minimal 2 karakter): pencarian nama (`LIKE %q%`), maksimal **100** hasil, urut nama A–Z.
         Bila `q` diisi tetapi kurang dari 2 karakter, mengembalikan array kosong (bukan error).
         Bila `q` kosong/tidak dikirim, mengembalikan daftar pelanggan (maksimal 100) untuk tabel.
-        Data hanya berisi `id_pelanggan` dan `nama`.
+        Data berisi `id_pelanggan`, `nama`, dan `jumlah_kunjungan` (jumlah transaksi yang belum dihapus; `0` bila belum ada).
         Untuk saran nama (autocomplete) di form transaksi: bila kasir memilih salah satu saran,
         kirim `id_pelanggan`-nya pada `POST /transaksi/index.php` agar transaksi tertaut ke
         pelanggan yang sama (bukan data ganda).
@@ -818,12 +818,26 @@ paths:
                   data:
                     type: array
                     maxItems: 100
-                    items: { $ref: "#/components/schemas/Pelanggan" }
+                    items:
+                      allOf:
+                        - $ref: "#/components/schemas/Pelanggan"
+                        - type: object
+                          properties:
+                            jumlah_kunjungan:
+                              {
+                                type: integer,
+                                description: Jumlah transaksi yang belum dihapus (0 bila belum ada),
+                                example: 2,
+                              }
               examples:
                 adaHasil:
                   summary: q=And
                   value:
-                    { success: true, data: [{ id_pelanggan: 7, nama: Andi }] }
+                    {
+                      success: true,
+                      data:
+                        [{ id_pelanggan: 7, nama: Andi, jumlah_kunjungan: 2 }],
+                    }
                 kosong:
                   summary: q kurang dari 2 karakter atau tidak ada yang cocok
                   value: { success: true, data: [] }

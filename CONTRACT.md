@@ -503,7 +503,9 @@ Aturan:
 - Jika `q` diisi tetapi kurang dari 2 karakter (mis. `a`), respons tetap `200 OK` dengan `data` berupa array kosong (bukan error).
 - Jika `q` tidak dikirim atau kosong: mengembalikan **daftar pelanggan** (nama A–Z, maksimal 100) untuk ditampilkan di tabel.
 - Pelanggan yang sudah dihapus (soft delete) tidak ikut ditampilkan.
-- Setiap data hanya berisi `id_pelanggan` dan `nama` (tidak ada `no_hp`).
+- Setiap data berisi `id_pelanggan`, `nama`, dan `jumlah_kunjungan` (tidak ada `no_hp`).
+- `jumlah_kunjungan`: jumlah transaksi pelanggan tersebut yang belum dihapus (satu transaksi = satu kunjungan, walaupun berisi beberapa layanan). Pelanggan tanpa transaksi bernilai `0`. Dihitung di server dalam satu query, jadi FE tidak perlu memanggil `/api/riwayat/pelanggan.php` untuk tiap pelanggan.
+- Pelanggan dengan nama yang sama tetap tampil sebagai baris terpisah (berbeda `id_pelanggan`), dan jumlah kunjungannya dihitung sendiri-sendiri.
 - Method yang diterima hanya `GET` dan `DELETE`; method lain ditolak `405 Method Not Allowed` (header `Allow: GET, DELETE`).
 
 Contoh request:
