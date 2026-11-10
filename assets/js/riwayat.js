@@ -1,7 +1,8 @@
 /**
  * Kataji Barber - Riwayat Transaksi (Frontend)
  * Terhubung langsung dengan Backend API (/KELOMPOK-5/api/transaksi/index.php):
- * - Server-side Filter: q, id_barber, id_layanan, metode_pembayaran, tanggal (rentang / tunggal)
+ * - Filter API: q, id_barber, id_layanan, metode_pembayaran, tanggal tunggal
+ * - Filter rentang tanggal: gabungkan hasil API per tanggal di halaman ini
  * - Server-side Paginasi: page, per_page (default 10)
  * - Rentang Tanggal Default: Minggu ini (contoh: 09/11/2026 – 15/11/2026)
  * - Tombol Silang (✕): Menghapus filter tanggal sehingga kembali ke placeholder (dd-mm-yyyy) dan menampilkan semua riwayat
@@ -162,19 +163,9 @@ document.addEventListener('DOMContentLoaded', function () {
             btnClearDate.hidden = !(tglMulai || tglSelesai);
         }
 
-        // Susun parameter URL untuk BE
+        // API menerima satu tanggal per request; untuk rentang, ambil per hari.
         const params = new URLSearchParams();
-        params.set('page', currentPage);
-        params.set('per_page', perPage);
-
-        if (tglMulai && tglSelesai) {
-            params.set('tanggal_mulai', tglMulai);
-            params.set('tanggal_selesai', tglSelesai);
-        } else if (tglMulai) {
-            params.set('tanggal', tglMulai);
-        } else if (tglSelesai) {
-            params.set('tanggal', tglSelesai);
-        }
+        params.set('per_page', '100');
 
         if (kataKunci) {
             params.set('q', kataKunci);
@@ -189,25 +180,93 @@ document.addEventListener('DOMContentLoaded', function () {
             params.set('metode_pembayaran', metode);
         }
 
-        const url = `${API_TRANSAKSI}?${params.toString()}`;
-
-        try {
-            const response = await fetch(url, {
+        async function ambilHalaman(paramsTanggal, halaman) {
+            const query = new URLSearchParams(paramsTanggal);
+            query.set('page', halaman);
+            const response = await fetch(`${API_TRANSAKSI}?${query.toString()}`, {
                 method: 'GET',
                 headers: { 'Accept': 'application/json' },
                 credentials: 'same-origin'
             });
-
             const result = await response.json();
 
             if (!response.ok || !result.success) {
                 throw new Error(result.message || 'Riwayat transaksi gagal dimuat.');
             }
 
-            const items = Array.isArray(result.data) ? result.data : [];
-            const meta = result.meta || {};
-            const totalItems = typeof meta.total === 'number' ? meta.total : items.length;
-            const totalPages = typeof meta.total_pages === 'number' ? meta.total_pages : 1;
+            return result;
+        }
+
+        try {
+            const memakaiRentang =
+                tglMulai && tglSelesai && tglMulai !== tglSelesai;
+            let items = [];
+            let totalItems;
+            let totalPages;
+
+            if (memakaiRentang) {
+                if (tglMulai > tglSelesai) {
+                    throw new Error('Tanggal mulai tidak boleh setelah tanggal selesai.');
+                }
+
+                const tanggalDalamRentang = [];
+                const awal = new Date(`${tglMulai}T00:00:00Z`);
+                const akhir = new Date(`${tglSelesai}T00:00:00Z`);
+                for (
+                    let hari = awal;
+                    hari <= akhir;
+                    hari = new Date(hari.getTime() + 86400000)
+                ) {
+                    tanggalDalamRentang.push(hari.toISOString().slice(0, 10));
+                }
+
+                const hasilPerTanggal = [];
+                for (let i = 0; i < tanggalDalamRentang.length; i += 7) {
+                    const kelompok = tanggalDalamRentang.slice(i, i + 7);
+                    const hasilKelompok = await Promise.all(kelompok.map(async (tanggal) => {
+                        const paramsTanggal = new URLSearchParams(params);
+                        paramsTanggal.set('tanggal', tanggal);
+
+                        const pertama = await ambilHalaman(paramsTanggal, 1);
+                        const hasilTanggal = Array.isArray(pertama.data)
+                            ? [...pertama.data]
+                            : [];
+                        const jumlahHalaman = Number(pertama.meta?.total_pages) || 1;
+
+                        for (let halaman = 2; halaman <= jumlahHalaman; halaman += 1) {
+                            const lanjutan = await ambilHalaman(paramsTanggal, halaman);
+                            if (Array.isArray(lanjutan.data)) {
+                                hasilTanggal.push(...lanjutan.data);
+                            }
+                        }
+
+                        return hasilTanggal;
+                    }));
+                    hasilPerTanggal.push(...hasilKelompok);
+                }
+
+                items = hasilPerTanggal.flat();
+                items.sort((a, b) => {
+                    const urutanA = `${a.tanggal || ''} ${a.waktu || ''}`;
+                    const urutanB = `${b.tanggal || ''} ${b.waktu || ''}`;
+                    return urutanB.localeCompare(urutanA) ||
+                        Number(b.id_transaksi || 0) - Number(a.id_transaksi || 0);
+                });
+                totalItems = items.length;
+                totalPages = Math.max(1, Math.ceil(totalItems / perPage));
+                const awalHalaman = (currentPage - 1) * perPage;
+                items = items.slice(awalHalaman, awalHalaman + perPage);
+            } else {
+                if (tglMulai || tglSelesai) {
+                    params.set('tanggal', tglMulai || tglSelesai);
+                }
+                params.set('per_page', perPage);
+                const result = await ambilHalaman(params, currentPage);
+                items = Array.isArray(result.data) ? result.data : [];
+                const meta = result.meta || {};
+                totalItems = typeof meta.total === 'number' ? meta.total : items.length;
+                totalPages = typeof meta.total_pages === 'number' ? meta.total_pages : 1;
+            }
 
             renderTabel(items, totalItems);
             renderPaginasi(totalItems, totalPages, items.length);
