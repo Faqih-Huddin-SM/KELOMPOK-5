@@ -311,14 +311,14 @@ Query parameter `tanggal` (opsional, `YYYY-MM-DD`): owner tanpa `tanggal` meliha
 
 Query parameter tambahan untuk halaman Riwayat (semua opsional, bisa digabung):
 
-| Parameter           | Keterangan                                                                                                           |
-| ------------------- | -------------------------------------------------------------------------------------------------------------------- |
-| `q`                 | Pencarian: nama pelanggan mengandung kata itu, atau `id_transaksi` persis sama (`12` atau `#12`). Maks 100 karakter. |
-| `id_barber`         | Hanya transaksi barber tersebut.                                                                                     |
-| `id_layanan`        | Hanya transaksi yang memuat layanan tersebut.                                                                        |
-| `metode_pembayaran` | `cash`, `qris`, atau `transfer`.                                                                                     |
-| `page`              | Nomor halaman, minimal 1 (default 1).                                                                                |
-| `per_page`          | Jumlah baris per halaman, 1–100 (default 10).                                                                        |
+| Parameter | Keterangan |
+| --- | --- |
+| `q` | Pencarian: nama pelanggan mengandung kata itu, atau `id_transaksi` persis sama (`12` atau `#12`). Maks 100 karakter. |
+| `id_barber` | Hanya transaksi barber tersebut. |
+| `id_layanan` | Hanya transaksi yang memuat layanan tersebut. |
+| `metode_pembayaran` | `cash`, `qris`, atau `transfer`. |
+| `page` | Nomor halaman, minimal 1 (default 1). |
+| `per_page` | Jumlah baris per halaman, 1–100 (default 10). |
 
 Paginasi aktif bila `page` atau `per_page` dikirim. Tanpa keduanya semua data dikembalikan. Parameter yang tidak valid ditolak `400 BAD_REQUEST`. Barber tetap hanya melihat transaksi yang dicatatnya sendiri.
 
@@ -1183,6 +1183,30 @@ Respons berhasil (`200 OK`) memuat objek `data` dengan isi:
 - `pengeluaran`: daftar pengeluaran pada tanggal tersebut.
 - `total_pengeluaran`: total nominal pengeluaran pada tanggal tersebut.
 - Setiap item `pengeluaran` berisi: `id_pengeluaran`, `kategori`, `nominal`, `tanggal`, `keterangan` (boleh `null`), `dibuat_pada`, `id_user`, dan `nama_user` (nama pencatat dari tabel `users`).
+
+Parameter `periode` (opsional): `hari` (default), `minggu` (Senin–Minggu), `bulan`, atau `semua`, dihitung terhadap `tanggal` dalam WIB. Selain yang di atas, `data` juga memuat `periode`, `tanggal_awal`, `tanggal_akhir`, `jumlah_catatan`, `rincian_per_kategori`, `hpp_layanan`, dan `hpp_lengkap`.
+
+**Rincian HPP per layanan (`rincian_hpp_layanan`):** daftar layanan terjual pada rentang `periode` dan `tanggal` yang sama dengan respons pengeluaran. Field `hpp_layanan` tetap ada dan tidak berubah (total HPP). Transaksi yang sudah dihapus tidak dihitung.
+
+| Field | Keterangan |
+| --- | --- |
+| `id_layanan` | ID layanan (`null` bila layanan sudah dihapus dari master). |
+| `nama_layanan` | Nama layanan. |
+| `jumlah_terjual` | Jumlah unit terjual (`jumlah` dijumlahkan). |
+| `pendapatan` | Jumlah `harga_saat_transaksi × jumlah`. |
+| `hpp` | Jumlah `hpp_saat_transaksi × jumlah` (HPP yang belum diisi dihitung 0; lihat `hpp_lengkap`). |
+
+Diurutkan dari `jumlah_terjual` terbanyak. Jumlah seluruh `hpp` sama dengan `hpp_layanan`. Periode tanpa penjualan menghasilkan `[]`.
+
+Contoh:
+
+```json
+"hpp_layanan": 36000,
+"hpp_lengkap": true,
+"rincian_hpp_layanan": [
+  { "id_layanan": 1, "nama_layanan": "Potong rambut reguler", "jumlah_terjual": 12, "pendapatan": 600000, "hpp": 36000 }
+]
+```
 
 ### 6.2 POST — Menambahkan Pengeluaran
 

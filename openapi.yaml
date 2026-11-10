@@ -1355,6 +1355,18 @@ paths:
       operationId: listPengeluaran
       parameters:
         - $ref: "#/components/parameters/Tanggal"
+        - {
+            name: periode,
+            in: query,
+            required: false,
+            description: "Rentang waktu terhadap `tanggal` (minggu Senin–Minggu, WIB). Default `hari`.",
+            schema:
+              {
+                type: string,
+                enum: [hari, minggu, bulan, semua],
+                default: hari,
+              },
+          }
       responses:
         "200":
           description: Daftar pengeluaran
@@ -1373,6 +1385,41 @@ paths:
                         type: array
                         items: { $ref: "#/components/schemas/Pengeluaran" }
                       total_pengeluaran: { type: integer, example: 150000 }
+                      hpp_layanan:
+                        {
+                          type: integer,
+                          description: Total HPP layanan terjual pada periode,
+                          example: 36000,
+                        }
+                      hpp_lengkap:
+                        {
+                          type: boolean,
+                          description: "`false` bila ada layanan terjual yang HPP-nya belum diisi",
+                          example: true,
+                        }
+                      rincian_hpp_layanan:
+                        type: array
+                        description: Rincian HPP per layanan terjual pada periode yang sama. Jumlah seluruh `hpp` sama dengan `hpp_layanan`. Urut dari `jumlah_terjual` terbanyak.
+                        items:
+                          type: object
+                          properties:
+                            id_layanan:
+                              { type: integer, nullable: true, example: 1 }
+                            nama_layanan:
+                              { type: string, example: Potong rambut reguler }
+                            jumlah_terjual: { type: integer, example: 12 }
+                            pendapatan:
+                              {
+                                type: integer,
+                                description: "Jumlah harga saat transaksi × jumlah",
+                                example: 600000,
+                              }
+                            hpp:
+                              {
+                                type: integer,
+                                description: "Jumlah HPP saat transaksi × jumlah (HPP kosong dihitung 0)",
+                                example: 36000,
+                              }
         "401": { $ref: "#/components/responses/Unauthorized" }
         "403": { $ref: "#/components/responses/ForbiddenOwner" }
         "422":

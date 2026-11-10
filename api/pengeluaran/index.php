@@ -116,6 +116,43 @@ try {
         $stmtHpp->execute($param);
         $hppRow = $stmtHpp->fetch(PDO::FETCH_ASSOC);
 
+        // Rincian HPP per layanan terjual (rentang periode yang sama).
+        // Jumlah semua `hpp` di sini = `hpp_layanan`.
+        $stmtRincianHpp = $pdo->prepare(
+            "SELECT
+                dt.id_layanan,
+                COALESCE(MAX(l.nama_layanan), MAX(dt.nama_layanan_saat_transaksi))
+                    AS nama_layanan,
+                COALESCE(SUM(dt.jumlah), 0) AS jumlah_terjual,
+                COALESCE(SUM(dt.harga_saat_transaksi * dt.jumlah), 0)
+                    AS pendapatan,
+                COALESCE(SUM(COALESCE(dt.hpp_saat_transaksi, 0) * dt.jumlah), 0)
+                    AS hpp
+             FROM detail_transaksi dt
+             INNER JOIN transaksi t ON t.id_transaksi = dt.id_transaksi
+             LEFT JOIN layanan l ON l.id_layanan = dt.id_layanan
+             WHERE t.dihapus_pada IS NULL
+               AND t.tanggal BETWEEN :awal AND :akhir
+             GROUP BY dt.id_layanan,
+                      CASE WHEN dt.id_layanan IS NULL
+                           THEN dt.nama_layanan_saat_transaksi ELSE '' END
+             ORDER BY jumlah_terjual DESC, nama_layanan ASC"
+        );
+        $stmtRincianHpp->execute($param);
+
+        $rincianHppLayanan = [];
+        foreach ($stmtRincianHpp->fetchAll(PDO::FETCH_ASSOC) as $baris) {
+            $rincianHppLayanan[] = [
+                'id_layanan' => $baris['id_layanan'] === null
+                    ? null
+                    : (int) $baris['id_layanan'],
+                'nama_layanan' => $baris['nama_layanan'],
+                'jumlah_terjual' => (int) $baris['jumlah_terjual'],
+                'pendapatan' => (int) $baris['pendapatan'],
+                'hpp' => (int) $baris['hpp']
+            ];
+        }
+
         kirimJsonPengeluaran(200, [
             'success' => true,
             'data' => [
@@ -128,6 +165,7 @@ try {
                 'jumlah_catatan' => $rekap['jumlah_catatan'],
                 'rincian_per_kategori' => $rekap['rincian_per_kategori'],
                 'hpp_layanan' => (int) $hppRow['hpp'],
+                'rincian_hpp_layanan' => $rincianHppLayanan,
                 'hpp_lengkap' => (int) $hppRow['item_tanpa_hpp'] === 0
             ]
         ]);
