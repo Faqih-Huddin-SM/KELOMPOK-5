@@ -1,36 +1,42 @@
 /**
  * Kataji Barber - Riwayat Transaksi (Frontend)
- * Sesuai Desain & Fungsionalitas Figma:
- * - Filter: Pencarian (Cari riwayat...), Metode Pembayaran, Tanggal (dd-mm-yyyy)
- * - Paginasi dinamis dengan limit per halaman (default 10)
- * - Badge metode pembayaran dengan skema warna Figma (#17186B, #E6F4EC, #3B3DA8)
- * - Riwayat transaksi bersifat permanen (tanpa tombol/kolom hapus)
+ * Terhubung langsung dengan Backend API (/KELOMPOK-5/api/transaksi/index.php):
+ * - Server-side Filter: q, id_barber, id_layanan, metode_pembayaran, tanggal (rentang / tunggal)
+ * - Server-side Paginasi: page, per_page (default 10)
+ * - Rentang Tanggal Default: Minggu ini (contoh: 09/11/2026 – 15/11/2026)
+ * - Tombol Silang (✕): Menghapus filter tanggal sehingga kembali ke placeholder (dd-mm-yyyy) dan menampilkan semua riwayat
+ * - Urutan Kolom Sesuai Figma: No, Nama, Barber, Tgl-Bln-Thn, Layanan, Nominal, Metode Pembayaran
+ * - Badge Pembayaran: Tunai (#17186B), QRIS (#E6F4EC), Transfer (#3B3DA8)
  */
 
 document.addEventListener('DOMContentLoaded', function () {
     const tableBody = document.getElementById('riwayatTableBody');
     const inputCari = document.getElementById('cariRiwayat');
+    const selectBarber = document.getElementById('filterBarberRiwayat');
+    const selectLayanan = document.getElementById('filterLayananRiwayat');
     const selectMetode = document.getElementById('filterMetodeRiwayat');
-    const inputTanggal = document.getElementById('filterTanggalRiwayat');
+    const btnResetFilter = document.getElementById('btnResetFilter');
+    const inputTanggalMulai = document.getElementById('filterTanggalMulai');
+    const inputTanggalSelesai = document.getElementById('filterTanggalSelesai');
     const btnClearDate = document.getElementById('btnClearDate');
+    const datePill = document.getElementById('riwayatDatePill');
     const paginationInfo = document.getElementById('riwayatPaginationInfo');
     const paginationControls = document.getElementById('riwayatPaginationControls');
     const selectPerPage = document.getElementById('riwayatPerPage');
     const notification = document.getElementById('riwayatNotification');
 
     const API_TRANSAKSI = '/KELOMPOK-5/api/transaksi/index.php';
-    const DETAIL_URL = '/KELOMPOK-5/api/transaksi/detail.php';
+    const API_BARBER = '/KELOMPOK-5/api/barber/index.php';
+    const API_LAYANAN = '/KELOMPOK-5/api/layanan/index.php';
 
     if (!tableBody) return;
 
-    let semuaTransaksi = [];
-    let transaksiTerfilter = [];
     let currentPage = 1;
     let perPage = 10;
-    let notificationTimer = null;
+    let debounceTimer = null;
 
     // ======================================================
-    // 1. HELPER FORMAT
+    // 1. HELPER FORMAT & UTILITY
     // ======================================================
 
     function escapeHtml(text) {
@@ -58,11 +64,13 @@ document.addEventListener('DOMContentLoaded', function () {
         return tanggal;
     }
 
-    function tanggalLokal(tanggal = new Date()) {
-        const tahun = tanggal.getFullYear();
-        const bulan = String(tanggal.getMonth() + 1).padStart(2, '0');
-        const hari = String(tanggal.getDate()).padStart(2, '0');
-        return `${tahun}-${bulan}-${hari}`;
+    // Mendapatkan tanggal hari ini lokal (YYYY-MM-DD)
+    function getTanggalHariIni() {
+        const today = new Date();
+        const yyyy = today.getFullYear();
+        const mm = String(today.getMonth() + 1).padStart(2, '0');
+        const dd = String(today.getDate()).padStart(2, '0');
+        return `${yyyy}-${mm}-${dd}`;
     }
 
     function getMetodeInfo(metode) {
@@ -90,27 +98,101 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     // ======================================================
-    // 2. MEMUAT DATA DARI API
+    // 2. MEMUAT DAFTAR OPSI FILTER (BARBER & LAYANAN)
     // ======================================================
 
-    async function muatDetailTransaksi(idTransaksi) {
-        const response = await fetch(`${DETAIL_URL}?id=${encodeURIComponent(idTransaksi)}`, {
-            method: 'GET',
-            headers: { 'Accept': 'application/json' },
-            credentials: 'same-origin'
-        });
-        const result = await response.json();
-        if (!response.ok || !result.success) {
-            throw new Error(result.message || 'Detail gagal dimuat');
+    async function muatOpsiFilter() {
+        // 1. Ambil daftar Barber
+        try {
+            const resBarber = await fetch(API_BARBER, {
+                headers: { 'Accept': 'application/json' },
+                credentials: 'same-origin'
+            });
+            const resData = await resBarber.json();
+            if (resData.success && Array.isArray(resData.data) && selectBarber) {
+                let options = '<option value="">Semua Barber</option>';
+                resData.data.forEach(b => {
+                    if (b && b.id_user && b.nama) {
+                        options += `<option value="${escapeHtml(String(b.id_user))}">${escapeHtml(b.nama)}</option>`;
+                    }
+                });
+                selectBarber.innerHTML = options;
+            }
+        } catch (err) {
+            console.warn('Gagal memuat list barber dari API:', err);
         }
-        return result.data;
+
+        // 2. Ambil daftar Layanan
+        try {
+            const resLayanan = await fetch(API_LAYANAN, {
+                headers: { 'Accept': 'application/json' },
+                credentials: 'same-origin'
+            });
+            const resLayananData = await resLayanan.json();
+            if (resLayananData.success && Array.isArray(resLayananData.data) && selectLayanan) {
+                let options = '<option value="">Semua Layanan</option>';
+                resLayananData.data.forEach(l => {
+                    if (l && l.id_layanan && l.nama_layanan) {
+                        options += `<option value="${escapeHtml(String(l.id_layanan))}">${escapeHtml(l.nama_layanan)}</option>`;
+                    }
+                });
+                selectLayanan.innerHTML = options;
+            }
+        } catch (err) {
+            console.warn('Gagal memuat list layanan dari API:', err);
+        }
     }
+
+    // ======================================================
+    // 3. MEMUAT DATA DARI BACKEND API DENGAN FILTER & PAGINASI
+    // ======================================================
 
     async function muatData() {
         tampilkanPesan('Memuat riwayat transaksi...');
 
+        const kataKunci = (inputCari?.value || '').trim();
+        const idBarber = (selectBarber?.value || '').trim();
+        const idLayanan = (selectLayanan?.value || '').trim();
+        const metode = (selectMetode?.value || '').trim();
+        const tglMulai = (inputTanggalMulai?.value || '').trim();
+        const tglSelesai = (inputTanggalSelesai?.value || '').trim();
+
+        // Sinkronkan visibilitas tombol silang tanggal (✕)
+        if (btnClearDate) {
+            btnClearDate.hidden = !(tglMulai || tglSelesai);
+        }
+
+        // Susun parameter URL untuk BE
+        const params = new URLSearchParams();
+        params.set('page', currentPage);
+        params.set('per_page', perPage);
+
+        if (tglMulai && tglSelesai) {
+            params.set('tanggal_mulai', tglMulai);
+            params.set('tanggal_selesai', tglSelesai);
+        } else if (tglMulai) {
+            params.set('tanggal', tglMulai);
+        } else if (tglSelesai) {
+            params.set('tanggal', tglSelesai);
+        }
+
+        if (kataKunci) {
+            params.set('q', kataKunci);
+        }
+        if (idBarber) {
+            params.set('id_barber', idBarber);
+        }
+        if (idLayanan) {
+            params.set('id_layanan', idLayanan);
+        }
+        if (metode) {
+            params.set('metode_pembayaran', metode);
+        }
+
+        const url = `${API_TRANSAKSI}?${params.toString()}`;
+
         try {
-            const response = await fetch(API_TRANSAKSI, {
+            const response = await fetch(url, {
                 method: 'GET',
                 headers: { 'Accept': 'application/json' },
                 credentials: 'same-origin'
@@ -122,30 +204,13 @@ document.addEventListener('DOMContentLoaded', function () {
                 throw new Error(result.message || 'Riwayat transaksi gagal dimuat.');
             }
 
-            semuaTransaksi = Array.isArray(result.data) ? result.data : [];
+            const items = Array.isArray(result.data) ? result.data : [];
+            const meta = result.meta || {};
+            const totalItems = typeof meta.total === 'number' ? meta.total : items.length;
+            const totalPages = typeof meta.total_pages === 'number' ? meta.total_pages : 1;
 
-            // Jika transaksi belum memiliki layanan_teks dari backend, siapkan fallback
-            const missingDetails = semuaTransaksi.filter(t => !t.layanan_teks && t.id_transaksi);
-            if (missingDetails.length > 0) {
-                // Ambil detail secara background
-                Promise.all(missingDetails.map(async t => {
-                    try {
-                        const detail = await muatDetailTransaksi(t.id_transaksi);
-                        if (detail && Array.isArray(detail.layanan)) {
-                            t.layanan_teks = detail.layanan.map(l => {
-                                const qty = Number(l.jumlah) || 1;
-                                return qty > 1 ? `${l.nama_layanan} (${qty}x)` : l.nama_layanan;
-                            }).join(', ');
-                        }
-                    } catch (e) {
-                        t.layanan_teks = '-';
-                    }
-                })).then(() => {
-                    terapkanFilter();
-                });
-            }
-
-            terapkanFilter();
+            renderTabel(items, totalItems);
+            renderPaginasi(totalItems, totalPages, items.length);
 
         } catch (error) {
             console.error('Gagal memuat riwayat:', error);
@@ -154,97 +219,33 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     // ======================================================
-    // 3. FILTERING & PENCARIAN
+    // 4. RENDERING TABEL & PAGINASI SESUAI FIGMA
+    // Urutan Kolom: No, Nama, Barber, Tgl-Bln-Thn, Layanan, Nominal, Metode Pembayaran
     // ======================================================
 
-    function terapkanFilter() {
-        const kataKunci = (inputCari?.value || '').toLowerCase().trim();
-        const metodeDipilih = (selectMetode?.value || '').toLowerCase().trim();
-        const tanggalDipilih = (inputTanggal?.value || '').trim(); // Format YYYY-MM-DD
-
-        // Tampilkan/sembunyikan tombol clear tanggal
-        if (btnClearDate) {
-            btnClearDate.hidden = !tanggalDipilih;
-        }
-
-        transaksiTerfilter = semuaTransaksi.filter(trx => {
-            // 1. Filter Tanggal
-            if (tanggalDipilih) {
-                const tglTrx = String(trx.tanggal || '').slice(0, 10);
-                if (tglTrx !== tanggalDipilih) return false;
-            }
-
-            // 2. Filter Metode Pembayaran
-            if (metodeDipilih) {
-                const mTrx = String(trx.metode_pembayaran || '').toLowerCase().trim();
-                const mapMetode = (mTrx === 'tunai') ? 'cash' : mTrx;
-                const mapDipilih = (metodeDipilih === 'tunai') ? 'cash' : metodeDipilih;
-                if (mapMetode !== mapDipilih) return false;
-            }
-
-            // 3. Filter Pencarian Teks
-            if (kataKunci) {
-                const barber = String(trx.nama_barber || '').toLowerCase();
-                const pelanggan = String(trx.nama_pelanggan || '').toLowerCase();
-                const layanan = String(trx.layanan_teks || '').toLowerCase();
-                const nominal = String(trx.total_harga || '').toLowerCase();
-                const tglFormat = formatTanggal(trx.tanggal).toLowerCase();
-                const metodeInfo = getMetodeInfo(trx.metode_pembayaran);
-                const metode = metodeInfo.label.toLowerCase();
-
-                const cocok = barber.includes(kataKunci) ||
-                              pelanggan.includes(kataKunci) ||
-                              layanan.includes(kataKunci) ||
-                              nominal.includes(kataKunci) ||
-                              tglFormat.includes(kataKunci) ||
-                              metode.includes(kataKunci);
-
-                if (!cocok) return false;
-            }
-
-            return true;
-        });
-
-        currentPage = 1;
-        renderTabelDanPaginasi();
-    }
-
-    // ======================================================
-    // 4. RENDERING TABEL & PAGINASI (SESUAI FIGMA)
-    // ======================================================
-
-    function renderTabelDanPaginasi() {
-        const totalItems = transaksiTerfilter.length;
-
-        if (totalItems === 0) {
-            tampilkanPesan('Belum ada Riwayat Hari ini');
+    function renderTabel(items, totalItems) {
+        if (!items || items.length === 0) {
+            tampilkanPesan('Belum ada Riwayat Transaksi');
             return;
         }
 
-        const totalPages = Math.max(1, Math.ceil(totalItems / perPage));
-        if (currentPage > totalPages) {
-            currentPage = totalPages;
-        }
-
         const startIndex = (currentPage - 1) * perPage;
-        const endIndex = Math.min(startIndex + perPage, totalItems);
-        const itemHalaman = transaksiTerfilter.slice(startIndex, endIndex);
 
-        // Render Baris Tabel
-        tableBody.innerHTML = itemHalaman.map((trx, index) => {
+        tableBody.innerHTML = items.map((trx, index) => {
             const no = startIndex + index + 1;
-            const barber = escapeHtml(trx.nama_barber || '-');
             const nama = escapeHtml(trx.nama_pelanggan || '-');
+            const barber = escapeHtml(trx.nama_barber || '-');
             const tgl = formatTanggal(trx.tanggal);
-            const layanan = escapeHtml(trx.layanan_teks || '-');
+            const layananRaw = trx.layanan_teks || trx.nama_layanan || '';
+            const layanan = layananRaw && layananRaw.trim() !== '' ? escapeHtml(layananRaw) : '-';
             const nominal = formatRupiah(trx.total_harga);
             const metodeInfo = getMetodeInfo(trx.metode_pembayaran);
 
             return `
                 <tr>
                     <td class="td-no">${no}</td>
-                    <td class="td-barber">${barber}</td>
                     <td class="td-nama">${nama}</td>
+                    <td class="td-barber">${barber}</td>
                     <td class="td-tanggal">${tgl}</td>
                     <td class="td-layanan">${layanan}</td>
                     <td class="td-nominal">${nominal}</td>
@@ -256,22 +257,26 @@ document.addEventListener('DOMContentLoaded', function () {
                 </tr>
             `;
         }).join('');
-
-        // Render Info Paginasi
-        if (paginationInfo) {
-            paginationInfo.textContent = `Menampilkan ${startIndex + 1}-${endIndex} dari ${totalItems} riwayat`;
-        }
-
-        // Render Tombol Paginasi
-        renderTombolPaginasi(totalPages);
     }
 
-    function renderTombolPaginasi(totalPages) {
+    function renderPaginasi(totalItems, totalPages, currentItemCount) {
+        if (!paginationInfo) return;
+
+        if (totalItems === 0) {
+            paginationInfo.textContent = 'Menampilkan 0 riwayat';
+            if (paginationControls) paginationControls.innerHTML = '';
+            return;
+        }
+
+        const startIndex = (currentPage - 1) * perPage;
+        const endIndex = startIndex + currentItemCount;
+        paginationInfo.textContent = `Menampilkan ${startIndex + 1}-${endIndex} dari ${totalItems} riwayat`;
+
         if (!paginationControls) return;
 
         let html = '';
 
-        // Tombol Sebelumnya
+        // Tombol Sebelumnya (< Sebelumnya)
         const prevDisabled = currentPage <= 1 ? 'disabled' : '';
         html += `
             <button type="button" class="btn-page-nav btn-page-prev" ${prevDisabled} data-page="${currentPage - 1}">
@@ -306,7 +311,7 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
 
-        // Tombol Selanjutnya
+        // Tombol Selanjutnya (Selanjutnya >)
         const nextDisabled = currentPage >= totalPages ? 'disabled' : '';
         html += `
             <button type="button" class="btn-page-nav btn-page-next" ${nextDisabled} data-page="${currentPage + 1}">
@@ -321,32 +326,89 @@ document.addEventListener('DOMContentLoaded', function () {
     // 5. EVENT LISTENERS
     // ======================================================
 
-    // Filter Pencarian
+    // Filter Pencarian Teks (Debounce 250ms)
     if (inputCari) {
         inputCari.addEventListener('input', function () {
-            terapkanFilter();
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(() => {
+                currentPage = 1;
+                muatData();
+            }, 250);
+        });
+    }
+
+    // Filter Barber
+    if (selectBarber) {
+        selectBarber.addEventListener('change', function () {
+            currentPage = 1;
+            muatData();
+        });
+    }
+
+    // Filter Layanan
+    if (selectLayanan) {
+        selectLayanan.addEventListener('change', function () {
+            currentPage = 1;
+            muatData();
         });
     }
 
     // Filter Metode Pembayaran
     if (selectMetode) {
         selectMetode.addEventListener('change', function () {
-            terapkanFilter();
+            currentPage = 1;
+            muatData();
         });
     }
 
-    // Filter Tanggal
-    if (inputTanggal) {
-        inputTanggal.addEventListener('change', function () {
-            terapkanFilter();
+    // Filter Tanggal Mulai & Selesai
+    if (inputTanggalMulai) {
+        inputTanggalMulai.addEventListener('change', function () {
+            if (inputTanggalSelesai && inputTanggalMulai.value && inputTanggalSelesai.value && inputTanggalMulai.value > inputTanggalSelesai.value) {
+                inputTanggalSelesai.value = inputTanggalMulai.value;
+            }
+            currentPage = 1;
+            muatData();
         });
     }
 
-    // Clear Tanggal
+    if (inputTanggalSelesai) {
+        inputTanggalSelesai.addEventListener('change', function () {
+            if (inputTanggalMulai && inputTanggalMulai.value && inputTanggalSelesai.value && inputTanggalSelesai.value < inputTanggalMulai.value) {
+                inputTanggalMulai.value = inputTanggalSelesai.value;
+            }
+            currentPage = 1;
+            muatData();
+        });
+    }
+
+    // Tombol Silang (✕) pada Tanggal: Menghapus filter tanggal sehingga kembali ke dd-mm-yyyy (semua tanggal)
     if (btnClearDate) {
-        btnClearDate.addEventListener('click', function () {
-            if (inputTanggal) inputTanggal.value = '';
-            terapkanFilter();
+        btnClearDate.addEventListener('click', function (e) {
+            e.stopPropagation();
+            if (inputTanggalMulai) inputTanggalMulai.value = '';
+            if (inputTanggalSelesai) inputTanggalSelesai.value = '';
+            btnClearDate.hidden = true;
+            currentPage = 1;
+            muatData();
+        });
+    }
+
+    // Tombol Reset Filter: Mengembalikan semua filter ke default (tanggal hari ini - tanggal hari ini)
+    if (btnResetFilter) {
+        btnResetFilter.addEventListener('click', function () {
+            if (inputCari) inputCari.value = '';
+            if (selectBarber) selectBarber.value = '';
+            if (selectLayanan) selectLayanan.value = '';
+            if (selectMetode) selectMetode.value = '';
+
+            const hariIni = getTanggalHariIni();
+            if (inputTanggalMulai) inputTanggalMulai.value = hariIni;
+            if (inputTanggalSelesai) inputTanggalSelesai.value = hariIni;
+            if (btnClearDate) btnClearDate.hidden = false;
+
+            currentPage = 1;
+            muatData();
         });
     }
 
@@ -355,11 +417,11 @@ document.addEventListener('DOMContentLoaded', function () {
         selectPerPage.addEventListener('change', function () {
             perPage = Number(selectPerPage.value) || 10;
             currentPage = 1;
-            renderTabelDanPaginasi();
+            muatData();
         });
     }
 
-    // Klik Tombol Paginasi
+    // Klik Tombol Navigasi Paginasi
     if (paginationControls) {
         paginationControls.addEventListener('click', function (e) {
             const btn = e.target.closest('[data-page]');
@@ -368,15 +430,26 @@ document.addEventListener('DOMContentLoaded', function () {
             const targetPage = Number(btn.dataset.page);
             if (targetPage && targetPage !== currentPage) {
                 currentPage = targetPage;
-                renderTabelDanPaginasi();
+                muatData();
             }
         });
     }
 
-    // Mulai memuat data
-    if (inputTanggal && !inputTanggal.value) {
-        inputTanggal.value = tanggalLokal();
+    // ======================================================
+    // 6. INISIALISASI
+    // Rentang Tanggal Default: Hari ini - Hari ini (contoh: 09/11/2026 – 09/11/2026)
+    // ======================================================
+    const hariIni = getTanggalHariIni();
+    if (inputTanggalMulai && !inputTanggalMulai.value) {
+        inputTanggalMulai.value = hariIni;
+    }
+    if (inputTanggalSelesai && !inputTanggalSelesai.value) {
+        inputTanggalSelesai.value = hariIni;
+    }
+    if (btnClearDate) {
         btnClearDate.hidden = false;
     }
+
+    muatOpsiFilter();
     muatData();
 });

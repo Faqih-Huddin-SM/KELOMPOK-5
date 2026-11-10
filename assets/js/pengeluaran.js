@@ -24,6 +24,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const ringkasanElement = document.getElementById('totalRingkasanPengeluaran');
     const daftarElement = document.getElementById('daftarPengeluaranHarian');
     const statusElement = document.getElementById('statusPengeluaranHarian');
+    const judulDaftarElement = document.getElementById('judulDaftarPengeluaran');
 
     if (
         !form ||
@@ -354,9 +355,11 @@ document.addEventListener('DOMContentLoaded', () => {
         elemenError.textContent = pesan;
     }
 
-    async function validasiFormDanBeriTahu() {
+    function validasiForm() {
         bersihkanError(kategoriInput, errorKategori);
         bersihkanError(nominalInput, errorNominal);
+
+        let valid = true;
 
         if (!kategoriInput.value.trim()) {
             tampilkanError(
@@ -364,14 +367,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 errorKategori,
                 '*Kategori wajib diisi'
             );
-            await tampilkanAlert({
-                judul: 'Validasi Pengeluaran',
-                pesan: 'Silakan pilih kategori pengeluaran terlebih dahulu.',
-                teksTombol: 'Mengerti',
-                tipe: 'primary'
-            });
-            kategoriInput.focus();
-            return false;
+            valid = false;
         }
 
         const nominal = nominalInput.value.trim();
@@ -383,14 +379,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 errorNominal,
                 '*Nominal harus diisi'
             );
-            await tampilkanAlert({
-                judul: 'Validasi Pengeluaran',
-                pesan: 'Nominal pengeluaran harus diisi.',
-                teksTombol: 'Mengerti',
-                tipe: 'primary'
-            });
-            nominalInput.focus();
-            return false;
+            valid = false;
         } else if (
             !Number.isFinite(angkaNominal) ||
             angkaNominal <= 0 ||
@@ -401,31 +390,21 @@ document.addEventListener('DOMContentLoaded', () => {
                 errorNominal,
                 '*Nominal harus lebih dari nol'
             );
-            await tampilkanAlert({
-                judul: 'Validasi Pengeluaran',
-                pesan: 'Nominal harus bernilai lebih dari nol (angka bulat).',
-                teksTombol: 'Mengerti',
-                tipe: 'primary'
-            });
-            nominalInput.focus();
-            return false;
+            valid = false;
         } else if (angkaNominal > 2147483647) {
             tampilkanError(
                 nominalInput,
                 errorNominal,
                 '*Nominal terlalu besar'
             );
-            await tampilkanAlert({
-                judul: 'Validasi Pengeluaran',
-                pesan: 'Nominal terlalu besar melebihi batas sistem.',
-                teksTombol: 'Mengerti',
-                tipe: 'primary'
-            });
-            nominalInput.focus();
-            return false;
+            valid = false;
         }
 
-        return true;
+        if (!valid) {
+            (kategoriInput.value.trim() ? nominalInput : kategoriInput).focus();
+        }
+
+        return valid;
     }
 
     kategoriInput.addEventListener('change', () => {
@@ -806,12 +785,33 @@ document.addEventListener('DOMContentLoaded', () => {
     function tampilkanDaftar(data) {
         daftarElement.replaceChildren();
 
+        const periode = data.periode || periodeAktif;
+        const tanggal = data.tanggal || tanggalInput.value || tanggalLokal();
+        const judulPeriode = {
+            hari: tanggal === tanggalLokal()
+                ? 'Pengeluaran Hari Ini'
+                : `Pengeluaran Tanggal ${formatTanggal(tanggal)}`,
+            minggu: 'Pengeluaran Minggu Ini',
+            bulan: 'Pengeluaran Bulan Ini',
+            semua: 'Semua Pengeluaran'
+        };
+        if (judulDaftarElement) {
+            judulDaftarElement.textContent =
+                judulPeriode[periode] || 'Daftar Pengeluaran';
+        }
+
         const daftar = Array.isArray(data.pengeluaran)
             ? data.pengeluaran
             : [];
 
         if (daftar.length === 0) {
-            tampilkanKosong('Belum ada pengeluaran pada tanggal ini.');
+            const pesanKosong = {
+                hari: 'Belum ada pengeluaran pada tanggal ini.',
+                minggu: 'Belum ada pengeluaran pada minggu ini.',
+                bulan: 'Belum ada pengeluaran pada bulan ini.',
+                semua: 'Belum ada data pengeluaran.'
+            };
+            tampilkanKosong(pesanKosong[periode] || 'Belum ada data pengeluaran.');
         } else {
             daftar.forEach((item) => {
                 item.akun_login = data.akun_login || '';
@@ -841,6 +841,37 @@ document.addEventListener('DOMContentLoaded', () => {
         if (ringkasanElement) {
             ringkasanElement.textContent = formatRupiah(total);
         }
+
+        const rincianKategori = Array.isArray(data.rincian_per_kategori)
+            ? data.rincian_per_kategori
+            : null;
+        const kategoriBahan = rincianKategori?.find((item) =>
+            String(item.kategori || '').trim().toLocaleLowerCase('id-ID') === 'bahan'
+        );
+        const ringkasanBahan = document.getElementById('ringkasanPembelianBahan');
+        if (ringkasanBahan && rincianKategori) {
+            ringkasanBahan.textContent = formatRupiah(
+                kategoriBahan?.total_pengeluaran || 0
+            );
+        }
+
+        const ringkasanHpp = document.getElementById('ringkasanHppLayanan');
+        if (ringkasanHpp && data.hpp_layanan !== undefined) {
+            ringkasanHpp.textContent = formatRupiah(data.hpp_layanan);
+        }
+
+        const daftarHpp = document.getElementById('daftarHppLayanan');
+        if (daftarHpp) {
+            const baris = document.createElement('tr');
+            const sel = document.createElement('td');
+            sel.colSpan = 4;
+            sel.className = 'pengeluaran-hpp-empty';
+            sel.textContent = data.hpp_lengkap === false
+                ? 'API menyediakan total HPP, tetapi ada transaksi yang belum memiliki data HPP. Rincian HPP per layanan belum tersedia.'
+                : 'API menyediakan total HPP, tetapi belum menyediakan rincian HPP per layanan.';
+            baris.appendChild(sel);
+            daftarHpp.replaceChildren(baris);
+        }
     }
 
     // ======================================================
@@ -851,9 +882,8 @@ document.addEventListener('DOMContentLoaded', () => {
         tampilkanStatus('Memuat data pengeluaran...');
 
         try {
-            const tanggal = tanggalInput.value || tanggalLokal();
             const params = new URLSearchParams({
-                tanggal,
+                tanggal: tanggalInput.value || tanggalLokal(),
                 periode: periodeAktif
             });
 
@@ -888,7 +918,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function muatRingkasan() {
         const respons = await fetch(
-            `${DASHBOARD_API_URL}?periode=${encodeURIComponent(periodeAktif)}&tanggal=${encodeURIComponent(tanggalLokal())}&limit=1`,
+            `${DASHBOARD_API_URL}?periode=${encodeURIComponent(periodeAktif)}&tanggal=${encodeURIComponent(tanggalInput.value || tanggalLokal())}&limit=1`,
             {
                 method: 'GET',
                 credentials: 'same-origin',
@@ -903,30 +933,21 @@ document.addEventListener('DOMContentLoaded', () => {
         const keuangan = hasil.data?.keuangan || {};
         const ringkasanHpp = document.getElementById('ringkasanHppLayanan');
         const ringkasanOperasional = document.getElementById('totalRingkasanPengeluaran');
-        const ringkasanBahan = document.getElementById('ringkasanPembelianBahan');
         const daftarHpp = document.getElementById('daftarHppLayanan');
 
         if (ringkasanHpp) ringkasanHpp.textContent = formatRupiah(keuangan.hpp || 0);
         if (ringkasanOperasional) ringkasanOperasional.textContent = formatRupiah(keuangan.biaya_operasional || 0);
-        if (ringkasanBahan) ringkasanBahan.textContent = formatRupiah(keuangan.pembelian_bahan || 0);
 
         if (daftarHpp) {
-            const layanan = Array.isArray(keuangan.hpp_layanan) ? keuangan.hpp_layanan : [];
-            daftarHpp.replaceChildren();
-            if (layanan.length === 0) {
-                const baris = document.createElement('tr');
-                baris.innerHTML = '<td colspan="4" class="pengeluaran-hpp-empty">Data HPP belum tersedia.</td>';
-                daftarHpp.appendChild(baris);
-            } else {
-                layanan.forEach((item) => {
-                    const baris = document.createElement('tr');
-                    baris.appendChild(buatSel(item.nama_layanan || '-'));
-                    baris.appendChild(buatSel(item.jumlah_terjual || 0));
-                    baris.appendChild(buatSel(formatRupiah(item.pendapatan || 0)));
-                    baris.appendChild(buatSel(formatRupiah(item.hpp || 0)));
-                    daftarHpp.appendChild(baris);
-                });
-            }
+            const baris = document.createElement('tr');
+            const sel = document.createElement('td');
+            sel.colSpan = 4;
+            sel.className = 'pengeluaran-hpp-empty';
+            sel.textContent = keuangan.hpp_lengkap === false
+                ? 'API menyediakan total HPP, tetapi ada transaksi yang belum memiliki data HPP. Rincian HPP per layanan belum tersedia.'
+                : 'API menyediakan total HPP, tetapi belum menyediakan rincian HPP per layanan.';
+            baris.appendChild(sel);
+            daftarHpp.replaceChildren(baris);
         }
     }
 
@@ -937,7 +958,7 @@ document.addEventListener('DOMContentLoaded', () => {
     form.addEventListener('submit', async (event) => {
         event.preventDefault();
 
-        const valid = await validasiFormDanBeriTahu();
+        const valid = validasiForm();
         if (!valid) return;
 
         const kategori = kategoriInput.value.trim();

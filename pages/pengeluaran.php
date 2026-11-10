@@ -126,7 +126,7 @@ include __DIR__ . '/../includes/header.php';
     <section class="pengeluaran-daily-card">
 
         <div class="pengeluaran-daily-header">
-            <h2>Pengeluaran Hari Ini</h2>
+            <h2 id="judulDaftarPengeluaran">Pengeluaran Hari Ini</h2>
 
             <div class="pengeluaran-date-filter">
                 <label for="tanggalPengeluaranHarian"
