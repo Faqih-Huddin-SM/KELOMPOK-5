@@ -3382,7 +3382,7 @@ body.layanan-modal-open {
 /* 2. QRIS: #E6F4EC (Text Dark Green) */
 .riwayat-page .riwayat-badge.badge-qris {
     background-color: #E6F4EC !important;
-    color: #0E7B3B !important;
+    color: #1A1A1A !important;
 }
 
 /* 3. TRANSFER: #3B3DA8 */
