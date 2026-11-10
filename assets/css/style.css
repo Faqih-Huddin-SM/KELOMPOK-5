@@ -6812,8 +6812,15 @@ body .pengeluaran-toast[hidden] {
     font-size: 28px;
     font-weight: 800;
     color: #1A1D2C;
-    margin: 0;
+    margin: 0 0 6px;
     letter-spacing: -0.5px;
+}
+
+.pelanggan-page .pelanggan-subtitle {
+    font-size: 14px;
+    color: #6B7280;
+    margin: 0;
+    font-weight: 400;
 }
 
 /* [Card 5.2] Grid 2 Kolom (Kiri: Daftar Pelanggan 340px, Kanan: Detail & Riwayat 1fr) */
@@ -6911,10 +6918,10 @@ body .pengeluaran-toast[hidden] {
     background: #F8FAFC;
 }
 
-/* Item Aktif / Terpilih */
+/* Item Aktif / Terpilih (Sesuai Figma: Dark Navy #17186B) */
 .pelanggan-page .pelanggan-item.active {
-    background: #EEF0FB;
-    border-color: #DDE2F7;
+    background: #17186B !important;
+    border-color: #17186B !important;
 }
 
 /* Inisial Avatar */
@@ -6934,8 +6941,8 @@ body .pengeluaran-toast[hidden] {
 }
 
 .pelanggan-page .pelanggan-item.active .pelanggan-item-avatar {
-    background: #17186B;
-    color: #FFFFFF;
+    background: #FFFFFF !important;
+    color: #17186B !important;
 }
 
 .pelanggan-page .pelanggan-item-info {
@@ -6955,8 +6962,8 @@ body .pengeluaran-toast[hidden] {
 }
 
 .pelanggan-page .pelanggan-item.active .pelanggan-item-name {
-    color: #17186B;
-    font-weight: 700;
+    color: #FFFFFF !important;
+    font-weight: 600;
 }
 
 .pelanggan-page .pelanggan-item-kunjungan {
@@ -6967,7 +6974,7 @@ body .pengeluaran-toast[hidden] {
 }
 
 .pelanggan-page .pelanggan-item.active .pelanggan-item-kunjungan {
-    color: #4A4D5A;
+    color: rgba(255, 255, 255, 0.75) !important;
 }
 
 /* [Card 5.2] Kolom Kanan: Detail & Riwayat Layanan */
@@ -6977,13 +6984,17 @@ body .pengeluaran-toast[hidden] {
     gap: 18px;
 }
 
-/* [Card 5.2] Kartu Profil Ringkas (Atas) */
+/* [Card 5.2] Kartu Profil Ringkas (Atas) - Dark Navy Background sesuai Figma */
 .pelanggan-page .pelanggan-profile-card {
-    padding: 20px 24px;
+    background: #17186B !important;
+    border: none !important;
+    border-radius: 20px;
+    padding: 22px 28px;
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 16px;
+    box-shadow: 0 8px 24px rgba(23, 24, 107, 0.16);
 }
 
 .pelanggan-page .pelanggan-profile-left {
@@ -6994,18 +7005,18 @@ body .pengeluaran-toast[hidden] {
 }
 
 .pelanggan-page .pelanggan-avatar-large {
-    width: 52px;
-    height: 52px;
+    width: 56px;
+    height: 56px;
     border-radius: 50%;
-    background: #FFFFFF;
-    color: #17186B;
+    background: #FFFFFF !important;
+    color: #17186B !important;
     font-size: 22px;
     font-weight: 700;
     display: flex;
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
-    box-shadow: 0 2px 8px rgba(23, 24, 107, 0.15);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
 }
 
 .pelanggan-page .pelanggan-profile-info {
@@ -7015,10 +7026,10 @@ body .pengeluaran-toast[hidden] {
 }
 
 .pelanggan-page .pelanggan-profile-name {
-    font-size: 20px;
+    font-size: 22px;
     font-weight: 700;
-    color: #1A1D2C;
-    margin: 0 0 3px;
+    color: #FFFFFF !important;
+    margin: 0 0 4px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -7026,19 +7037,38 @@ body .pengeluaran-toast[hidden] {
 
 .pelanggan-page .pelanggan-profile-subtext {
     font-size: 13px;
-    color: #8F92A1;
+    color: rgba(255, 255, 255, 0.75) !important;
     margin: 0;
-    font-weight: 500;
+    font-weight: 400;
 }
 
-.pelanggan-page .badge-kunjungan-pill {
-    background: #EEF0FB;
-    color: #17186B;
-    font-size: 13px;
-    font-weight: 600;
-    padding: 6px 16px;
-    border-radius: 9999px;
-    white-space: nowrap;
+/* Badge Kunjungan Kotak Rounded di Kanan Banner Navy */
+.pelanggan-page .badge-kunjungan-box {
+    background: rgba(255, 255, 255, 0.12);
+    border-radius: 14px;
+    padding: 10px 22px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-width: 90px;
+    text-align: center;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.pelanggan-page .badge-kunjungan-num {
+    font-size: 22px;
+    font-weight: 700;
+    color: #FFFFFF;
+    line-height: 1.1;
+}
+
+.pelanggan-page .badge-kunjungan-label {
+    font-size: 11px;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.82);
+    margin-top: 2px;
+    letter-spacing: 0.3px;
 }
 
 /* [Card 5.2] Kartu Riwayat Layanan (Bawah) */
@@ -7210,7 +7240,7 @@ body .pengeluaran-toast[hidden] {
         align-items: flex-start;
     }
 
-    .pelanggan-page .badge-kunjungan-pill {
+    .pelanggan-page .badge-kunjungan-box {
         align-self: flex-start;
     }
 
