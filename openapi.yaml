@@ -463,13 +463,31 @@ paths:
       tags: [Transaksi]
       summary: Daftar transaksi
       description: |
-        - **barber**: hanya transaksi yang dicatat oleh akunnya (`id_pencatat`); bila `tanggal` kosong, otomatis hari ini (WIB).
-        - **owner**: semua transaksi; bila `tanggal` kosong, menampilkan **semua tanggal**.
+        - **barber**: hanya transaksi yang dicatat oleh akunnya (`id_pencatat`); bila filter tanggal kosong, otomatis hari ini (WIB).
+        - **owner**: semua transaksi; bila filter tanggal kosong, menampilkan **semua tanggal**.
+
+        Filter tanggal: `tanggal` (satu hari) **atau** `tanggal_awal` dan/atau `tanggal_akhir` (rentang, batas ikut termasuk). Keduanya tidak boleh dikirim bersamaan.
 
         Transaksi yang sudah dihapus (soft delete) tidak ditampilkan. Urut terbaru lebih dulu.
       operationId: listTransaksi
       parameters:
         - $ref: "#/components/parameters/Tanggal"
+        - name: tanggal_awal
+          in: query
+          required: false
+          description: "Batas awal rentang (termasuk), format `YYYY-MM-DD`. Boleh dikirim sendiri. Tidak boleh dipakai bersama `tanggal`."
+          schema:
+            type: string
+            format: date
+            example: "2026-11-09"
+        - name: tanggal_akhir
+          in: query
+          required: false
+          description: "Batas akhir rentang (termasuk), format `YYYY-MM-DD`. Boleh dikirim sendiri. Tidak boleh lebih kecil dari `tanggal_awal`."
+          schema:
+            type: string
+            format: date
+            example: "2026-11-15"
         - {
             name: q,
             in: query,
@@ -537,8 +555,22 @@ paths:
                       per_page: { type: integer, example: 10 }
                       total: { type: integer, example: 23 }
                       total_pages: { type: integer, example: 3 }
+                      tanggal_awal:
+                        {
+                          type: string,
+                          format: date,
+                          nullable: true,
+                          example: "2026-11-09",
+                        }
+                      tanggal_akhir:
+                        {
+                          type: string,
+                          format: date,
+                          nullable: true,
+                          example: "2026-11-15",
+                        }
         "400":
-          description: Format tanggal salah (`BAD_REQUEST`)
+          description: Format tanggal salah, `tanggal_awal` lebih besar dari `tanggal_akhir`, atau `tanggal` dikirim bersama rentang (`BAD_REQUEST`)
           content:
             application/json:
               schema: { $ref: "#/components/schemas/Error" }

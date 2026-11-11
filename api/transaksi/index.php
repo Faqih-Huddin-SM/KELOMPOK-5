@@ -93,42 +93,108 @@ try {
             $zonaWaktu
         ))->format('Y-m-d');
 
-        // Barber default melihat transaksi hari ini.
-        // Owner boleh melihat semua tanggal atau memilih tanggal.
-        $tanggal = $_GET['tanggal'] ?? null;
+        // ------------------------------------------------------
+        // Filter tanggal (pilih salah satu cara):
+        //   - tanggal=YYYY-MM-DD                         : satu hari
+        //   - tanggal_awal=... dan/atau tanggal_akhir=... : rentang
+        //     (salah satu boleh dikosongkan = tanpa batas di sisi itu)
+        // tanggal_mulai dan tanggal_selesai adalah alias dari tanggal_awal
+        // dan tanggal_akhir (dipakai halaman Riwayat).
+        // Barber tanpa filter tanggal melihat transaksi hari ini.
+        // Owner tanpa filter tanggal melihat semua tanggal.
+        // ------------------------------------------------------
+        $namaParamTanggal = [
+            'tanggal' => ['tanggal'],
+            'awal' => ['tanggal_awal', 'tanggal_mulai'],
+            'akhir' => ['tanggal_akhir', 'tanggal_selesai']
+        ];
+        $inputTanggal = ['tanggal' => null, 'awal' => null, 'akhir' => null];
 
-        if ($role === 'barber' && ($tanggal === null || $tanggal === '')) {
-            $tanggal = $tanggalHariIni;
+        foreach ($namaParamTanggal as $kunciTanggal => $daftarNama) {
+            foreach ($daftarNama as $namaTanggal) {
+                $nilaiTanggal = $_GET[$namaTanggal] ?? null;
+
+                if ($nilaiTanggal === null || $nilaiTanggal === '') {
+                    continue;
+                }
+
+                if (!is_string($nilaiTanggal)) {
+                    kirimJson(400, [
+                        'success' => false,
+                        'message' => "Format {$namaTanggal} tidak valid.",
+                        'error_code' => 'BAD_REQUEST'
+                    ]);
+                }
+
+                $objTanggal = DateTimeImmutable::createFromFormat(
+                    '!Y-m-d',
+                    $nilaiTanggal,
+                    $zonaWaktu
+                );
+
+                if (
+                    !$objTanggal ||
+                    $objTanggal->format('Y-m-d') !== $nilaiTanggal
+                ) {
+                    $labelTanggal = $namaTanggal === 'tanggal' ? 'Tanggal' : $namaTanggal;
+                    kirimJson(400, [
+                        'success' => false,
+                        'message' => "{$labelTanggal} harus menggunakan format YYYY-MM-DD.",
+                        'error_code' => 'BAD_REQUEST'
+                    ]);
+                }
+
+                // Nama utama dan alias dikirim bersamaan dengan nilai berbeda.
+                if (
+                    $inputTanggal[$kunciTanggal] !== null &&
+                    $inputTanggal[$kunciTanggal] !== $nilaiTanggal
+                ) {
+                    kirimJson(400, [
+                        'success' => false,
+                        'message' => "{$daftarNama[0]} dan {$daftarNama[1]} berisi tanggal berbeda. Kirim salah satu saja.",
+                        'error_code' => 'BAD_REQUEST'
+                    ]);
+                }
+
+                $inputTanggal[$kunciTanggal] = $nilaiTanggal;
+            }
         }
 
-        // Validasi tanggal jika dikirim atau diwajibkan.
-        if ($tanggal !== null && $tanggal !== '') {
-            if (!is_string($tanggal)) {
-                kirimJson(400, [
-                    'success' => false,
-                    'message' => 'Format tanggal tidak valid.',
-                    'error_code' => 'BAD_REQUEST'
-                ]);
-            }
-
-            $tanggalObj = DateTimeImmutable::createFromFormat(
-                '!Y-m-d',
-                $tanggal,
-                $zonaWaktu
-            );
-
-            if (
-                !$tanggalObj ||
-                $tanggalObj->format('Y-m-d') !== $tanggal
-            ) {
-                kirimJson(400, [
-                    'success' => false,
-                    'message' => 'Tanggal harus menggunakan format YYYY-MM-DD.',
-                    'error_code' => 'BAD_REQUEST'
-                ]);
-            }
+        if (
+            $inputTanggal['tanggal'] !== null &&
+            ($inputTanggal['awal'] !== null || $inputTanggal['akhir'] !== null)
+        ) {
+            kirimJson(400, [
+                'success' => false,
+                'message' => 'Gunakan tanggal saja, atau tanggal_awal dan tanggal_akhir, jangan keduanya.',
+                'error_code' => 'BAD_REQUEST'
+            ]);
         }
 
+        $tanggalAwal = $inputTanggal['awal'];
+        $tanggalAkhir = $inputTanggal['akhir'];
+
+        if ($inputTanggal['tanggal'] !== null) {
+            $tanggalAwal = $inputTanggal['tanggal'];
+            $tanggalAkhir = $inputTanggal['tanggal'];
+        }
+
+        if (
+            $tanggalAwal !== null &&
+            $tanggalAkhir !== null &&
+            $tanggalAwal > $tanggalAkhir
+        ) {
+            kirimJson(400, [
+                'success' => false,
+                'message' => 'tanggal_awal tidak boleh lebih besar dari tanggal_akhir.',
+                'error_code' => 'BAD_REQUEST'
+            ]);
+        }
+
+        if ($role === 'barber' && $tanggalAwal === null && $tanggalAkhir === null) {
+            $tanggalAwal = $tanggalHariIni;
+            $tanggalAkhir = $tanggalHariIni;
+        }
         // ------------------------------------------------------
         // Filter tambahan untuk halaman Riwayat (semua opsional)
         // ------------------------------------------------------
@@ -244,29 +310,15 @@ try {
             $stmtParams[':id_user'] = $idUser;
         }
 
-        // Filter tanggal berlaku untuk barber dan owner.
-        if ($tanggal !== null && $tanggal !== '') {
-            $where .= " AND t.tanggal = :tanggal";
-            $stmtParams[':tanggal'] = $tanggal;
+                // Filter tanggal (satu hari atau rentang) berlaku untuk barber dan owner.
+        if ($tanggalAwal !== null) {
+            $where .= " AND t.tanggal >= :tanggal_awal";
+            $stmtParams[':tanggal_awal'] = $tanggalAwal;
         }
 
-        if ($idBarberFilter !== null) {
-            $where .= " AND t.id_barber = :id_barber_filter";
-            $stmtParams[':id_barber_filter'] = $idBarberFilter;
-        }
-
-        if ($metodeFilter !== '') {
-            $where .= " AND t.metode_pembayaran = :metode_filter";
-            $stmtParams[':metode_filter'] = $metodeFilter;
-        }
-
-        if ($idLayananFilter !== null) {
-            $where .= " AND EXISTS (
-                SELECT 1 FROM detail_transaksi df
-                WHERE df.id_transaksi = t.id_transaksi
-                  AND df.id_layanan = :id_layanan_filter
-            )";
-            $stmtParams[':id_layanan_filter'] = $idLayananFilter;
+        if ($tanggalAkhir !== null) {
+            $where .= " AND t.tanggal <= :tanggal_akhir";
+            $stmtParams[':tanggal_akhir'] = $tanggalAkhir;
         }
 
         // Pencarian: nama pelanggan (mengandung) atau ID transaksi (persis).
@@ -351,9 +403,11 @@ try {
                 'page' => $halaman,
                 'per_page' => $pakaiPaginasi ? $perHalaman : $total,
                 'total' => $total,
-                'total_pages' => $pakaiPaginasi
+                                'total_pages' => $pakaiPaginasi
                     ? max(1, (int) ceil($total / $perHalaman))
-                    : 1
+                    : 1,
+                'tanggal_awal' => $tanggalAwal,
+                'tanggal_akhir' => $tanggalAkhir
             ]
         ]);
     }
