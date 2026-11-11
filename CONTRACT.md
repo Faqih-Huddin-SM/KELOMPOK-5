@@ -307,25 +307,41 @@ Contoh respons sukses (`200 OK`):
 
 Contoh nilai di atas bukan data tetap. Transaksi lama yang belum memiliki pelanggan memiliki `id_pelanggan` dan `nama_pelanggan` bernilai `null`. Daftar dan detail transaksi tidak memuat `no_hp`.
 
-Query parameter `tanggal` (opsional, `YYYY-MM-DD`): owner tanpa `tanggal` melihat semua tanggal, barber tanpa `tanggal` otomatis melihat hari ini (WIB). Transaksi yang sudah dihapus (soft delete) tidak ditampilkan. Format `tanggal` yang tidak valid ditolak `400 BAD_REQUEST`. Daftar diurutkan dari tanggal, waktu, dan ID terbaru.
+Filter tanggal (opsional, format `YYYY-MM-DD`). Pilih salah satu cara:
+
+| Parameter       | Keterangan                                                                       |
+| --------------- | -------------------------------------------------------------------------------- |
+| `tanggal`       | Satu hari saja.                                                                  |
+| `tanggal_awal`  | Batas awal rentang (tanggal itu ikut). Boleh dikirim sendiri: tanpa batas akhir. |
+| `tanggal_akhir` | Batas akhir rentang (tanggal itu ikut). Boleh dikirim sendiri: tanpa batas awal. |
+
+Aturan:
+
+- `tanggal` tidak boleh dikirim bersama `tanggal_awal` atau `tanggal_akhir` (`400 BAD_REQUEST`).
+- `tanggal_awal` tidak boleh lebih besar dari `tanggal_akhir` (`400 BAD_REQUEST`). Kedua nilai sama berarti satu hari.
+- Owner tanpa filter tanggal melihat semua tanggal. Barber tanpa filter tanggal otomatis melihat hari ini (WIB). Barber boleh memakai `tanggal` atau rentang untuk tanggal lain, tetap hanya transaksi miliknya.
+- Rentang tanpa transaksi dikembalikan `200 OK` dengan `data: []` dan `meta.total: 0`, bukan error.
+- Transaksi yang sudah dihapus (soft delete) tidak ditampilkan. Format tanggal yang tidak valid ditolak `400 BAD_REQUEST`. Daftar diurutkan dari tanggal, waktu, dan ID terbaru.
+
+Contoh: `GET /api/transaksi/index.php?tanggal_awal=2026-11-09&tanggal_akhir=2026-11-15&page=1&per_page=10`
 
 Query parameter tambahan untuk halaman Riwayat (semua opsional, bisa digabung):
 
-| Parameter | Keterangan |
-| --- | --- |
-| `q` | Pencarian: nama pelanggan mengandung kata itu, atau `id_transaksi` persis sama (`12` atau `#12`). Maks 100 karakter. |
-| `id_barber` | Hanya transaksi barber tersebut. |
-| `id_layanan` | Hanya transaksi yang memuat layanan tersebut. |
-| `metode_pembayaran` | `cash`, `qris`, atau `transfer`. |
-| `page` | Nomor halaman, minimal 1 (default 1). |
-| `per_page` | Jumlah baris per halaman, 1–100 (default 10). |
+| Parameter           | Keterangan                                                                                                           |
+| ------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| `q`                 | Pencarian: nama pelanggan mengandung kata itu, atau `id_transaksi` persis sama (`12` atau `#12`). Maks 100 karakter. |
+| `id_barber`         | Hanya transaksi barber tersebut.                                                                                     |
+| `id_layanan`        | Hanya transaksi yang memuat layanan tersebut.                                                                        |
+| `metode_pembayaran` | `cash`, `qris`, atau `transfer`.                                                                                     |
+| `page`              | Nomor halaman, minimal 1 (default 1).                                                                                |
+| `per_page`          | Jumlah baris per halaman, 1–100 (default 10).                                                                        |
 
 Paginasi aktif bila `page` atau `per_page` dikirim. Tanpa keduanya semua data dikembalikan. Parameter yang tidak valid ditolak `400 BAD_REQUEST`. Barber tetap hanya melihat transaksi yang dicatatnya sendiri.
 
 Setiap baris data memuat `layanan_teks`: nama layanan dipisah koma, layanan berjumlah lebih dari satu ditulis `Nama (3x)`, contoh `Potong rambut reguler, Creambath (3x)`. Respons juga memuat `meta`:
 
 ```json
-"meta": { "page": 1, "per_page": 10, "total": 23, "total_pages": 3 }
+"meta": { "page": 1, "per_page": 10, "total": 23, "total_pages": 3, "tanggal_awal": "2026-11-09", "tanggal_akhir": "2026-11-15" }
 ```
 
 Halaman yang melebihi `total_pages` mengembalikan `data: []` dengan status 200.
@@ -503,7 +519,9 @@ Aturan:
 - Jika `q` diisi tetapi kurang dari 2 karakter (mis. `a`), respons tetap `200 OK` dengan `data` berupa array kosong (bukan error).
 - Jika `q` tidak dikirim atau kosong: mengembalikan **daftar pelanggan** (nama A–Z, maksimal 100) untuk ditampilkan di tabel.
 - Pelanggan yang sudah dihapus (soft delete) tidak ikut ditampilkan.
-- Setiap data hanya berisi `id_pelanggan` dan `nama` (tidak ada `no_hp`).
+- Setiap data berisi `id_pelanggan`, `nama`, dan `jumlah_kunjungan` (tidak ada `no_hp`).
+- `jumlah_kunjungan`: jumlah transaksi pelanggan tersebut yang belum dihapus (satu transaksi = satu kunjungan, walaupun berisi beberapa layanan). Pelanggan tanpa transaksi bernilai `0`. Dihitung di server dalam satu query, jadi FE tidak perlu memanggil `/api/riwayat/pelanggan.php` untuk tiap pelanggan.
+- Pelanggan dengan nama yang sama tetap tampil sebagai baris terpisah (berbeda `id_pelanggan`), dan jumlah kunjungannya dihitung sendiri-sendiri.
 - Method yang diterima hanya `GET` dan `DELETE`; method lain ditolak `405 Method Not Allowed` (header `Allow: GET, DELETE`).
 
 Contoh request:
@@ -1188,13 +1206,13 @@ Parameter `periode` (opsional): `hari` (default), `minggu` (Senin–Minggu), `bu
 
 **Rincian HPP per layanan (`rincian_hpp_layanan`):** daftar layanan terjual pada rentang `periode` dan `tanggal` yang sama dengan respons pengeluaran. Field `hpp_layanan` tetap ada dan tidak berubah (total HPP). Transaksi yang sudah dihapus tidak dihitung.
 
-| Field | Keterangan |
-| --- | --- |
-| `id_layanan` | ID layanan (`null` bila layanan sudah dihapus dari master). |
-| `nama_layanan` | Nama layanan. |
-| `jumlah_terjual` | Jumlah unit terjual (`jumlah` dijumlahkan). |
-| `pendapatan` | Jumlah `harga_saat_transaksi × jumlah`. |
-| `hpp` | Jumlah `hpp_saat_transaksi × jumlah` (HPP yang belum diisi dihitung 0; lihat `hpp_lengkap`). |
+| Field            | Keterangan                                                                                   |
+| ---------------- | -------------------------------------------------------------------------------------------- |
+| `id_layanan`     | ID layanan (`null` bila layanan sudah dihapus dari master).                                  |
+| `nama_layanan`   | Nama layanan.                                                                                |
+| `jumlah_terjual` | Jumlah unit terjual (`jumlah` dijumlahkan).                                                  |
+| `pendapatan`     | Jumlah `harga_saat_transaksi × jumlah`.                                                      |
+| `hpp`            | Jumlah `hpp_saat_transaksi × jumlah` (HPP yang belum diisi dihitung 0; lihat `hpp_lengkap`). |
 
 Diurutkan dari `jumlah_terjual` terbanyak. Jumlah seluruh `hpp` sama dengan `hpp_layanan`. Periode tanpa penjualan menghasilkan `[]`.
 
@@ -1417,7 +1435,7 @@ Fitur ini memungkinkan barber melihat transaksi yang dicatat sendiri pada tangga
 - **URL:** `/api/transaksi/index.php`
 - **Autentikasi:** Wajib login.
 - **Role yang diizinkan:** `owner`, `barber`.
-- **Query parameter:** `tanggal` (opsional), format `YYYY-MM-DD`.
+- **Query parameter:** `tanggal`, atau `tanggal_awal` dan/atau `tanggal_akhir` (opsional), format `YYYY-MM-DD`. Lihat bagian 4.1.
 
 Contoh request:
 
@@ -1428,7 +1446,7 @@ GET /api/transaksi/index.php?tanggal=2026-10-23
 Aturan:
 
 - Jika role adalah `barber` dan parameter `tanggal` tidak diberikan, API menggunakan tanggal hari ini berdasarkan zona waktu `Asia/Jakarta`.
-- Jika parameter `tanggal` diberikan, daftar transaksi difilter berdasarkan tanggal tersebut.
+- Jika `tanggal` diberikan, daftar difilter pada tanggal itu. Jika `tanggal_awal` dan/atau `tanggal_akhir` diberikan, daftar difilter pada rentang tersebut (batas ikut termasuk).
 - Barber hanya dapat melihat transaksi yang dicatat oleh akun barber yang sedang login (`id_pencatat`).
 - Transaksi yang sudah dihapus secara logis (`dihapus_pada` tidak NULL) tidak ditampilkan.
 - Daftar diurutkan berdasarkan tanggal, waktu, dan ID transaksi dari terbaru ke terlama.

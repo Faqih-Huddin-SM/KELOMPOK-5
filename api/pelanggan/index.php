@@ -114,7 +114,10 @@ try {
 
     if ($q !== '') {
         $stmt = $pdo->prepare(
-            'SELECT id_pelanggan, nama
+            'SELECT id_pelanggan, nama,
+                    (SELECT COUNT(*) FROM transaksi t
+                     WHERE t.id_pelanggan = pelanggan.id_pelanggan
+                       AND t.dihapus_pada IS NULL) AS jumlah_kunjungan
              FROM pelanggan
              WHERE dihapus_pada IS NULL
                AND nama LIKE :q
@@ -127,7 +130,10 @@ try {
         ]);
     } else {
         $stmt = $pdo->query(
-            'SELECT id_pelanggan, nama
+            'SELECT id_pelanggan, nama,
+                    (SELECT COUNT(*) FROM transaksi t
+                     WHERE t.id_pelanggan = pelanggan.id_pelanggan
+                       AND t.dihapus_pada IS NULL) AS jumlah_kunjungan
              FROM pelanggan
              WHERE dihapus_pada IS NULL
              ORDER BY nama ASC, id_pelanggan ASC
@@ -135,9 +141,17 @@ try {
         );
     }
 
+    $daftarPelanggan = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    foreach ($daftarPelanggan as &$barisPelanggan) {
+        $barisPelanggan['id_pelanggan'] = (int) $barisPelanggan['id_pelanggan'];
+        $barisPelanggan['jumlah_kunjungan'] = (int) $barisPelanggan['jumlah_kunjungan'];
+    }
+    unset($barisPelanggan);
+
     kirimJsonPelanggan(200, [
         'success' => true,
-        'data' => $stmt->fetchAll(PDO::FETCH_ASSOC)
+        'data' => $daftarPelanggan
     ]);
 
 } catch (Throwable $e) {
