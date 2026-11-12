@@ -321,6 +321,25 @@ try {
             $stmtParams[':tanggal_akhir'] = $tanggalAkhir;
         }
 
+                if ($idBarberFilter !== null) {
+            $where .= " AND t.id_barber = :id_barber_filter";
+            $stmtParams[':id_barber_filter'] = $idBarberFilter;
+        }
+
+        if ($metodeFilter !== '') {
+            $where .= " AND t.metode_pembayaran = :metode_filter";
+            $stmtParams[':metode_filter'] = $metodeFilter;
+        }
+
+        if ($idLayananFilter !== null) {
+            $where .= " AND EXISTS (
+                SELECT 1 FROM detail_transaksi df
+                WHERE df.id_transaksi = t.id_transaksi
+                  AND df.id_layanan = :id_layanan_filter
+            )";
+            $stmtParams[':id_layanan_filter'] = $idLayananFilter;
+        }
+
         // Pencarian: nama pelanggan (mengandung) atau ID transaksi (persis).
         if ($q !== '') {
             $where .= " AND (p.nama LIKE :q_nama OR t.id_transaksi = :q_id)";
