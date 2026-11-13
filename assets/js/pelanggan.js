@@ -18,10 +18,12 @@ document.addEventListener('DOMContentLoaded', function () {
     const listContainer = document.getElementById('pelangganListContainer');
     const inputCari = document.getElementById('cariPelanggan');
     const profileAvatar = document.getElementById('profileAvatar');
+    const profileCard = document.getElementById('pelangganProfileCard');
     const profileNama = document.getElementById('profileNama');
     const profileLastVisit = document.getElementById('profileLastVisit');
     const profileKunjunganBadge = document.getElementById('profileKunjunganBadge');
     const timelineContainer = document.getElementById('riwayatTimelineContainer');
+    const historyCard = document.getElementById('riwayatHistoryCard');
 
     // [Card 5.2] Endpoint Backend API
     const API_PELANGGAN = '/KELOMPOK-5/api/pelanggan/index.php';
@@ -84,6 +86,8 @@ document.addEventListener('DOMContentLoaded', function () {
      * Memuat daftar seluruh pelanggan dari /api/pelanggan/index.php
      */
     async function muatDaftarPelanggan(keyword = '') {
+        const waktuMulai = performance.now();
+
         try {
             let url = API_PELANGGAN;
             if (keyword.trim()) {
@@ -98,26 +102,35 @@ document.addEventListener('DOMContentLoaded', function () {
 
             const result = await response.json();
 
+            if (!keyword.trim()) {
+                const sisaWaktuLoading = 500 - (performance.now() - waktuMulai);
+                if (sisaWaktuLoading > 0) {
+                    await new Promise(resolve => setTimeout(resolve, sisaWaktuLoading));
+                }
+            }
+
             if (!response.ok || !result.success) {
                 throw new Error(result.message || 'Gagal memuat pelanggan.');
             }
 
-            semuaPelanggan = Array.isArray(result.data) ? result.data : [];
+            const semuaRaw = Array.isArray(result.data) ? result.data : [];
 
-            // Simpan jumlah kunjungan yang dikembalikan dari API ke cache
-            semuaPelanggan.forEach(p => {
+            // [Card 5.2] Simpan jumlah kunjungan ke cache dari API
+            semuaRaw.forEach(p => {
                 if (p && p.id_pelanggan && p.jumlah_kunjungan !== undefined) {
                     cacheKunjungan.set(Number(p.id_pelanggan), Number(p.jumlah_kunjungan));
                 }
             });
 
+            // [Card 5.2] Filter: hanya tampilkan pelanggan yang sudah pernah bertransaksi (jumlah_kunjungan > 0)
+            // Pelanggan dengan 0 kunjungan tidak ditampilkan di daftar sesuai permintaan
+            semuaPelanggan = semuaRaw.filter(p => Number(p.jumlah_kunjungan || 0) > 0);
+
             renderDaftarPelanggan(semuaPelanggan);
 
-            // [Card 5.2] Auto-select pelanggan:
+            // [Card 5.2] Auto-select pelanggan (hanya dari yang sudah pernah bertransaksi):
             // 1. Sesuai parameter URL (?id=...) jika ada
-            // 2. Atau pelanggan "Budi" (skenario utama Figma)
-            // 3. Atau pelanggan pertama yang memiliki riwayat kunjungan
-            // 4. Fallback ke pelanggan pertama
+            // 2. Atau pelanggan pertama yang memiliki kunjungan
             if (semuaPelanggan.length > 0) {
                 const urlParams = new URLSearchParams(window.location.search);
                 const requestedId = parseInt(urlParams.get('id') || '0', 10);
@@ -127,49 +140,66 @@ document.addEventListener('DOMContentLoaded', function () {
                     dipilih = semuaPelanggan.find(p => Number(p.id_pelanggan) === requestedId);
                 }
                 if (!dipilih) {
-                    dipilih = semuaPelanggan.find(p => (p.nama || '').trim().toLowerCase() === 'budi');
-                }
-                if (!dipilih) {
-                    dipilih = semuaPelanggan.find(p => Number(p.jumlah_kunjungan || 0) > 0);
-                }
-                if (!dipilih) {
                     dipilih = semuaPelanggan[0];
                 }
 
                 pilihPelanggan(dipilih.id_pelanggan, dipilih.nama);
             } else {
-                tampilkanDaftarKosong('Tidak ada pelanggan ditemukan.');
+                tampilkanDaftarKosong('Belum ada pelanggan dengan riwayat transaksi.');
                 resetProfilKosong();
             }
 
         } catch (error) {
             console.error('[Card 5.2] Gagal memuat daftar pelanggan:', error);
             tampilkanDaftarKosong('Gagal memuat data pelanggan.');
+            if (profileNama) profileNama.textContent = 'Gagal memuat pelanggan';
+            if (profileAvatar) profileAvatar.textContent = '-';
+            if (profileLastVisit) profileLastVisit.textContent = 'Silakan muat ulang halaman untuk mencoba kembali.';
+            if (profileCard) profileCard.setAttribute('aria-busy', 'false');
+            if (profileKunjunganBadge) {
+                profileKunjunganBadge.setAttribute('aria-busy', 'false');
+                profileKunjunganBadge.innerHTML = `
+                    <span class="badge-kunjungan-num">-</span>
+                    <span class="badge-kunjungan-label">kunjungan</span>
+                `;
+            }
+            if (historyCard) historyCard.setAttribute('aria-busy', 'false');
+            if (timelineContainer) {
+                timelineContainer.innerHTML = `
+                    <div class="text-center py-4 text-danger">
+                        Gagal memuat riwayat layanan.
+                    </div>
+                `;
+            }
         }
     }
 
     /**
-     * Render item daftar pelanggan di kolom kiri sesuai desain Figma
+     * [Card 5.2] Render Daftar Pelanggan — hanya tampilkan yang sudah pernah bertransaksi
+     * List sudah difilter sebelum masuk ke sini (jumlah_kunjungan > 0)
      */
     function renderDaftarPelanggan(list) {
         if (!listContainer) return;
 
-        if (list.length === 0) {
-            tampilkanDaftarKosong('Tidak ada pelanggan ditemukan.');
+        // [Card 5.2] Filter lokal: pastikan hanya yang ada kunjungan (double-check)
+        const listBertransaksi = list.filter(p => Number(p.jumlah_kunjungan || 0) > 0);
+
+        if (listBertransaksi.length === 0) {
+            tampilkanDaftarKosong('Belum ada pelanggan dengan riwayat transaksi.');
             return;
         }
 
-        listContainer.innerHTML = list.map(p => {
+        listContainer.innerHTML = listBertransaksi.map(p => {
             const id = p.id_pelanggan;
             const nama = escapeHtml(p.nama || 'Tanpa Nama');
             const inisial = escapeHtml(getInisial(p.nama));
             const isActive = Number(pelangganAktifId) === Number(id) ? 'active' : '';
 
-            // [Card 5.2] Ambil jumlah_kunjungan langsung dari respons API pelanggan (0 = "Belum ada kunjungan")
+            // [Card 5.2] Jumlah kunjungan pasti > 0 karena sudah difilter
             const jml = (typeof p.jumlah_kunjungan === 'number')
                 ? p.jumlah_kunjungan
                 : (cacheKunjungan.get(Number(id)) ?? 0);
-            const kunjunganTeks = jml > 0 ? `${jml} kunjungan` : 'Belum ada kunjungan';
+            const kunjunganTeks = `${jml} kunjungan`;
 
             return `
                 <div
@@ -206,7 +236,10 @@ document.addEventListener('DOMContentLoaded', function () {
         if (profileNama) profileNama.textContent = 'Pilih Pelanggan';
         if (profileAvatar) profileAvatar.textContent = '-';
         if (profileLastVisit) profileLastVisit.textContent = 'Tidak ada pelanggan yang dipilih.';
+        if (profileCard) profileCard.setAttribute('aria-busy', 'false');
+        if (historyCard) historyCard.setAttribute('aria-busy', 'false');
         if (profileKunjunganBadge) {
+            profileKunjunganBadge.setAttribute('aria-busy', 'false');
             profileKunjunganBadge.innerHTML = `
                 <span class="badge-kunjungan-num">0</span>
                 <span class="badge-kunjungan-label">kunjungan</span>
@@ -227,7 +260,8 @@ document.addEventListener('DOMContentLoaded', function () {
     // ==========================================================================
 
     /**
-     * Memilih pelanggan dan memanggil API /api/riwayat/pelanggan.php?id_pelanggan={id}
+     * [Card 5.2] Memilih pelanggan dan memanggil API /api/riwayat/pelanggan.php?id_pelanggan={id}
+     * Hanya dipanggil untuk pelanggan yang sudah pernah bertransaksi (jumlah_kunjungan > 0)
      */
     async function pilihPelanggan(idPelanggan, namaPelanggan) {
         if (!idPelanggan) return;
@@ -241,14 +275,34 @@ document.addEventListener('DOMContentLoaded', function () {
             item.classList.toggle('active', itemMatch);
         });
 
-        // [Card 5.2] Tampilkan indikator memuat pada profil dan timeline
+        // [Card 5.2] Tampilkan history card dulu (akan disembunyikan kembali jika 0 kunjungan)
+        // dan tampilkan loading spinner di timeline
+        if (historyCard) historyCard.style.display = '';
+
         if (profileNama) profileNama.textContent = namaPelanggan || 'Memuat...';
-        if (profileAvatar) profileAvatar.textContent = getInisial(namaPelanggan);
-        if (profileLastVisit) profileLastVisit.textContent = 'Memuat riwayat kunjungan...';
+        if (profileAvatar) {
+            profileAvatar.innerHTML = '<span class="pelanggan-loading-spinner pelanggan-loading-spinner--avatar" aria-hidden="true"></span>';
+        }
+        if (profileLastVisit) {
+            profileLastVisit.innerHTML = `
+                <span class="pelanggan-loading-spinner" aria-hidden="true"></span>
+                Memuat riwayat kunjungan...
+            `;
+        }
+        if (profileKunjunganBadge) {
+            profileKunjunganBadge.setAttribute('aria-busy', 'true');
+            profileKunjunganBadge.innerHTML = `
+                <span class="pelanggan-loading-spinner pelanggan-loading-spinner--visits" role="status" aria-label="Memuat jumlah kunjungan"></span>
+                <span class="badge-kunjungan-label">kunjungan</span>
+            `;
+        }
+        if (profileCard) profileCard.setAttribute('aria-busy', 'true');
+        if (historyCard) historyCard.setAttribute('aria-busy', 'true');
         if (timelineContainer) {
             timelineContainer.innerHTML = `
-                <div class="pelanggan-timeline-loading text-center py-4 text-muted">
-                    Memuat riwayat layanan...
+                <div class="pelanggan-timeline-loading" role="status" aria-live="polite">
+                    <span class="pelanggan-loading-spinner pelanggan-loading-spinner--large" aria-hidden="true"></span>
+                    <span>Memuat riwayat layanan...</span>
                 </div>
             `;
         }
@@ -265,6 +319,8 @@ document.addEventListener('DOMContentLoaded', function () {
             if (!response.ok || !result.success) {
                 throw new Error(result.message || 'Gagal memuat riwayat layanan.');
             }
+            if (profileCard) profileCard.setAttribute('aria-busy', 'false');
+            if (historyCard) historyCard.setAttribute('aria-busy', 'false');
 
             const data = result.data || {};
             const pelangganInfo = data.pelanggan || { id_pelanggan: idPelanggan, nama: namaPelanggan };
@@ -282,12 +338,27 @@ document.addEventListener('DOMContentLoaded', function () {
             // [Card 5.2] Update Tampilan Kartu Profil Pelanggan (Atas)
             renderKartuProfil(pelangganInfo.nama, jumlahKunjungan, riwayatRaw, adaData);
 
+            // [Card 5.2] Hide/show history card: sembunyikan jika 0 transaksi (tidak perlu pesan kosong)
+            if (historyCard) {
+                historyCard.style.display = jumlahKunjungan === 0 ? 'none' : '';
+            }
+
             // [Card 5.2] Update Tampilan Timeline Riwayat Layanan (Bawah)
             renderTimelineRiwayat(riwayatRaw, adaData);
 
         } catch (error) {
             console.error('[Card 5.2] Gagal memuat riwayat pelanggan:', error);
+            if (profileCard) profileCard.setAttribute('aria-busy', 'false');
+            if (historyCard) historyCard.setAttribute('aria-busy', 'false');
+            if (profileAvatar) profileAvatar.textContent = getInisial(namaPelanggan);
             if (profileLastVisit) profileLastVisit.textContent = 'Gagal memuat detail pelanggan.';
+            if (profileKunjunganBadge) {
+                profileKunjunganBadge.setAttribute('aria-busy', 'false');
+                profileKunjunganBadge.innerHTML = `
+                    <span class="badge-kunjungan-num">-</span>
+                    <span class="badge-kunjungan-label">kunjungan</span>
+                `;
+            }
             if (timelineContainer) {
                 timelineContainer.innerHTML = `
                     <div class="text-center py-4 text-danger">
@@ -307,6 +378,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         // Badge Kunjungan di kanan kartu profil (Kotak Kunjungan)
         if (profileKunjunganBadge) {
+            profileKunjunganBadge.setAttribute('aria-busy', 'false');
             profileKunjunganBadge.innerHTML = `
                 <span class="badge-kunjungan-num">${jumlahKunjungan}</span>
                 <span class="badge-kunjungan-label">kunjungan</span>
@@ -329,25 +401,15 @@ document.addEventListener('DOMContentLoaded', function () {
      * [Card 5.2] Render Timeline Riwayat Layanan
      * - Mengelompokkan transaksi multi-layanan per id_transaksi (contoh: "Cukur + Creambath")
      * - Menandai kunjungan teratas dengan badge "Terbaru"
-     * - Menampilkan pesan "Belum ada riwayat layanan" bila belum pernah bertransaksi
+     * - Sembunyikan history card jika jumlahKunjungan === 0 (sudah ditangani di pilihPelanggan())
+     * - Urutan sesuai Figma: nama layanan di ATAS, tanggal di BAWAH
      */
     function renderTimelineRiwayat(riwayatList, adaData) {
         if (!timelineContainer) return;
 
-        // [Card 5.2] SKENARIO: Belum pernah bertransaksi (ada_data === false)
+        // [Card 5.2] SKENARIO: Belum pernah bertransaksi — history card sudah disembunyikan oleh pilihPelanggan()
         if (!adaData || riwayatList.length === 0) {
-            timelineContainer.innerHTML = `
-                <div class="pelanggan-empty-state">
-                    <div class="pelanggan-empty-icon" aria-hidden="true">
-                        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                            <circle cx="12" cy="12" r="10"></circle>
-                            <polyline points="12 6 12 12 16 14"></polyline>
-                        </svg>
-                    </div>
-                    <p class="pelanggan-empty-title">Belum ada riwayat layanan</p>
-                    <p class="pelanggan-empty-desc">Pelanggan ini belum pernah melakukan transaksi.</p>
-                </div>
-            `;
+            timelineContainer.innerHTML = '';
             return;
         }
 
@@ -375,14 +437,16 @@ document.addEventListener('DOMContentLoaded', function () {
 
         const daftarKunjungan = Array.from(kunjunganMap.values());
 
-        // [Card 5.2] Render Node Timeline Sesuai Desain Figma
+        // [Card 5.2] Render Node Timeline Sesuai Desain Figma:
+        // Setiap kunjungan = dot kiri + BOX kanan (nama layanan + badge "Terbaru" sejajar, tanggal di bawah)
         timelineContainer.innerHTML = `
             <div class="pelanggan-timeline-list">
                 ${daftarKunjungan.map((kunjungan, index) => {
-                    const isLatest = index === 0; // Kunjungan paling atas adalah yang terbaru
+                    const isLatest = index === 0;
                     const tglFormat = formatTanggalIndo(kunjungan.tanggal);
-                    // Gabungkan multi-layanan dengan tanda " + " (contoh: "Cukur + Creambath")
+                    // Gabungkan multi-layanan dengan " + " (contoh: "Cukur + Creambath")
                     const layananGabung = escapeHtml(kunjungan.layananList.join(' + '));
+                    // Badge "Terbaru" diletakkan DALAM box, sejajar nama layanan (sesuai Figma)
                     const latestBadge = isLatest
                         ? '<span class="timeline-badge-terbaru">Terbaru</span>'
                         : '';
@@ -391,11 +455,21 @@ document.addEventListener('DOMContentLoaded', function () {
                     return `
                         <div class="timeline-item ${latestClass}">
                             <span class="timeline-item-dot" aria-hidden="true"></span>
-                            <div class="timeline-content">
-                                <span class="timeline-date">${tglFormat}</span>
-                                <h4 class="timeline-services">${layananGabung}</h4>
+                            <div class="timeline-item-box">
+                                <div class="timeline-item-top">
+                                    <h4 class="timeline-services">${layananGabung}</h4>
+                                    ${latestBadge}
+                                </div>
+                                <span class="timeline-date">
+                                    <svg class="timeline-cal-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                                        <line x1="16" y1="2" x2="16" y2="6"></line>
+                                        <line x1="8" y1="2" x2="8" y2="6"></line>
+                                        <line x1="3" y1="10" x2="21" y2="10"></line>
+                                    </svg>
+                                    ${tglFormat}
+                                </span>
                             </div>
-                            ${latestBadge}
                         </div>
                     `;
                 }).join('')}
@@ -462,4 +536,3 @@ document.addEventListener('DOMContentLoaded', function () {
     // ==========================================================================
     muatDaftarPelanggan();
 });
-

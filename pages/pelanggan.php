@@ -54,8 +54,10 @@ include __DIR__ . '/../includes/header.php';
 
             <!-- [Card 5.2] Kontainer Daftar Item Pelanggan (Diisi Dinamis via pelanggan.js) -->
             <div class="pelanggan-list-container" id="pelangganListContainer" role="list">
-                <div class="pelanggan-list-loading text-center py-4 text-muted">
-                    Memuat daftar pelanggan...
+                <!-- [Card 5.2] Loading state awal daftar pelanggan -->
+                <div class="pelanggan-list-loading-wrap" role="status" aria-live="polite">
+                    <span class="pelanggan-loading-spinner" aria-hidden="true"></span>
+                    <span>Memuat daftar pelanggan...</span>
                 </div>
             </div>
         </section>
@@ -66,42 +68,46 @@ include __DIR__ . '/../includes/header.php';
         <main class="pelanggan-detail-col">
 
             <!-- [Card 5.2] 1. KARTU PROFIL RINGKAS PELANGGAN (ATAS) -->
-            <section class="pelanggan-card pelanggan-profile-card" id="pelangganProfileCard" aria-label="Profil Pelanggan">
+            <section class="pelanggan-card pelanggan-profile-card" id="pelangganProfileCard" aria-label="Profil Pelanggan" aria-busy="true">
                 <div class="pelanggan-profile-left">
                     <!-- Avatar Lingkaran Besar dengan Inisial Nama -->
                     <div class="pelanggan-avatar-large" id="profileAvatar" aria-hidden="true">
-                        -
+                        <span class="pelanggan-loading-spinner pelanggan-loading-spinner--avatar"></span>
                     </div>
                     <div class="pelanggan-profile-info">
                         <h2 class="pelanggan-profile-name" id="profileNama">
-                            Pilih Pelanggan
+                            Memuat pelanggan...
                         </h2>
-                        <p class="pelanggan-profile-subtext" id="profileLastVisit">
-                            Pilih salah satu pelanggan di sebelah kiri untuk melihat riwayat layanan.
+                        <p class="pelanggan-profile-subtext pelanggan-profile-loading" id="profileLastVisit" role="status" aria-live="polite">
+                            <span class="pelanggan-loading-spinner" aria-hidden="true"></span>
+                            Memuat data pelanggan...
                         </p>
                     </div>
                 </div>
 
                 <div class="pelanggan-profile-right">
                     <!-- [Card 5.2] Badge Jumlah Kunjungan Box Sesuai Desain Figma (Kotak Kunjungan) -->
-                    <div class="badge-kunjungan-box" id="profileKunjunganBadge" aria-label="Jumlah kunjungan">
-                        <span class="badge-kunjungan-num">0</span>
+                    <div class="badge-kunjungan-box" id="profileKunjunganBadge" aria-label="Jumlah kunjungan" aria-busy="true">
+                        <span class="pelanggan-loading-spinner pelanggan-loading-spinner--visits" role="status" aria-label="Memuat jumlah kunjungan"></span>
                         <span class="badge-kunjungan-label">kunjungan</span>
                     </div>
                 </div>
             </section>
 
             <!-- [Card 5.2] 2. KARTU RIWAYAT LAYANAN TIMELINE (BAWAH) -->
-            <section class="pelanggan-card pelanggan-history-card" aria-label="Riwayat Layanan">
+            <!-- id="riwayatHistoryCard" dipakai JS untuk hide/show saat pelanggan belum pernah bertransaksi -->
+            <section class="pelanggan-card pelanggan-history-card" id="riwayatHistoryCard" aria-label="Riwayat Layanan" aria-busy="true">
                 <div class="pelanggan-history-header">
                     <h3 class="pelanggan-history-title">Riwayat Layanan</h3>
-                    <p class="pelanggan-history-subtitle">Layanan yang pernah diambil</p>
+                    <!-- [Card 5.2] Subtitle sesuai Figma: "terbaru di atas" -->
+                    <p class="pelanggan-history-subtitle">Layanan yang pernah diambil, terbaru di atas</p>
                 </div>
 
                 <!-- [Card 5.2] Kontainer Timeline Riwayat (Diisi Dinamis via pelanggan.js) -->
                 <div class="pelanggan-timeline-container" id="riwayatTimelineContainer">
-                    <div class="text-center py-4 text-muted">
-                        Pilih pelanggan untuk memuat riwayat layanan.
+                    <div class="pelanggan-timeline-loading" role="status" aria-live="polite">
+                        <span class="pelanggan-loading-spinner pelanggan-loading-spinner--large" aria-hidden="true"></span>
+                        <span>Memuat riwayat layanan...</span>
                     </div>
                 </div>
             </section>
@@ -113,7 +119,6 @@ include __DIR__ . '/../includes/header.php';
 </div>
 
 <!-- [Card 5.2] Script Frontend Pelanggan & Riwayat Layanan -->
-<script src="/KELOMPOK-5/assets/js/pelanggan.js?v=2"></script>
+<script src="/KELOMPOK-5/assets/js/pelanggan.js?v=7"></script>
 
 <?php include __DIR__ . '/../includes/footer.php'; ?>
-
