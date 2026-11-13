@@ -6,6 +6,6 @@
 <script src="/KELOMPOK-5/assets/js/script.js?v=11"></script>
 <script src="/KELOMPOK-5/assets/js/dashboard.js?v=24"></script>
 <script src="/KELOMPOK-5/assets/js/pemasukan.js?v=3"></script>
-<script src="/KELOMPOK-5/assets/js/laporan.js"></script>
+<script src="/KELOMPOK-5/assets/js/laporan.js?v=7"></script>
 </body>
 </html>
