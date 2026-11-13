@@ -5,6 +5,8 @@
 
 document.addEventListener('DOMContentLoaded', () => {
     const API_URL = '/KELOMPOK-5/api/pengeluaran/index.php';
+    const DASHBOARD_API_URL = '/KELOMPOK-5/api/rekap/dashboard.php';
+    let periodeAktif = 'hari';
 
     // Elemen form dan input
     const form = document.getElementById('formPengeluaranHarian');
@@ -22,6 +24,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const ringkasanElement = document.getElementById('totalRingkasanPengeluaran');
     const daftarElement = document.getElementById('daftarPengeluaranHarian');
     const statusElement = document.getElementById('statusPengeluaranHarian');
+    const judulDaftarElement = document.getElementById('judulDaftarPengeluaran');
 
     if (
         !form ||
@@ -352,9 +355,11 @@ document.addEventListener('DOMContentLoaded', () => {
         elemenError.textContent = pesan;
     }
 
-    async function validasiFormDanBeriTahu() {
+    function validasiForm() {
         bersihkanError(kategoriInput, errorKategori);
         bersihkanError(nominalInput, errorNominal);
+
+        let valid = true;
 
         if (!kategoriInput.value.trim()) {
             tampilkanError(
@@ -362,14 +367,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 errorKategori,
                 '*Kategori wajib diisi'
             );
-            await tampilkanAlert({
-                judul: 'Validasi Pengeluaran',
-                pesan: 'Silakan pilih kategori pengeluaran terlebih dahulu.',
-                teksTombol: 'Mengerti',
-                tipe: 'primary'
-            });
-            kategoriInput.focus();
-            return false;
+            valid = false;
         }
 
         const nominal = nominalInput.value.trim();
@@ -381,14 +379,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 errorNominal,
                 '*Nominal harus diisi'
             );
-            await tampilkanAlert({
-                judul: 'Validasi Pengeluaran',
-                pesan: 'Nominal pengeluaran harus diisi.',
-                teksTombol: 'Mengerti',
-                tipe: 'primary'
-            });
-            nominalInput.focus();
-            return false;
+            valid = false;
         } else if (
             !Number.isFinite(angkaNominal) ||
             angkaNominal <= 0 ||
@@ -399,31 +390,21 @@ document.addEventListener('DOMContentLoaded', () => {
                 errorNominal,
                 '*Nominal harus lebih dari nol'
             );
-            await tampilkanAlert({
-                judul: 'Validasi Pengeluaran',
-                pesan: 'Nominal harus bernilai lebih dari nol (angka bulat).',
-                teksTombol: 'Mengerti',
-                tipe: 'primary'
-            });
-            nominalInput.focus();
-            return false;
+            valid = false;
         } else if (angkaNominal > 2147483647) {
             tampilkanError(
                 nominalInput,
                 errorNominal,
                 '*Nominal terlalu besar'
             );
-            await tampilkanAlert({
-                judul: 'Validasi Pengeluaran',
-                pesan: 'Nominal terlalu besar melebihi batas sistem.',
-                teksTombol: 'Mengerti',
-                tipe: 'primary'
-            });
-            nominalInput.focus();
-            return false;
+            valid = false;
         }
 
-        return true;
+        if (!valid) {
+            (kategoriInput.value.trim() ? nominalInput : kategoriInput).focus();
+        }
+
+        return valid;
     }
 
     kategoriInput.addEventListener('change', () => {
@@ -804,12 +785,33 @@ document.addEventListener('DOMContentLoaded', () => {
     function tampilkanDaftar(data) {
         daftarElement.replaceChildren();
 
+        const periode = data.periode || periodeAktif;
+        const tanggal = data.tanggal || tanggalInput.value || tanggalLokal();
+        const judulPeriode = {
+            hari: tanggal === tanggalLokal()
+                ? 'Pengeluaran Hari Ini'
+                : `Pengeluaran Tanggal ${formatTanggal(tanggal)}`,
+            minggu: 'Pengeluaran Minggu Ini',
+            bulan: 'Pengeluaran Bulan Ini',
+            semua: 'Semua Pengeluaran'
+        };
+        if (judulDaftarElement) {
+            judulDaftarElement.textContent =
+                judulPeriode[periode] || 'Daftar Pengeluaran';
+        }
+
         const daftar = Array.isArray(data.pengeluaran)
             ? data.pengeluaran
             : [];
 
         if (daftar.length === 0) {
-            tampilkanKosong('Belum ada pengeluaran pada tanggal ini.');
+            const pesanKosong = {
+                hari: 'Belum ada pengeluaran pada tanggal ini.',
+                minggu: 'Belum ada pengeluaran pada minggu ini.',
+                bulan: 'Belum ada pengeluaran pada bulan ini.',
+                semua: 'Belum ada data pengeluaran.'
+            };
+            tampilkanKosong(pesanKosong[periode] || 'Belum ada data pengeluaran.');
         } else {
             daftar.forEach((item) => {
                 item.akun_login = data.akun_login || '';
@@ -839,6 +841,37 @@ document.addEventListener('DOMContentLoaded', () => {
         if (ringkasanElement) {
             ringkasanElement.textContent = formatRupiah(total);
         }
+
+        const rincianKategori = Array.isArray(data.rincian_per_kategori)
+            ? data.rincian_per_kategori
+            : null;
+        const kategoriBahan = rincianKategori?.find((item) =>
+            String(item.kategori || '').trim().toLocaleLowerCase('id-ID') === 'bahan'
+        );
+        const ringkasanBahan = document.getElementById('ringkasanPembelianBahan');
+        if (ringkasanBahan && rincianKategori) {
+            ringkasanBahan.textContent = formatRupiah(
+                kategoriBahan?.total_pengeluaran || 0
+            );
+        }
+
+        const ringkasanHpp = document.getElementById('ringkasanHppLayanan');
+        if (ringkasanHpp && data.hpp_layanan !== undefined) {
+            ringkasanHpp.textContent = formatRupiah(data.hpp_layanan);
+        }
+
+        const daftarHpp = document.getElementById('daftarHppLayanan');
+        if (daftarHpp) {
+            const baris = document.createElement('tr');
+            const sel = document.createElement('td');
+            sel.colSpan = 4;
+            sel.className = 'pengeluaran-hpp-empty';
+            sel.textContent = data.hpp_lengkap === false
+                ? 'API menyediakan total HPP, tetapi ada transaksi yang belum memiliki data HPP. Rincian HPP per layanan belum tersedia.'
+                : 'API menyediakan total HPP, tetapi belum menyediakan rincian HPP per layanan.';
+            baris.appendChild(sel);
+            daftarHpp.replaceChildren(baris);
+        }
     }
 
     // ======================================================
@@ -849,10 +882,13 @@ document.addEventListener('DOMContentLoaded', () => {
         tampilkanStatus('Memuat data pengeluaran...');
 
         try {
-            const tanggal = tanggalInput.value || tanggalLokal();
+            const params = new URLSearchParams({
+                tanggal: tanggalInput.value || tanggalLokal(),
+                periode: periodeAktif
+            });
 
             const respons = await fetch(
-                `${API_URL}?tanggal=${encodeURIComponent(tanggal)}`,
+                `${API_URL}?${params.toString()}`,
                 {
                     method: 'GET',
                     credentials: 'same-origin',
@@ -880,6 +916,41 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    async function muatRingkasan() {
+        const respons = await fetch(
+            `${DASHBOARD_API_URL}?periode=${encodeURIComponent(periodeAktif)}&tanggal=${encodeURIComponent(tanggalInput.value || tanggalLokal())}&limit=1`,
+            {
+                method: 'GET',
+                credentials: 'same-origin',
+                headers: { 'Accept': 'application/json' }
+            }
+        );
+        const hasil = await respons.json();
+        if (!respons.ok || hasil.success !== true) {
+            throw new Error(hasil.message || 'Ringkasan pengeluaran gagal dimuat.');
+        }
+
+        const keuangan = hasil.data?.keuangan || {};
+        const ringkasanHpp = document.getElementById('ringkasanHppLayanan');
+        const ringkasanOperasional = document.getElementById('totalRingkasanPengeluaran');
+        const daftarHpp = document.getElementById('daftarHppLayanan');
+
+        if (ringkasanHpp) ringkasanHpp.textContent = formatRupiah(keuangan.hpp || 0);
+        if (ringkasanOperasional) ringkasanOperasional.textContent = formatRupiah(keuangan.biaya_operasional || 0);
+
+        if (daftarHpp) {
+            const baris = document.createElement('tr');
+            const sel = document.createElement('td');
+            sel.colSpan = 4;
+            sel.className = 'pengeluaran-hpp-empty';
+            sel.textContent = keuangan.hpp_lengkap === false
+                ? 'API menyediakan total HPP, tetapi ada transaksi yang belum memiliki data HPP. Rincian HPP per layanan belum tersedia.'
+                : 'API menyediakan total HPP, tetapi belum menyediakan rincian HPP per layanan.';
+            baris.appendChild(sel);
+            daftarHpp.replaceChildren(baris);
+        }
+    }
+
     // ======================================================
     // 8. SIMPAN PENGELUARAN BARU
     // ======================================================
@@ -887,7 +958,7 @@ document.addEventListener('DOMContentLoaded', () => {
     form.addEventListener('submit', async (event) => {
         event.preventDefault();
 
-        const valid = await validasiFormDanBeriTahu();
+        const valid = validasiForm();
         if (!valid) return;
 
         const kategori = kategoriInput.value.trim();
@@ -969,10 +1040,40 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     tanggalInput.value = tanggalLokal();
-    tanggalInput.addEventListener('change', muatPengeluaran);
+    tanggalInput.addEventListener('change', async () => {
+        periodeAktif = 'hari';
+        document.querySelectorAll('.pengeluaran-period-options [data-periode]').forEach((item) => {
+            const aktif = item.dataset.periode === 'hari';
+            item.classList.toggle('active', aktif);
+            item.setAttribute('aria-pressed', String(aktif));
+        });
+        await muatPengeluaran();
+        await muatRingkasan();
+    });
+
+    document.querySelectorAll('.pengeluaran-period-options [data-periode]').forEach((tombol) => {
+        tombol.addEventListener('click', async () => {
+            periodeAktif = tombol.dataset.periode || 'hari';
+            document.querySelectorAll('.pengeluaran-period-options [data-periode]').forEach((item) => {
+                const aktif = item === tombol;
+                item.classList.toggle('active', aktif);
+                item.setAttribute('aria-pressed', String(aktif));
+            });
+
+            if (periodeAktif === 'hari') {
+                tanggalInput.value = tanggalLokal();
+                await muatPengeluaran();
+            } else {
+                tanggalInput.value = '';
+                await muatPengeluaran();
+            }
+            await muatRingkasan();
+        });
+    });
 
     bersihkanError(kategoriInput, errorKategori);
     bersihkanError(nominalInput, errorNominal);
 
     muatPengeluaran();
+    muatRingkasan().catch((error) => tampilkanStatus(error.message));
 });
