@@ -21,7 +21,6 @@ include __DIR__ . '/../includes/header.php';
     <!-- [Card 5.2] Header Judul Halaman -->
     <div class="pelanggan-header-row">
         <h1 class="pelanggan-title">Pelanggan</h1>
-        <p class="pelanggan-subtitle">Lihat riwayat layanan untuk merekomendasikan layanan yang pas.</p>
     </div>
 
     <!-- [Card 5.2] Layout Grid 2 Kolom Sesuai Desain Figma:
@@ -53,7 +52,7 @@ include __DIR__ . '/../includes/header.php';
             </div>
 
             <!-- [Card 5.2] Kontainer Daftar Item Pelanggan (Diisi Dinamis via pelanggan.js) -->
-            <div class="pelanggan-list-container" id="pelangganListContainer" role="list">
+            <div class="pelanggan-list-container is-loading" id="pelangganListContainer" role="list">
                 <!-- [Card 5.2] Loading state awal daftar pelanggan -->
                 <div class="pelanggan-list-loading-wrap" role="status" aria-live="polite">
                     <span class="pelanggan-loading-spinner" aria-hidden="true"></span>
@@ -69,27 +68,33 @@ include __DIR__ . '/../includes/header.php';
 
             <!-- [Card 5.2] 1. KARTU PROFIL RINGKAS PELANGGAN (ATAS) -->
             <section class="pelanggan-card pelanggan-profile-card" id="pelangganProfileCard" aria-label="Profil Pelanggan" aria-busy="true">
-                <div class="pelanggan-profile-left">
-                    <!-- Avatar Lingkaran Besar dengan Inisial Nama -->
-                    <div class="pelanggan-avatar-large" id="profileAvatar" aria-hidden="true">
-                        <span class="pelanggan-loading-spinner pelanggan-loading-spinner--avatar"></span>
-                    </div>
-                    <div class="pelanggan-profile-info">
-                        <h2 class="pelanggan-profile-name" id="profileNama">
-                            Memuat pelanggan...
-                        </h2>
-                        <p class="pelanggan-profile-subtext pelanggan-profile-loading" id="profileLastVisit" role="status" aria-live="polite">
-                            <span class="pelanggan-loading-spinner" aria-hidden="true"></span>
-                            Memuat data pelanggan...
-                        </p>
-                    </div>
+                <div class="pelanggan-profile-loading-state" role="status" aria-live="polite">
+                    <span class="pelanggan-loading-spinner" aria-hidden="true"></span>
+                    <span>Memuat profil pelanggan...</span>
                 </div>
+                <div class="pelanggan-profile-content">
+                    <div class="pelanggan-profile-left">
+                        <!-- Avatar Lingkaran Besar dengan Inisial Nama -->
+                        <div class="pelanggan-avatar-large" id="profileAvatar" aria-hidden="true">
+                            <span class="pelanggan-loading-spinner pelanggan-loading-spinner--avatar"></span>
+                        </div>
+                        <div class="pelanggan-profile-info">
+                            <h2 class="pelanggan-profile-name" id="profileNama">
+                                Memuat pelanggan...
+                            </h2>
+                            <p class="pelanggan-profile-subtext pelanggan-profile-loading" id="profileLastVisit" role="status" aria-live="polite">
+                                <span class="pelanggan-loading-spinner" aria-hidden="true"></span>
+                                Memuat data pelanggan...
+                            </p>
+                        </div>
+                    </div>
 
-                <div class="pelanggan-profile-right">
-                    <!-- [Card 5.2] Badge Jumlah Kunjungan Box Sesuai Desain Figma (Kotak Kunjungan) -->
-                    <div class="badge-kunjungan-box" id="profileKunjunganBadge" aria-label="Jumlah kunjungan" aria-busy="true">
-                        <span class="pelanggan-loading-spinner pelanggan-loading-spinner--visits" role="status" aria-label="Memuat jumlah kunjungan"></span>
-                        <span class="badge-kunjungan-label">kunjungan</span>
+                    <div class="pelanggan-profile-right">
+                        <!-- [Card 5.2] Badge Jumlah Kunjungan Box Sesuai Desain Figma (Kotak Kunjungan) -->
+                        <div class="badge-kunjungan-box" id="profileKunjunganBadge" aria-label="Jumlah kunjungan" aria-busy="true">
+                            <span class="pelanggan-loading-spinner pelanggan-loading-spinner--visits" role="status" aria-label="Memuat jumlah kunjungan"></span>
+                            <span class="badge-kunjungan-label">kunjungan</span>
+                        </div>
                     </div>
                 </div>
             </section>
@@ -119,6 +124,6 @@ include __DIR__ . '/../includes/header.php';
 </div>
 
 <!-- [Card 5.2] Script Frontend Pelanggan & Riwayat Layanan -->
-<script src="/KELOMPOK-5/assets/js/pelanggan.js?v=7"></script>
+<script src="/KELOMPOK-5/assets/js/pelanggan.js?v=9"></script>
 
 <?php include __DIR__ . '/../includes/footer.php'; ?>

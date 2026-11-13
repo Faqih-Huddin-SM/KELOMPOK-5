@@ -7127,6 +7127,12 @@ body .pengeluaran-toast[hidden] {
     padding-right: 4px;
 }
 
+.pelanggan-page .pelanggan-list-container.is-loading {
+    min-height: 180px;
+    max-height: 180px;
+    overflow: hidden;
+}
+
 /* [Card 5.2] Loading state daftar pelanggan (spinner kecil inline) */
 .pelanggan-page .pelanggan-list-loading-wrap {
     display: flex;
@@ -7136,8 +7142,10 @@ body .pengeluaran-toast[hidden] {
     justify-content: center;
     gap: 6px;
     width: 100%;
-    min-height: 180px;
+    min-height: 100%;
     padding: 24px 12px;
+    border-radius: 10px;
+    background: #F1F2FA;
     color: #8F92A1;
     font-size: 9px;
 }
@@ -7271,6 +7279,40 @@ body .pengeluaran-toast[hidden] {
     justify-content: space-between;
     gap: 16px;
     box-shadow: 0 8px 24px rgba(23, 24, 107, 0.16);
+}
+
+.pelanggan-page .pelanggan-profile-content {
+    display: flex;
+    width: 100%;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.pelanggan-page .pelanggan-profile-loading-state {
+    display: none;
+}
+
+.pelanggan-page .pelanggan-profile-card[aria-busy="true"] {
+    padding: 10px;
+}
+
+.pelanggan-page .pelanggan-profile-card[aria-busy="true"] .pelanggan-profile-content {
+    display: none;
+}
+
+.pelanggan-page .pelanggan-profile-card[aria-busy="true"] .pelanggan-profile-loading-state {
+    display: flex;
+    flex: 1;
+    min-height: 54px;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    border-radius: 9px;
+    background: rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.72);
+    font-size: 8px;
 }
 
 .pelanggan-page .pelanggan-profile-left {
@@ -7507,12 +7549,6 @@ body .pengeluaran-toast[hidden] {
     flex-shrink: 0;
 }
 
-border-radius: 9999px;
-white-space: nowrap;
-letter-spacing: 0.2px;
-flex-shrink: 0;
-}
-
 /* [Card 5.2] Loading State Riwayat Layanan (Spinner sesuai Dashboard) */
 .pelanggan-page .pelanggan-timeline-loading {
     display: flex;
@@ -7521,12 +7557,22 @@ flex-shrink: 0;
     justify-content: center;
     gap: 8px;
     width: 100%;
-    min-height: 200px;
+    min-height: 80px;
     padding: 20px;
+    border-radius: 10px;
+    background: #F1F2FA;
     color: #8F92A1;
     font-size: 12px;
     text-align: center;
     font-family: 'Poppins', sans-serif;
+}
+
+.pelanggan-page .pelanggan-history-card[aria-busy="true"] {
+    min-height: 0;
+}
+
+.pelanggan-page .pelanggan-history-card[aria-busy="true"] .pelanggan-history-header {
+    margin-bottom: 12px;
 }
 
 /* [Card 5.2] Empty State Riwayat (Pelanggan yang belum pernah bertransaksi) */

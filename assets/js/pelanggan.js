@@ -180,6 +180,7 @@ document.addEventListener('DOMContentLoaded', function () {
      */
     function renderDaftarPelanggan(list) {
         if (!listContainer) return;
+        listContainer.classList.remove('is-loading');
 
         // [Card 5.2] Filter lokal: pastikan hanya yang ada kunjungan (double-check)
         const listBertransaksi = list.filter(p => Number(p.jumlah_kunjungan || 0) > 0);
@@ -224,6 +225,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function tampilkanDaftarKosong(pesan) {
         if (listContainer) {
+            listContainer.classList.remove('is-loading');
             listContainer.innerHTML = `
                 <div class="pelanggan-list-empty text-center py-4 text-muted">
                     ${escapeHtml(pesan)}
