@@ -734,7 +734,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     // ==========================================================================
-    // [Card 6.7] 5. LOGIKA TABEL REKAP & PAGINASI
+    // [Card 6.7] 5. LOGIKA CLICK TABEL REKAP & PAGINASI
     // ==========================================================================
 
     function initTabelControls() {
@@ -817,7 +817,7 @@ document.addEventListener('DOMContentLoaded', function () {
         let filtered = rawPemasukanList;
         if (keywordPencarian) {
             filtered = rawPemasukanList.filter(item => {
-                const idTrx = `TRX-${String(item.id_transaksi).padStart(4, '0')}`.toLowerCase();
+                const idTrx = `TRX-${String(item.id_transaksi).padStart(4, '0')}`.toLowerCase();// Format ID Transaksi: "TRX-0001" (4 digit, leading zero)
                 const namaPelanggan = (item.nama_pelanggan || '').toLowerCase();
                 const namaBarber = (item.nama_barber || '').toLowerCase();
                 const layanan = (item.layanan_teks || '').toLowerCase();
@@ -852,7 +852,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         tableBody.innerHTML = pageData.map((trx, index) => {
             const noUrut = startIdx + index + 1;
-            const idFormat = `TRX-${String(trx.id_transaksi).padStart(4, '0')}`;
+            const idFormat = `KTJ-${String(trx.id_transaksi).padStart(4, '0')}`; // Format ID Transaksi: "KTJ-0001" (4 digit, leading zero)
 
             // Format Tanggal & Waktu: "31-10-2026 17.45"
             let waktuTeks = trx.waktu ? trx.waktu.slice(0, 5).replace(':', '.') : '';
@@ -1097,13 +1097,13 @@ document.addEventListener('DOMContentLoaded', function () {
     // ==========================================================================
     // [Card 6.2] BAGIAN LAYANAN TERLARIS (Sprint Berjalan - Tetap Dipertahankan)
     // ==========================================================================
-    const dashboardUrl = '/KELOMPOK-5/api/rekap/dashboard.php';
-    const periodeSelect = document.getElementById('layananPeriode');
-    const urutanSelect = document.getElementById('layananUrutan');
-    const statusElement = document.getElementById('layananTerlarisStatus');
-    const listElement = document.getElementById('layananTerlarisList');
+    //const dashboardUrl = '/KELOMPOK-5/api/rekap/dashboard.php';
+    //const periodeSelect = document.getElementById('layananPeriode');
+    //const urutanSelect = document.getElementById('layananUrutan');
+    //const statusElement = document.getElementById('layananTerlarisStatus');
+    //const listElement = document.getElementById('layananTerlarisList');
 
-    if (periodeSelect && urutanSelect && statusElement && listElement) {
+    //if (periodeSelect && urutanSelect && statusElement && listElement) {
         function renderDataLayanan(layanan) {
             const urutan = urutanSelect.value === 'jarang' ? -1 : 1;
             const terurut = layanan
@@ -1175,5 +1175,5 @@ document.addEventListener('DOMContentLoaded', function () {
         periodeSelect.addEventListener('change', muatLayananTerlaris);
         urutanSelect.addEventListener('change', muatLayananTerlaris);
         muatLayananTerlaris();
-    }
+    //}
 });
