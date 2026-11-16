@@ -702,16 +702,31 @@ try {
             throw new DomainException('Nama pelanggan wajib diisi.');
         }
 
-        $stmtPelanggan = $pdo->prepare(
-            'INSERT INTO pelanggan (nama, no_hp)
-             VALUES (?, ?)'
+                $stmtCari = $pdo->prepare(
+            'SELECT id_pelanggan
+             FROM pelanggan
+             WHERE LOWER(TRIM(nama)) = LOWER(TRIM(?))
+               AND dihapus_pada IS NULL
+             ORDER BY id_pelanggan ASC
+             LIMIT 1'
         );
-        $stmtPelanggan->execute([
-            $namaPelanggan,
-            $noHp !== '' ? $noHp : null
-        ]);
+        $stmtCari->execute([$namaPelanggan]);
+        $idAda = $stmtCari->fetchColumn();
 
-        $idPelanggan = (int) $pdo->lastInsertId();
+        if ($idAda !== false) {
+            $idPelanggan = (int) $idAda;
+        } else {
+            $stmtPelanggan = $pdo->prepare(
+                'INSERT INTO pelanggan (nama, no_hp)
+                 VALUES (?, ?)'
+            );
+            $stmtPelanggan->execute([
+                $namaPelanggan,
+                $noHp !== '' ? $noHp : null
+            ]);
+
+            $idPelanggan = (int) $pdo->lastInsertId();
+        }
     }
 
 

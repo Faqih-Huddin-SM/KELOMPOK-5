@@ -654,18 +654,37 @@ try {
                 }
 
                 $idPelanggan = (int) $pelanggan['id_pelanggan'];
-            } else {
-                // Tidak menyimpan nomor HP dari transaksi.
-                $stmtPelanggan = $pdo->prepare(
-                    'INSERT INTO pelanggan (nama)
-                     VALUES (:nama)'
+                
+                } else {
+
+                // Cari pelanggan dengan nama sama (tanpa beda huruf besar/kecil
+                // dan spasi di ujung). Kalau ada, pakai yang sudah ada.
+                $stmtCari = $pdo->prepare(
+                    'SELECT id_pelanggan
+                     FROM pelanggan
+                     WHERE LOWER(TRIM(nama)) = LOWER(TRIM(:nama))
+                       AND dihapus_pada IS NULL
+                     ORDER BY id_pelanggan ASC
+                     LIMIT 1'
                 );
+                $stmtCari->execute([':nama' => $namaPelanggan]);
+                $idAda = $stmtCari->fetchColumn();
 
-                $stmtPelanggan->execute([
-                    ':nama' => $namaPelanggan
-                ]);
+                if ($idAda !== false) {
+                    $idPelanggan = (int) $idAda;
+                } else {
+                    // Tidak menyimpan nomor HP dari transaksi.
+                    $stmtPelanggan = $pdo->prepare(
+                        'INSERT INTO pelanggan (nama)
+                         VALUES (:nama)'
+                    );
 
-                $idPelanggan = (int) $pdo->lastInsertId();
+                    $stmtPelanggan->execute([
+                        ':nama' => $namaPelanggan
+                    ]);
+
+                    $idPelanggan = (int) $pdo->lastInsertId();
+                }
             }
 
             // Ambil harga dan HPP dari database.
