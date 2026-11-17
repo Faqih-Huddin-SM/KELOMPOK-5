@@ -1646,7 +1646,7 @@ body:has(.login-page) main.container {
 
 .kasir-heading h1 {
     margin: 0 0 2px;
-    font-size: 25px;
+    font-size: 28px;
     font-weight: 800;
     color: var(--text-main);
 }
@@ -7189,7 +7189,7 @@ body .pengeluaran-toast[hidden] {
     display: flex;
     align-items: center;
     gap: 12px;
-    padding: 10px 14px;
+    padding: 6px 14px;
     border-radius: 14px;
     cursor: pointer;
     background: transparent;
@@ -7210,8 +7210,8 @@ body .pengeluaran-toast[hidden] {
 
 /* Inisial Avatar */
 .pelanggan-page .pelanggan-item-avatar {
-    width: 38px;
-    height: 38px;
+    width: 35px;
+    height: 35px;
     border-radius: 50%;
     background: #EEF0FB;
     color: #17186B;
@@ -7237,7 +7237,7 @@ body .pengeluaran-toast[hidden] {
 
 .pelanggan-page .pelanggan-item-name {
     font-size: 14px;
-    font-weight: 600;
+    font-weight: 500;
     color: #1A1D2C;
     margin: 0 0 2px;
     white-space: nowrap;
@@ -7247,7 +7247,7 @@ body .pengeluaran-toast[hidden] {
 
 .pelanggan-page .pelanggan-item.active .pelanggan-item-name {
     color: #1A1A1A !important;
-    font-weight: 600;
+    font-weight: 500;
 }
 
 .pelanggan-page .pelanggan-item-kunjungan {
@@ -7454,8 +7454,8 @@ body .pengeluaran-toast[hidden] {
     flex-shrink: 0;
     margin-top: 18px;
     /* sejajar tengah konten box */
-    width: 16px;
-    height: 16px;
+    width: 15px;
+    height: 15px;
     border-radius: 50%;
     background: #FFFFFF;
     border: 2px solid #C5CAD9;
@@ -7656,8 +7656,8 @@ body .pengeluaran-toast[hidden] {
 }
 
 .laporan-page .laporan-title {
-    font-size: 24px;
-    font-weight: 700;
+    font-size: 28px;
+    font-weight: 800;
     color: #1A1D2C;
     margin: 0 0 3px;
     letter-spacing: -0.4px;
