@@ -321,6 +321,25 @@ try {
             $stmtParams[':tanggal_akhir'] = $tanggalAkhir;
         }
 
+                if ($idBarberFilter !== null) {
+            $where .= " AND t.id_barber = :id_barber_filter";
+            $stmtParams[':id_barber_filter'] = $idBarberFilter;
+        }
+
+        if ($metodeFilter !== '') {
+            $where .= " AND t.metode_pembayaran = :metode_filter";
+            $stmtParams[':metode_filter'] = $metodeFilter;
+        }
+
+        if ($idLayananFilter !== null) {
+            $where .= " AND EXISTS (
+                SELECT 1 FROM detail_transaksi df
+                WHERE df.id_transaksi = t.id_transaksi
+                  AND df.id_layanan = :id_layanan_filter
+            )";
+            $stmtParams[':id_layanan_filter'] = $idLayananFilter;
+        }
+
         // Pencarian: nama pelanggan (mengandung) atau ID transaksi (persis).
         if ($q !== '') {
             $where .= " AND (p.nama LIKE :q_nama OR t.id_transaksi = :q_id)";
@@ -635,18 +654,37 @@ try {
                 }
 
                 $idPelanggan = (int) $pelanggan['id_pelanggan'];
-            } else {
-                // Tidak menyimpan nomor HP dari transaksi.
-                $stmtPelanggan = $pdo->prepare(
-                    'INSERT INTO pelanggan (nama)
-                     VALUES (:nama)'
+                
+                } else {
+
+                // Cari pelanggan dengan nama sama (tanpa beda huruf besar/kecil
+                // dan spasi di ujung). Kalau ada, pakai yang sudah ada.
+                $stmtCari = $pdo->prepare(
+                    'SELECT id_pelanggan
+                     FROM pelanggan
+                     WHERE LOWER(TRIM(nama)) = LOWER(TRIM(:nama))
+                       AND dihapus_pada IS NULL
+                     ORDER BY id_pelanggan ASC
+                     LIMIT 1'
                 );
+                $stmtCari->execute([':nama' => $namaPelanggan]);
+                $idAda = $stmtCari->fetchColumn();
 
-                $stmtPelanggan->execute([
-                    ':nama' => $namaPelanggan
-                ]);
+                if ($idAda !== false) {
+                    $idPelanggan = (int) $idAda;
+                } else {
+                    // Tidak menyimpan nomor HP dari transaksi.
+                    $stmtPelanggan = $pdo->prepare(
+                        'INSERT INTO pelanggan (nama)
+                         VALUES (:nama)'
+                    );
 
-                $idPelanggan = (int) $pdo->lastInsertId();
+                    $stmtPelanggan->execute([
+                        ':nama' => $namaPelanggan
+                    ]);
+
+                    $idPelanggan = (int) $pdo->lastInsertId();
+                }
             }
 
             // Ambil harga dan HPP dari database.
