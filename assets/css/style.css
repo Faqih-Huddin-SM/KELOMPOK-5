@@ -7733,7 +7733,7 @@ body .pengeluaran-toast[hidden] {
     align-items: center;
     justify-content: space-between;
     padding: 0 14px;
-    border: 1px solid #E2E8F0;
+    border: 1.5px solid #E5E5E5;
     border-radius: 10px;
     background: #FFFFFF;
     cursor: pointer;
@@ -7932,7 +7932,7 @@ body .pengeluaran-toast[hidden] {
     height: 34px !important;
     padding: 0 18px !important;
     border-radius: 9999px !important;
-    border: 1px solid #E2E8F0 !important;
+    border: 1.5px solid #E2E8F0 !important;
     background: #FFFFFF !important;
     color: #4B5563 !important;
     font-size: 12.5px !important;
@@ -8357,6 +8357,22 @@ body .pengeluaran-toast[hidden] {
     animation: modalPop 0.18s ease-out;
 }
 
+.laporan-export-dialog {
+    box-sizing: border-box;
+    width: min(100%, 408px);
+    padding: 22px 24px;
+    border-radius: 12px;
+}
+
+.laporan-export-dialog .laporan-modal-title {
+    font-size: 17px;
+}
+
+.laporan-export-dialog .laporan-modal-description {
+    margin-bottom: 12px;
+    font-size: 12px;
+}
+
 .laporan-modal-close {
     position: absolute;
     top: 14px;
@@ -8399,9 +8415,9 @@ body .pengeluaran-toast[hidden] {
 /* [Card 6.7] Box Detail Periode Ekspor (Figma Image 4) */
 .laporan-export-details {
     display: grid;
-    gap: 10px;
-    margin: 16px 0 22px;
-    padding: 16px 20px;
+    gap: 8px;
+    margin: 12px 0 16px;
+    padding: 12px 16px;
     border: 1px solid #E8EAF2;
     border-radius: 12px;
     background: #F8F9FD;
@@ -8413,34 +8429,36 @@ body .pengeluaran-toast[hidden] {
     align-items: center;
     gap: 14px;
     color: #6B7280;
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 500;
 }
 
 .laporan-export-details strong {
     color: #1A1D2C;
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 600;
     text-align: right;
 }
 
 /* [Card 6.7] Alert Error Saat Ekspor Gagal (Figma Image 6) */
 .laporan-dialog-error {
-    margin: 0 0 16px;
-    padding: 12px 16px;
-    border: 1px solid #FCA5A5;
-    border-radius: 10px;
-    background: #FEF2F2;
+    margin: 0 0 12px;
+    padding: 8px 12px;
+    border: 0;
+    border-radius: 8px;
+    background: #FEECEC;
     color: #DC2626;
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 500;
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 8px;
 }
 
 .laporan-dialog-error-icon {
     flex-shrink: 0;
+    width: 16px;
+    height: 16px;
 }
 
 /* Tombol-tombol Modal */
@@ -8486,9 +8504,9 @@ body .pengeluaran-toast[hidden] {
 }
 
 .laporan-button-secondary {
-    border-color: #D1D5DB;
+    border-color: #17186B;
     background: #FFFFFF;
-    color: #4B5563;
+    color: #17186B;
 }
 
 .laporan-button-secondary:hover:not(:disabled) {
@@ -8496,11 +8514,25 @@ body .pengeluaran-toast[hidden] {
     border-color: #9CA3AF;
 }
 
+.laporan-export-dialog .laporan-button-secondary {
+    border-color: #17186B;
+    color: #17186B;
+}
+
+.laporan-export-dialog .laporan-button-secondary:hover:not(:disabled) {
+    background: #F4F5FA;
+    border-color: #17186B;
+}
+
 .laporan-modal-actions {
     display: flex;
     align-items: center;
     justify-content: flex-end;
     gap: 10px;
+}
+
+.laporan-export-dialog .laporan-modal-actions {
+    gap: 8px;
 }
 
 /* [Card 6.7] Modal Pratinjau PDF (Figma Image 5 & 7) */
@@ -8620,6 +8652,16 @@ body .pengeluaran-toast[hidden] {
     width: 100%;
     box-sizing: border-box;
     flex-shrink: 0;
+}
+
+.laporan-preview-dialog .laporan-button-secondary {
+    border-color: #17186B;
+    color: #17186B;
+}
+
+.laporan-preview-dialog .laporan-button-secondary:hover:not(:disabled) {
+    background: #F4F5FA;
+    border-color: #17186B;
 }
 
 .laporan-preview-page-info {
