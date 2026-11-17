@@ -39,7 +39,7 @@ $nama = $_SESSION['nama'] ?? '';
             <div class="laporan-ekspor-controls">
                 <!-- [Card 6.7] Pemilih Bulan Periode Laporan (Bawaan Bulan Berjalan) -->
                 <div class="laporan-picker-col">
-                    <label for="laporanBulanInput" class="laporan-form-label">Periode laporan</label>
+                    <label for="laporanBulanInput" class="laporan-form-label">Periode Laporan</label>
                     <div class="laporan-picker-box" id="laporanPickerBox" title="Klik untuk memilih bulan">
                         <span class="laporan-picker-display" id="laporanBulanDisplay">Memuat periode...</span>
                         <svg class="laporan-picker-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -275,7 +275,7 @@ $nama = $_SESSION['nama'] ?? '';
 
         <!-- [Card 6.7] Footer Pratinjau dengan Informasi Halaman Sesuai Figma (Image 5) -->
         <div class="laporan-modal-actions laporan-preview-actions">
-            <span class="laporan-preview-page-info">Halaman 1 dari 1</span>
+            <span class="laporan-preview-page-info"></span>
             <div class="laporan-preview-buttons">
                 <button type="button" class="laporan-button laporan-button-secondary" data-close-preview>Tutup</button>
                 <button type="button" class="laporan-button laporan-button-primary" id="btnPreviewEkspor">

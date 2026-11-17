@@ -126,7 +126,7 @@ unset($_SESSION['login_notification']);
         href="/KELOMPOK-5/pages/pengeluaran.php"
         class="sidebar-link <?= $current_page === 'pengeluaran.php' ? 'active' : '' ?>"
     >
-        <span>Pengeluaran/HPP</span>
+        <span>Pengeluaran</span>
     </a>
 
     <!-- LAPORAN -->

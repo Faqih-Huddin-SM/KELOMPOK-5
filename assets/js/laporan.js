@@ -500,7 +500,9 @@ document.addEventListener('DOMContentLoaded', function () {
             exportCanRetry = true;
             if (exportError) {
                 const errTextEl = document.getElementById('laporanExportErrorText');
-                if (errTextEl) errTextEl.textContent = error.message || 'Laporan gagal dibuat. Silakan coba lagi';
+                if (errTextEl) {
+                    errTextEl.textContent = 'Laporan gagal dibuat. Silakan coba lagi';
+                }
                 exportError.hidden = false;
             }
             if (btnDialogEksporText) btnDialogEksporText.textContent = 'Coba Lagi';
