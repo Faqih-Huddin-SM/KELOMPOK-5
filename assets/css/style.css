@@ -2267,7 +2267,7 @@ body:has(.login-page) main.container {
 .transaction-success.transaction-error {
     background: #FBEAEA;
     color: #D64545;
-    border: 1px solid #F0BABA;
+    border: 1.5px solid #D64545;
 }
 
 /* ======================================================
@@ -7814,35 +7814,11 @@ body .pengeluaran-toast[hidden] {
     box-shadow: none;
 }
 
-/* Feedback / Alert Pesan BE */
+/* Notifikasi laporan mengikuti gaya notifikasi pada halaman login. */
 .laporan-page .laporan-feedback-alert {
-    margin-top: 14px;
-    padding: 10px 16px;
-    border-radius: 10px;
-    font-size: 12.5px;
-    font-weight: 500;
     display: flex;
     align-items: center;
-    gap: 10px;
-    animation: fadeIn 0.25s ease;
-}
-
-.laporan-page .laporan-feedback-alert.alert-warning {
-    background: #FFFBEB;
-    color: #92400E;
-    border: 1px solid #FCD34D;
-}
-
-.laporan-page .laporan-feedback-alert.alert-danger {
-    background: #FEF2F2;
-    color: #B91C1C;
-    border: 1px solid #FCA5A5;
-}
-
-.laporan-page .laporan-feedback-alert.alert-success {
-    background: #F0FDF4;
-    color: #166534;
-    border: 1px solid #BBF7D0;
+    gap: 8px;
 }
 
 /* [Card 6.7] 2. GRID 3 KARTU RINGKASAN KEUANGAN */
@@ -8441,24 +8417,43 @@ body .pengeluaran-toast[hidden] {
 }
 
 /* [Card 6.7] Alert Error Saat Ekspor Gagal (Figma Image 6) */
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////
 .laporan-dialog-error {
-    margin: 0 0 12px;
-    padding: 8px 12px;
-    border: 0;
-    border-radius: 8px;
-    background: #FEECEC;
-    color: #DC2626;
-    font-size: 12px;
+    margin: 0 0 14px;
+    padding: 10px 14px;
+    border: 1px solid #F8C9C9;
+    border-radius: 10px;
+    background: #FDECEC;
+    color: #C62828;
+    font-size: 12.5px;
     font-weight: 500;
+    line-height: 1.4;
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 10px;
+    animation: laporanAlertIn 0.2s ease-out;
+}
+
+.laporan-dialog-error[hidden] {
+    display: none;
 }
 
 .laporan-dialog-error-icon {
     flex-shrink: 0;
-    width: 16px;
-    height: 16px;
+    width: 18px;
+    height: 18px;
+    color: #DC2626;
+}
+
+@keyframes laporanAlertIn {
+    from { opacity: 0; transform: translateY(-4px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Animasi alert halaman laporan (sebelumnya @keyframes fadeIn belum terdefinisi) */
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
 }
 
 /* Tombol-tombol Modal */
