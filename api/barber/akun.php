@@ -89,6 +89,7 @@ function tampilkanAkun(array $baris): array
         'username' => $baris['username'],
         'nama' => $baris['nama'],
         'spesialisasi' => $baris['spesialisasi'],
+        'foto' => $baris['foto'] ?? null,
         'role' => $baris['role'],
         'aktif' => (int) $baris['aktif']
     ];
@@ -120,7 +121,7 @@ try {
     // GET: semua akun barber, termasuk yang nonaktif.
     if ($method === 'GET') {
         $stmt = $pdo->query(
-            "SELECT id_user, username, nama, spesialisasi, role, aktif
+            "SELECT id_user, username, nama, spesialisasi, foto, role, aktif
              FROM users
              WHERE role = 'barber'
              ORDER BY nama ASC, id_user ASC"
@@ -191,6 +192,7 @@ try {
                 'username' => $username,
                 'nama' => $nama,
                 'spesialisasi' => $spesialisasi,
+                'foto' => null,
                 'role' => 'barber',
                 'aktif' => 1
             ]
@@ -225,7 +227,7 @@ try {
         $stmt->execute([$nama, $spesialisasi, $id]);
 
         $stmtBaru = $pdo->prepare(
-            'SELECT id_user, username, nama, spesialisasi, role, aktif FROM users WHERE id_user = ?'
+            'SELECT id_user, username, nama, spesialisasi, foto, role, aktif FROM users WHERE id_user = ?'
         );
         $stmtBaru->execute([$id]);
 
