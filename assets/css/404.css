@@ -1,0 +1,213 @@
+/* ==============================================================================
+   [Card X.Y] Frontend Developer (Faqih) - Halaman 404 (Halaman Tidak Ditemukan)
+   Sesuai desain Figma 404_NOT_FOUND (canvas 1280x720). Halaman mandiri, tanpa Bootstrap.
+   ============================================================================== */
+
+.notfound-body {
+    margin: 0;
+    min-height: 100vh;
+    font-family: 'Poppins', sans-serif;
+    color: #1A1D2C;
+    background: #F3F4FA url('/KELOMPOK-5/assets/img/404-bg.svg') center / cover no-repeat fixed;
+}
+
+/* [Card X.Y] Strip diagonal merah-biru di tepi atas & bawah halaman */
+.notfound-body::before,
+.notfound-body::after {
+    content: '';
+    position: fixed;
+    left: 0;
+    right: 0;
+    height: 14px;
+    background: url('/KELOMPOK-5/assets/img/404-stripe.svg') repeat-x left top;
+    z-index: 2;
+}
+
+.notfound-body::before { top: 0; }
+.notfound-body::after  { bottom: 0; }
+
+/* [Card X.Y] Animasi strip tepi: bergeser satu periode (96px) agar loop mulus */
+.notfound-body::before,
+.notfound-body::after {
+    animation: notfoundStripeSlide 3s linear infinite;
+}
+
+@keyframes notfoundStripeSlide {
+    from { background-position: 0 0; }
+    to   { background-position: 96px 0; }
+}
+
+/* [Card X.Y] Animasi tiang barber pada angka "0" memakai SMIL di dalam 404.php (animateTransform) */
+
+.notfound-page {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    /* [Card X.Y] Padding atas +16px agar kartu sejajar posisi di Figma (strip atas 14px) */
+    padding: 56px 16px 40px;
+    box-sizing: border-box;
+}
+
+/* [Card X.Y] Kartu putih tengah (760 x 448, radius 20) */
+.notfound-card {
+    width: 100%;
+    max-width: 760px;
+    box-sizing: border-box;
+    padding: 64px 40px 49px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    background: #FFFFFF;
+    border-radius: 20px;
+    box-shadow: 0 4px 4px rgba(0, 0, 0, 0.25);
+}
+
+/* [Card X.Y] Angka 404: lebar mengikuti kartu, maksimum 402px sesuai Figma */
+.notfound-code {
+    display: block;
+    width: 100%;
+    max-width: 402px;
+    height: auto;
+}
+
+.notfound-title {
+    margin: 28px 0 0;
+    font-size: 28px;
+    font-weight: 700;
+    line-height: 1.3;
+    letter-spacing: -0.2px;
+    color: #1A1A1A;
+}
+
+.notfound-text {
+    margin: 10px 0 0;
+    font-size: 15px;
+    font-weight: 400;
+    line-height: 24px;
+    color: #6B7280;
+}
+
+.notfound-actions {
+    display: flex;
+    justify-content: center;
+    gap: 45px;
+    margin-top: 21px;
+}
+
+/* [Card X.Y] Tombol 168 x 44, radius 8 */
+.notfound-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 168px;
+    height: 44px;
+    box-sizing: border-box;
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 15px;
+    font-weight: 400;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+}
+
+.notfound-btn:focus-visible {
+    outline: 3px solid rgba(23, 24, 107, 0.35);
+    outline-offset: 2px;
+}
+
+.notfound-btn-primary {
+    border: 1.5px solid #17186B;
+    background: #17186B;
+    color: #FFFFFF;
+}
+
+.notfound-btn-primary:hover {
+    background: #0F104D;
+    border-color: #0F104D;
+    transform: translateY(-1px);
+}
+
+.notfound-btn-outline {
+    border: 1.5px solid #D4D0F5;
+    background: #FFFFFF;
+    color: #1A1D2C;
+}
+
+.notfound-btn-outline:hover {
+    border-color: #17186B;
+    background: #F7F7FD;
+    transform: translateY(-1px);
+}
+
+/* [Card X.Y] Responsif: tablet & mobile */
+@media (max-width: 768px) {
+    .notfound-card {
+        padding: 48px 28px 36px;
+    }
+
+    .notfound-code {
+        max-width: 300px;
+    }
+
+    .notfound-title {
+        font-size: 24px;
+    }
+
+    .notfound-actions {
+        gap: 16px;
+    }
+}
+
+@media (max-width: 480px) {
+    .notfound-card {
+        padding: 36px 20px 28px;
+    }
+
+    .notfound-code {
+        max-width: 240px;
+    }
+
+    .notfound-title {
+        font-size: 21px;
+        margin-top: 20px;
+    }
+
+    .notfound-text {
+        font-size: 13.5px;
+        line-height: 22px;
+    }
+
+    .notfound-text br {
+        display: none;
+    }
+
+    .notfound-actions {
+        flex-direction: column;
+        align-items: stretch;
+        width: 100%;
+        gap: 12px;
+    }
+
+    .notfound-btn {
+        width: 100%;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .notfound-body::before,
+    .notfound-body::after {
+        animation: none;
+    }
+
+    .notfound-btn {
+        transition: none;
+    }
+
+    .notfound-btn:hover {
+        transform: none;
+    }
+}

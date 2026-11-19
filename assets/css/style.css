@@ -3650,7 +3650,7 @@ body.layanan-modal-open {
 
 /* Rekap pemasukan dashboard â€” Desktop seperti Figma */
 .rekap-pemasukan {
-    margin-top: 18px;
+    margin-top: -5px;
     padding: 14px 20px 16px;
 }
 
@@ -5968,7 +5968,7 @@ body .pengeluaran-toast[hidden] {
     border: 1px solid var(--dash-border);
     box-shadow: 0 4px 16px rgba(23, 24, 107, 0.04);
     padding: 22px 28px;
-    margin-bottom: 22px;
+    margin-bottom: 19px;
 }
 
 .dashboard-page .dashboard-card-title {
@@ -6102,15 +6102,11 @@ body .pengeluaran-toast[hidden] {
 .dashboard-page .rekap-barber-table .data-table tbody td {
     border: none !important;
     border-bottom: 1.5px solid #A3A3A3 !important;
-    padding: 9px 8px !important;
+    padding: 9px 30px !important;
     color: #1A1A1A !important;
     font-size: 14px !important;
     font-weight: 500 !important;
     background: transparent !important;
-}
-
-.dashboard-page .rekap-barber-table .data-table tbody tr:last-child td {
-    border-bottom: none !important;
 }
 
 .dashboard-page .rekap-barber-table .data-table td.td-barber-empty {
@@ -6148,8 +6144,8 @@ body .pengeluaran-toast[hidden] {
 .dashboard-page .td-barber-trx,
 .dashboard-page .rekap-barber-table .data-table th:nth-child(2),
 .dashboard-page .rekap-barber-table .data-table tr.tr-barber-data td:nth-child(2) {
-    text-align: center !important;
-    width: 34% !important;
+    text-align: left !important;
+    width: 27% !important;
     color: #1A1A1A !important;
 }
 
@@ -6157,8 +6153,8 @@ body .pengeluaran-toast[hidden] {
 .dashboard-page .td-barber-total,
 .dashboard-page .rekap-barber-table .data-table th:nth-child(3),
 .dashboard-page .rekap-barber-table .data-table tr.tr-barber-data td:nth-child(3) {
-    text-align: right !important;
-    width: 33% !important;
+    text-align: left !important;
+    width: 40% !important;
     padding-right: 0 !important;
     font-weight: 500 !important;
     color: #1A1A1A !important;
@@ -6568,7 +6564,7 @@ body .pengeluaran-toast[hidden] {
 }
 
 .dashboard-page .layanan-footer-link {
-    color: var(--dash-text-muted) !important;
+    color: #17186B !important;
     text-decoration: none !important;
     transition: color 0.2s ease !important;
 }
@@ -6607,7 +6603,6 @@ body .pengeluaran-toast[hidden] {
 .dashboard-page #paymentEmptyState {
     flex: 1 !important;
     width: 100% !important;
-    display: flex !important;
     align-items: center !important;
     justify-content: center !important;
     padding: 0 !important;
@@ -6850,7 +6845,7 @@ body .pengeluaran-toast[hidden] {
 
 /* Empty State Centered – dipakai oleh Layanan Terlaris container */
 .dashboard-page .dashboard-empty-centered {
-    display: flex !important;
+    display: flex;
     align-items: center !important;
     justify-content: center !important;
     font-size: 14px !important;
@@ -6978,20 +6973,23 @@ body .pengeluaran-toast[hidden] {
 
     .dashboard-page .th-barber-nama,
     .dashboard-page .td-barber-nama {
-        width: 38% !important;
+        width: 33% !important;
         min-width: 0 !important;
+        text-align: left !important;
     }
 
     .dashboard-page .th-barber-trx,
     .dashboard-page .td-barber-trx {
-        width: 28% !important;
+        width: 27% !important;
         min-width: 0 !important;
+        text-align: left !important;
     }
 
     .dashboard-page .th-barber-total,
     .dashboard-page .td-barber-total {
-        width: 34% !important;
+        width: 40% !important;
         min-width: 0 !important;
+        text-align: left !important;
     }
 
     .dashboard-page .th-barber-spacer,
@@ -8664,6 +8662,113 @@ body .pengeluaran-toast[hidden] {
     display: flex;
     align-items: center;
     gap: 10px;
+}
+
+.connection-modal-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 20000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    background: rgba(0, 0, 0, 0.65);
+    box-sizing: border-box;
+}
+
+.connection-modal-overlay[hidden] {
+    display: none;
+}
+
+.connection-modal-dialog {
+    width: 100%;
+    max-width: 400px;
+    padding: 28px 24px 24px;
+    border-radius: 18px;
+    background: #FFFFFF;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.24);
+    box-sizing: border-box;
+    text-align: center;
+}
+
+.connection-modal-icon {
+    width: 56px;
+    height: 56px;
+    margin: 0 auto 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: #FDECEC;
+    color: #EF4444;
+}
+
+.connection-modal-icon svg {
+    width: 24px;
+    height: 24px;
+}
+
+.connection-modal-title {
+    margin: 0 0 8px;
+    color: #1A1D2C;
+    font-size: 18px;
+    font-weight: 700;
+    line-height: 1.35;
+}
+
+.connection-modal-description {
+    margin: 0 0 18px;
+    color: #737584;
+    font-size: 12px;
+    font-weight: 400;
+    line-height: 1.5;
+}
+
+.connection-modal-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.connection-modal-actions button {
+    min-width: 0;
+    min-height: 40px;
+    flex: 1;
+    border: 1px solid #D7D9F0;
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.connection-modal-retry {
+    border-color: #17186B !important;
+    background: #17186B;
+    color: #FFFFFF;
+}
+
+.connection-modal-retry:hover:not(:disabled) {
+    background: #24268D;
+}
+
+.connection-modal-retry:disabled {
+    cursor: wait;
+    opacity: 0.75;
+}
+
+.connection-modal-close {
+    background: #FFFFFF;
+    color: #17186B;
+}
+
+.connection-modal-close:hover {
+    background: #F5F6FC;
+}
+
+.connection-modal-actions button:focus-visible {
+    outline: 3px solid rgba(23, 24, 107, 0.25);
+    outline-offset: 2px;
 }
 
 @media (max-width: 480px) {

@@ -39,7 +39,9 @@ $display_role = ($role === 'owner') ? 'Owner Kataji' : ($nama ?: 'Barber');
                 </span>
                 <span class="summary-title">Pelanggan Hari Ini</span>
             </div>
-            <strong class="summary-value" id="dashPelangganHariIni">0</strong>
+            <strong class="summary-value" id="dashPelangganHariIni">
+                <div class="summary-loading-pill"><span class="dashboard-spinner spinner-sm"></span></div>
+            </strong>
         </div>
 
         <!-- 2. TRANSAKSI HARI INI -->
@@ -56,7 +58,9 @@ $display_role = ($role === 'owner') ? 'Owner Kataji' : ($nama ?: 'Barber');
                 </span>
                 <span class="summary-title">Transaksi Hari Ini</span>
             </div>
-            <strong class="summary-value" id="dashTransaksiHariIni">0</strong>
+            <strong class="summary-value" id="dashTransaksiHariIni">
+                <div class="summary-loading-pill"><span class="dashboard-spinner spinner-sm"></span></div>
+            </strong>
         </div>
 
         <!-- 3. PEMASUKAN HARI INI -->
@@ -70,7 +74,9 @@ $display_role = ($role === 'owner') ? 'Owner Kataji' : ($nama ?: 'Barber');
                 </span>
                 <span class="summary-title">Pemasukkan Hari Ini</span>
             </div>
-            <strong class="summary-value" id="dashPendapatanHariIni">Rp0</strong>
+            <strong class="summary-value" id="dashPendapatanHariIni">
+                <div class="summary-loading-pill"><span class="dashboard-spinner spinner-sm"></span></div>
+            </strong>
         </div>
 
         <!-- 4. LABA KOTOR HARI INI -->
@@ -84,7 +90,9 @@ $display_role = ($role === 'owner') ? 'Owner Kataji' : ($nama ?: 'Barber');
                 </span>
                 <span class="summary-title">Laba Kotor Hari Ini</span>
             </div>
-            <strong class="summary-value" id="dashLabaKotorHariIni">Rp0</strong>
+            <strong class="summary-value" id="dashLabaKotorHariIni">
+                <div class="summary-loading-pill"><span class="dashboard-spinner spinner-sm"></span></div>
+            </strong>
         </div>
 
     </div>
@@ -105,7 +113,13 @@ $display_role = ($role === 'owner') ? 'Owner Kataji' : ($nama ?: 'Barber');
             </div>
         </div>
 
-        <div class="financial-metrics rekap-metrics">
+        <!-- LOADING STATE REKAP KEUANGAN (FIGMA IMAGE) -->
+        <div class="dashboard-loading-box box-sm" id="rekapKeuanganLoading">
+            <span class="dashboard-spinner spinner-inline"></span>
+            <span>Memuat data keuangan...</span>
+        </div>
+
+        <div class="financial-metrics rekap-metrics" id="rekapKeuanganMetrics" style="display: none;">
             <div class="metric-item metric-pemasukan">
                 <span class="metric-label">Pemasukkan</span>
                 <strong class="metric-val" id="totalPemasukan">Rp0</strong>
@@ -133,23 +147,27 @@ $display_role = ($role === 'owner') ? 'Owner Kataji' : ($nama ?: 'Barber');
     <!-- BAGIAN: PEMASUKAN PER BARBER -->
     <!-- ======================================== -->
     <section class="dashboard-section rekap-barber-section">
-        <h2 class="dashboard-card-title">Pemasukkan per Barber</h2>
+        <h2 class="dashboard-card-title">Pemasukan per Barber</h2>
 
-        <div id="statusPemasukan" class="rekap-status" role="status" aria-live="polite">
-            Memuat data pemasukan...
-        </div>
-
-        <div class="table-responsive rekap-barber-table" id="tabelPemasukanWrapper" hidden>
+        <div class="table-responsive rekap-barber-table" id="tabelPemasukanWrapper">
             <table class="data-table">
                 <thead>
                     <tr>
                         <th class="th-barber-nama">Nama Barber</th>
-                        <th class="th-barber-trx text-center">Transaksi</th>
-                        <th class="th-barber-total text-center">Total Pemasukkan</th>
-                        <th class="th-barber-spacer"></th>
+                        <th class="th-barber-trx">Transaksi</th>
+                        <th class="th-barber-total">Total Pemasukan</th>
                     </tr>
                 </thead>
-                <tbody id="tabelPemasukanBody"></tbody>
+                <tbody id="tabelPemasukanBody">
+                    <tr>
+                        <td colspan="3" class="td-barber-loading">
+                            <div class="barber-loading-wrap">
+                                <span class="dashboard-spinner spinner-inline"></span>
+                                <span>Memuat data barber...</span>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
             </table>
         </div>
     </section>
@@ -179,36 +197,45 @@ $display_role = ($role === 'owner') ? 'Owner Kataji' : ($nama ?: 'Barber');
                 </select>
             </div>
 
-            <!-- 3 KARTU SUMMARY TREN (FIGMA) -->
-            <div class="trend-summary-grid">
-                <div class="trend-summary-card trend-summary-status-box" id="trenStatusCard">
-                    <div class="trend-badge-icon" id="trenBadgeIcon">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                            <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline>
-                            <polyline points="17 6 23 6 23 12"></polyline>
-                        </svg>
-                    </div>
-                    <div class="trend-badge-info">
-                        <strong id="trenStatusRingkas">Stabil 0%</strong>
-                        <small id="trenStatusSub">dibanding periode sebelumnya</small>
-                    </div>
-                </div>
-                <div class="trend-summary-card trend-summary-neutral">
-                    <span id="trenTotalLabel">Total 7 hari terakhir</span>
-                    <strong id="trenTotalAktif">Rp0</strong>
-                    <small id="trenTotalSebelumnya">sebelumnya Rp0</small>
-                </div>
-                <div class="trend-summary-card trend-summary-neutral">
-                    <span>Hari tertinggi</span>
-                    <strong id="trenHariTertinggi">Rp0</strong>
-                    <small id="trenHariTertinggiTanggal">Belum ada data</small>
-                </div>
+            <!-- LOADING STATE TREN (FIGMA IMAGE) -->
+            <div class="dashboard-loading-box box-tren" id="trenLoadingState">
+                <div class="dashboard-spinner spinner-lg"></div>
+                <span>Memuat data tren...</span>
             </div>
 
-            <!-- GRAFIK SVG LINE DENGAN TOOLTIP -->
-            <div class="line-chart-container">
-                <div class="line-chart" id="dashboardLineChart" aria-label="Grafik tren pemasukan" aria-live="polite">
-                    <div class="chart-empty-state">Memuat grafik pemasukan...</div>
+            <!-- KONTEN TREN (SUMMARY + CHART) -->
+            <div id="trenContentWrap" style="display: none;">
+                <!-- 3 KARTU SUMMARY TREN (FIGMA) -->
+                <div class="trend-summary-grid">
+                    <div class="trend-summary-card trend-summary-status-box" id="trenStatusCard">
+                        <div class="trend-badge-icon" id="trenBadgeIcon">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline>
+                                <polyline points="17 6 23 6 23 12"></polyline>
+                            </svg>
+                        </div>
+                        <div class="trend-badge-info">
+                            <strong id="trenStatusRingkas">Stabil 0%</strong>
+                            <small id="trenStatusSub">dibanding periode sebelumnya</small>
+                        </div>
+                    </div>
+                    <div class="trend-summary-card trend-summary-neutral">
+                        <span id="trenTotalLabel">Total 7 hari terakhir</span>
+                        <strong id="trenTotalAktif">Rp0</strong>
+                        <small id="trenTotalSebelumnya">sebelumnya Rp0</small>
+                    </div>
+                    <div class="trend-summary-card trend-summary-neutral">
+                        <span>Hari tertinggi</span>
+                        <strong id="trenHariTertinggi">Rp0</strong>
+                        <small id="trenHariTertinggiTanggal">Belum ada data</small>
+                    </div>
+                </div>
+
+                <!-- GRAFIK SVG LINE DENGAN TOOLTIP -->
+                <div class="line-chart-container">
+                    <div class="line-chart" id="dashboardLineChart" aria-label="Grafik tren pemasukan" aria-live="polite">
+                        <div class="chart-empty-state">Memuat grafik pemasukan...</div>
+                    </div>
                 </div>
             </div>
         </section>
@@ -240,7 +267,7 @@ $display_role = ($role === 'owner') ? 'Owner Kataji' : ($nama ?: 'Barber');
             </div>
 
             <!-- HEADER TABEL MINI LAYANAN -->
-            <div class="layanan-table-head">
+            <div class="layanan-table-head" id="layananTableHead">
                 <span class="col-head-no">No</span>
                 <span class="col-head-nama">Layanan</span>
                 <span class="col-head-qty">Jumlah Terjual</span>
@@ -248,12 +275,15 @@ $display_role = ($role === 'owner') ? 'Owner Kataji' : ($nama ?: 'Barber');
 
             <!-- LIST LAYANAN POPULER -->
             <div id="layananPopulerListContainer" class="layanan-populer-container">
-                <div class="layanan-populer-empty">Memuat data layanan...</div>
+                <div class="dashboard-loading-box box-layanan">
+                    <div class="dashboard-spinner spinner-lg"></div>
+                    <span>Memuat data layanan...</span>
+                </div>
             </div>
 
             <!-- FOOTER INFO LAYANAN -->
-            <div class="layanan-terlaris-footer">
-                <span class="layanan-footer-total" id="layananTotalTerjual">Total layanan terjual: 0</span>
+            <div class="layanan-terlaris-footer" id="layananTerlarisFooter">
+                <span class="layanan-footer-total" id="layananTotalTerjual">Total layanan terjual: -</span>
                 <a href="/KELOMPOK-5/pages/laporan.php" class="layanan-footer-link">Rincian per barber ada di Laporan</a>
             </div>
         </section>
@@ -265,7 +295,18 @@ $display_role = ($role === 'owner') ? 'Owner Kataji' : ($nama ?: 'Barber');
                 <span class="payment-card-subtitle">Berdasarkan metode, periode terpilih</span>
             </div>
 
-            <div class="payment-chart-content">
+            <!-- LOADING STATE DISTRIBUSI (FIGMA IMAGE) -->
+            <div class="dashboard-loading-box box-pembayaran" id="paymentLoadingState" style="display: flex;">
+                <div class="dashboard-spinner spinner-lg"></div>
+                <span>Memuat data pembayaran...</span>
+            </div>
+
+            <!-- EMPTY STATE DISTRIBUSI (FIGMA IMAGE 1) -->
+            <div class="dashboard-empty-centered" id="paymentEmptyState" style="display: none;">
+                Belum ada transaksi periode ini
+            </div>
+
+            <div class="payment-chart-content" id="paymentChartContent" style="display: none;">
                 <!-- DONUT CHART DENGAN CENTER TEXT -->
                 <div class="payment-donut-wrap">
                     <div class="payment-donut" id="dashboardPaymentDonut" role="img" aria-label="Diagram donat distribusi pembayaran">
@@ -309,10 +350,25 @@ $display_role = ($role === 'owner') ? 'Owner Kataji' : ($nama ?: 'Barber');
     <!-- ======================================== -->
     <!-- BAGIAN: PERMINTAAN RESET PASSWORD (LEBAR PENUH) -->
     <!-- ======================================== -->
-    <section class="dashboard-section reset-section-full">
+    <section class="dashboard-section reset-section-full" id="resetPasswordSection">
         <h2 class="reset-card-title">Permintaan Reset Password</h2>
 
-        <div class="reset-card-body" id="resetCardBody">
+        <!-- LOADING STATE RESET (FIGMA IMAGE) -->
+        <div class="dashboard-loading-box box-sm" id="resetLoadingState" style="display: flex;">
+            <span class="dashboard-spinner spinner-inline"></span>
+            <span>Memuat data permintaan...</span>
+        </div>
+
+        <!-- Tampilan Saat Kosong (Sesuai Desain Figma) -->
+        <div class="reset-empty-wrap" id="resetEmptyWrap" style="display: none;">
+            <div class="reset-card-divider" id="resetCardDivider"></div>
+            <div class="reset-empty-state" id="resetEmptyState">
+                Belum ada permintaan password
+            </div>
+        </div>
+
+        <!-- Tampilan Saat Ada Permintaan -->
+        <div class="reset-card-body" id="resetCardBody" style="display: none;">
             <div class="reset-user-info">
                 <span class="reset-user-name" id="resetUserName">Erik</span>
             </div>
