@@ -11,6 +11,7 @@
 document.addEventListener('DOMContentLoaded', function () {
     const dashboardApiUrl = '/KELOMPOK-5/api/rekap/dashboard.php';
     const transaksiApiUrl = '/KELOMPOK-5/api/transaksi/index.php';
+    const trenApiUrl = '/KELOMPOK-5/api/rekap/tren.php';
 
     // State aktif untuk filter dashboard
     const state = {
@@ -103,27 +104,32 @@ document.addEventListener('DOMContentLoaded', function () {
     // ========================================
 
     async function loadRingkasanHarian() {
+        const elPelanggan = document.getElementById('dashPelangganHariIni');
+        const elTransaksi = document.getElementById('dashTransaksiHariIni');
+        const elPemasukan = document.getElementById('dashPendapatanHariIni');
+        const elLabaKotor = document.getElementById('dashLabaKotorHariIni');
+
+        // Tampilkan spinner kecil dalam pill saat memuat (sesuai Figma Image 8)
+        const spinnerPill = '<div class="summary-loading-pill"><span class="dashboard-spinner spinner-sm"></span></div>';
+        if (elPelanggan) elPelanggan.innerHTML = spinnerPill;
+        if (elTransaksi) elTransaksi.innerHTML = spinnerPill;
+        if (elPemasukan) elPemasukan.innerHTML = spinnerPill;
+        if (elLabaKotor) elLabaKotor.innerHTML = spinnerPill;
+
         try {
             const data = await fetchApi(`${dashboardApiUrl}?periode=hari&tanggal=${getTodayString()}`);
-            
-            // 1. Pelanggan Hari Ini
-            const elPelanggan = document.getElementById('dashPelangganHariIni');
+
             if (elPelanggan) elPelanggan.textContent = String(Number(data.jumlah_pelanggan || 0));
-
-            // 2. Transaksi Hari Ini
-            const elTransaksi = document.getElementById('dashTransaksiHariIni');
             if (elTransaksi) elTransaksi.textContent = String(Number(data.jumlah_transaksi || 0));
-
-            // 3. Pemasukan Hari Ini
-            const elPemasukan = document.getElementById('dashPendapatanHariIni');
             if (elPemasukan) elPemasukan.textContent = formatRupiah(data.keuangan?.pemasukan || 0);
-
-            // 4. Laba Kotor Hari Ini
-            const elLabaKotor = document.getElementById('dashLabaKotorHariIni');
             if (elLabaKotor) elLabaKotor.textContent = formatRupiah(data.keuangan?.laba_kotor || 0);
 
         } catch (error) {
             console.error('Error loadRingkasanHarian:', error);
+            if (elPelanggan) elPelanggan.textContent = '0';
+            if (elTransaksi) elTransaksi.textContent = '0';
+            if (elPemasukan) elPemasukan.textContent = 'Rp0';
+            if (elLabaKotor) elLabaKotor.textContent = 'Rp0';
         }
     }
 
@@ -133,7 +139,29 @@ document.addEventListener('DOMContentLoaded', function () {
 
     async function loadRekapKeuangan(period = 'minggu') {
         state.rekapPeriode = period;
+        const loadingEl = document.getElementById('rekapKeuanganLoading');
+        const metricsEl = document.getElementById('rekapKeuanganMetrics');
+
         try {
+            // Tampilkan state memuat keuangan, pembayaran, & barber (sesuai Figma Image 8)
+            if (loadingEl) loadingEl.style.display = 'flex';
+            if (metricsEl) metricsEl.style.display = 'none';
+            renderDistribusiPembayaran([], 0, true);
+
+            const bodyEl = document.getElementById('tabelPemasukanBody');
+            if (bodyEl) {
+                bodyEl.innerHTML = `
+                    <tr>
+                        <td colspan="3" class="td-barber-loading">
+                            <div class="barber-loading-wrap">
+                                <span class="dashboard-spinner spinner-inline"></span>
+                                <span>Memuat data barber...</span>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }
+
             const data = await fetchApi(`${dashboardApiUrl}?periode=${encodeURIComponent(period)}&tanggal=${getTodayString()}`);
             const k = data.keuangan || {};
 
@@ -149,23 +177,27 @@ document.addEventListener('DOMContentLoaded', function () {
             if (elBiayaOps) elBiayaOps.textContent = formatRupiah(k.biaya_operasional);
             if (elLabaBersih) elLabaBersih.textContent = formatRupiah(k.laba_bersih);
 
+            if (loadingEl) loadingEl.style.display = 'none';
+            if (metricsEl) metricsEl.style.display = 'grid';
+
             // Distribusi pembayaran disinkronkan dengan periode rekap keuangan
-            renderDistribusiPembayaran(data.pembayaran || [], data.jumlah_transaksi || 0);
+            renderDistribusiPembayaran(data.pembayaran || [], data.jumlah_transaksi || 0, false);
 
             // Pemasukan per barber disinkronkan dengan periode yang sama
             renderPemasukanPerBarber(period);
 
         } catch (error) {
             console.error('Error loadRekapKeuangan:', error);
+            if (loadingEl) loadingEl.style.display = 'none';
+            if (metricsEl) metricsEl.style.display = 'grid';
+            renderDistribusiPembayaran([], 0, false);
+            renderPemasukanPerBarber(period);
         }
     }
 
     function renderPemasukanPerBarber(period = 'minggu') {
-        const statusEl = document.getElementById('statusPemasukan');
-        const wrapperEl = document.getElementById('tabelPemasukanWrapper');
         const bodyEl = document.getElementById('tabelPemasukanBody');
-
-        if (!statusEl || !wrapperEl || !bodyEl) return;
+        if (!bodyEl) return;
 
         const now = getToday();
         const currentYear = now.getFullYear();
@@ -183,7 +215,7 @@ document.addEventListener('DOMContentLoaded', function () {
         sunday.setHours(23, 59, 59, 999);
 
         // Filter transaksi sesuai periode
-        const filteredTrx = state.allTransactions.filter(trx => {
+        const filteredTrx = (state.allTransactions || []).filter(trx => {
             if (!trx.tanggal) return false;
             const tDate = new Date(trx.tanggal + 'T00:00:00');
 
@@ -210,22 +242,24 @@ document.addEventListener('DOMContentLoaded', function () {
         const barberList = Object.values(barberMap);
         barberList.sort((a, b) => b.total - a.total);
 
+        // Header tabel tetap muncul, jika belum ada data tampilkan pesan di tengah (warna #6B6B6B)
         if (!barberList.length) {
-            statusEl.textContent = 'Belum ada transaksi barber pada periode ini';
-            statusEl.hidden = false;
-            wrapperEl.hidden = true;
-            bodyEl.replaceChildren();
+            bodyEl.innerHTML = `
+                <tr class="tr-barber-empty">
+                    <td colspan="3" class="td-barber-empty">
+                        Belum ada pemasukan periode ini
+                    </td>
+                </tr>
+            `;
             return;
         }
 
-        statusEl.hidden = true;
-        wrapperEl.hidden = false;
-
+        // Jika ada data, tampilkan nama si barber, jumlah transaksi, dan total pemasukan (warna #1A1A1A)
         bodyEl.innerHTML = barberList.map(item => `
-            <tr>
+            <tr class="tr-barber-data">
                 <td class="td-barber-nama">${escapeHtml(item.nama)}</td>
-                <td class="td-barber-trx text-center">${Number(item.transaksi)}</td>
-                <td class="td-barber-total text-start">${formatRupiah(item.total)}</td>
+                <td class="td-barber-trx">${Number(item.transaksi)}</td>
+                <td class="td-barber-total">${formatRupiah(item.total)}</td>
             </tr>
         `).join('');
     }
@@ -234,163 +268,102 @@ document.addEventListener('DOMContentLoaded', function () {
     // BAGIAN: GRAFIK TREN PEMASUKAN
     // ========================================
 
+    /* [Card Tren Pemasukan] Frontend Developer (Faqih) - Penomoran request agar respons lama tidak menimpa grafik saat pill periode diklik cepat */
+    let trenRequestId = 0;
+
+    /* [Card Tren Pemasukan] Frontend Developer (Faqih) - Memuat data grafik tren dari endpoint BE (api/rekap/tren.php), bukan lagi dihitung di browser */
     async function loadTrenPemasukan(period = '7_hari') {
         state.trenPeriode = period;
         const chartContainer = document.getElementById('dashboardLineChart');
+        const loadingTren = document.getElementById('trenLoadingState');
+        const wrapTren = document.getElementById('trenContentWrap');
         if (!chartContainer) return;
 
+        const requestId = ++trenRequestId;
+
+        // Tampilkan animasi loading tren (sesuai Figma Image 8)
+        if (loadingTren) loadingTren.style.display = 'flex';
+        if (wrapTren) wrapTren.style.display = 'none';
+
         try {
-            const trendData = calculateTrendData(period);
+            const data = await fetchApi(`${trenApiUrl}?periode=${encodeURIComponent(period)}`);
+            if (requestId !== trenRequestId) return; // ada permintaan lebih baru, abaikan
+
+            const trendData = mapTrenApiToTrendData(data, period);
             updateTrenSummaryBox(trendData, period);
             renderSvgLineChart(chartContainer, trendData);
         } catch (error) {
-            console.error('Error loadTrenPemasukan:', error);
-            chartContainer.innerHTML = '<div class="chart-empty-state">Grafik pemasukan gagal dimuat.</div>';
+            if (requestId !== trenRequestId) return;
+            console.error('Gagal memuat tren pemasukan:', error);
+            renderTrenError(chartContainer);
         }
+
+        if (loadingTren) loadingTren.style.display = 'none';
+        if (wrapTren) wrapTren.style.display = 'block';
     }
 
-    function calculateTrendData(period) {
-        const now = getToday();
-        const currentYear = now.getFullYear();
-        const currentMonth = now.getMonth();
+    /* [Card Tren Pemasukan] Frontend Developer (Faqih) - Helper format tanggal dari BE (YYYY-MM-DD) tanpa geseran zona waktu */
+    function parseTanggalIso(str) {
+        const parts = String(str || '').split('-').map(Number);
+        if (parts.length !== 3 || parts.some(Number.isNaN)) {
+            throw new Error('Format tanggal tren dari server tidak valid.');
+        }
+        return new Date(parts[0], parts[1] - 1, parts[2]);
+    }
 
+    function pad2(n) {
+        return String(n).padStart(2, '0');
+    }
+
+    /* [Card Tren Pemasukan] Frontend Developer (Faqih) - Memetakan respons tren.php ke struktur yang dipakai updateTrenSummaryBox dan renderSvgLineChart */
+    function mapTrenApiToTrendData(data, period) {
+        const titik = Array.isArray(data && data.titik) ? data.titik : [];
+        if (!titik.length) {
+            throw new Error('Respons tren dari server tidak berisi titik data.');
+        }
+
+        const awalPeriode = parseTanggalIso(data.tanggal_awal);
+        const values = titik.map(t => Number(t.total_pemasukan || 0));
         let labels = [];
         let subLabels = [];
-        let values = [];
         let subtitleText = '';
-        let totalAktif = 0;
-        let totalSebelumnya = 0;
 
         if (period === '7_hari') {
-            // Dimulai dari hari SENIN dan diakhiri hari MINGGU (Senin s.d Minggu)
-            const dayOfWeek = now.getDay();
-            const diffToMonday = (dayOfWeek === 0 ? -6 : 1) - dayOfWeek;
-            const monday = new Date(now);
-            monday.setDate(now.getDate() + diffToMonday);
-            monday.setHours(0, 0, 0, 0);
-
-            // Hitung minggu sebelumnya untuk pembanding
-            const prevMonday = new Date(monday);
-            prevMonday.setDate(monday.getDate() - 7);
-            const prevSunday = new Date(monday);
-            prevSunday.setDate(monday.getDate() - 1);
-            prevSunday.setHours(23, 59, 59, 999);
-
-            const dates = [];
-            for (let i = 0; i < 7; i++) {
-                const d = new Date(monday);
-                d.setDate(monday.getDate() + i);
-                const str = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-                dates.push({ date: d, strDate: str, dayName: hariIndoList[i] });
-                labels.push(hariIndoList[i]);
-                subLabels.push(`${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}`);
-            }
-
-            const sunday = dates[6].date;
-            subtitleText = `Pemasukan per hari, ${subLabels[0]} - ${subLabels[6]}`;
-
-            // Pemasukan per hari
-            values = dates.map(item => {
-                const sum = state.allTransactions
-                    .filter(t => t.tanggal === item.strDate)
-                    .reduce((acc, t) => acc + Number(t.total_harga || 0), 0);
-                totalAktif += sum;
-                return sum;
+            // BE mengirim nama hari berbahasa Inggris, jadi label dibuat dari tanggalnya
+            titik.forEach(t => {
+                const d = parseTanggalIso(t.tanggal_awal);
+                labels.push(hariIndoList[(d.getDay() + 6) % 7]);
+                subLabels.push(`${pad2(d.getDate())}/${pad2(d.getMonth() + 1)}`);
             });
-
-            // Total minggu sebelumnya
-            totalSebelumnya = state.allTransactions
-                .filter(t => {
-                    const td = new Date(t.tanggal + 'T00:00:00');
-                    return td >= prevMonday && td <= prevSunday;
-                })
-                .reduce((acc, t) => acc + Number(t.total_harga || 0), 0);
-
+            subtitleText = `Pemasukan per hari, ${subLabels[0]} - ${subLabels[subLabels.length - 1]}`;
         } else if (period === 'minggu') {
-            // Dimulai dari awal bulan tanggal 1 (Minggu 1, Minggu 2, Minggu 3, Minggu 4)
-            labels = ['Minggu 1', 'Minggu 2', 'Minggu 3', 'Minggu 4'];
-            subLabels = ['01 - 07', '08 - 14', '15 - 21', '22 - Akhir'];
-            subtitleText = `Pemasukan per minggu, ${bulanNamaLengkap[currentMonth]} ${currentYear}`;
-
-            const m1 = state.allTransactions.filter(t => {
-                const td = new Date(t.tanggal + 'T00:00:00');
-                return td.getFullYear() === currentYear && td.getMonth() === currentMonth && td.getDate() >= 1 && td.getDate() <= 7;
-            }).reduce((acc, t) => acc + Number(t.total_harga || 0), 0);
-
-            const m2 = state.allTransactions.filter(t => {
-                const td = new Date(t.tanggal + 'T00:00:00');
-                return td.getFullYear() === currentYear && td.getMonth() === currentMonth && td.getDate() >= 8 && td.getDate() <= 14;
-            }).reduce((acc, t) => acc + Number(t.total_harga || 0), 0);
-
-            const m3 = state.allTransactions.filter(t => {
-                const td = new Date(t.tanggal + 'T00:00:00');
-                return td.getFullYear() === currentYear && td.getMonth() === currentMonth && td.getDate() >= 15 && td.getDate() <= 21;
-            }).reduce((acc, t) => acc + Number(t.total_harga || 0), 0);
-
-            const m4 = state.allTransactions.filter(t => {
-                const td = new Date(t.tanggal + 'T00:00:00');
-                return td.getFullYear() === currentYear && td.getMonth() === currentMonth && td.getDate() >= 22;
-            }).reduce((acc, t) => acc + Number(t.total_harga || 0), 0);
-
-            values = [m1, m2, m3, m4];
-            totalAktif = m1 + m2 + m3 + m4;
-
-            // Bulan sebelumnya untuk pembanding
-            const prevMonthDate = new Date(currentYear, currentMonth - 1, 1);
-            totalSebelumnya = state.allTransactions.filter(t => {
-                const td = new Date(t.tanggal + 'T00:00:00');
-                return td.getFullYear() === prevMonthDate.getFullYear() && td.getMonth() === prevMonthDate.getMonth();
-            }).reduce((acc, t) => acc + Number(t.total_harga || 0), 0);
-
-        } else if (period === 'bulan') {
-            // Dimulai dari JANUARI dan diakhiri DESEMBER (12 Bulan)
-            labels = [...bulanIndoList];
-            subLabels = Array(12).fill(String(currentYear));
-            subtitleText = `Pemasukan per bulan, Tahun ${currentYear}`;
-
-            values = [];
-            for (let m = 0; m < 12; m++) {
-                const sum = state.allTransactions.filter(t => {
-                    const td = new Date(t.tanggal + 'T00:00:00');
-                    return td.getFullYear() === currentYear && td.getMonth() === m;
-                }).reduce((acc, t) => acc + Number(t.total_harga || 0), 0);
-                values.push(sum);
-                totalAktif += sum;
-            }
-
-            // Tahun sebelumnya untuk pembanding
-            totalSebelumnya = state.allTransactions.filter(t => {
-                const td = new Date(t.tanggal + 'T00:00:00');
-                return td.getFullYear() === (currentYear - 1);
-            }).reduce((acc, t) => acc + Number(t.total_harga || 0), 0);
-        }
-
-        // Hitung persentase dan status tren (Naik / Turun / Stabil)
-        let status = 'stabil';
-        let pctDisplay = '0%';
-
-        if (totalSebelumnya === 0) {
-            if (totalAktif > 0) {
-                status = 'naik';
-                pctDisplay = '100%';
-            } else {
-                status = 'stabil';
-                pctDisplay = '0%';
-            }
+            titik.forEach(t => {
+                const a = parseTanggalIso(t.tanggal_awal);
+                const b = parseTanggalIso(t.tanggal_akhir);
+                labels.push(t.label);
+                subLabels.push(`${pad2(a.getDate())} - ${pad2(b.getDate())}`);
+            });
+            subtitleText = `Pemasukan per minggu, ${bulanNamaLengkap[awalPeriode.getMonth()]} ${awalPeriode.getFullYear()}`;
         } else {
-            const diff = totalAktif - totalSebelumnya;
-            const pct = (diff / totalSebelumnya) * 100;
-            const absPct = Math.abs(pct);
-            pctDisplay = (absPct % 1 === 0 ? absPct.toFixed(0) : absPct.toFixed(1)) + '%';
-
-            if (absPct < 5) {
-                status = 'stabil';
-            } else if (pct > 0) {
-                status = 'naik';
-            } else {
-                status = 'turun';
-            }
+            labels = titik.map((t, i) => bulanIndoList[i] || t.label);
+            subLabels = titik.map(() => String(awalPeriode.getFullYear()));
+            subtitleText = `Pemasukan per bulan, Tahun ${awalPeriode.getFullYear()}`;
         }
+
+        // Persentase dan status (naik/turun/stabil) dihitung BE; ambang stabil mengikuti BE
+        const persen = data.persentase_perubahan;
+        let pctDisplay;
+        if (persen === null || persen === undefined) {
+            // BE mengirim null saat periode sebelumnya Rp0 dan periode aktif ada pemasukan
+            pctDisplay = '100%';
+        } else {
+            const absPct = Math.abs(Number(persen));
+            pctDisplay = (absPct % 1 === 0 ? absPct.toFixed(0) : absPct.toFixed(1)) + '%';
+        }
+
+        const status = ['naik', 'turun', 'stabil'].includes(data.status_tren)
+            ? data.status_tren
+            : 'stabil';
 
         return {
             period,
@@ -398,13 +371,30 @@ document.addEventListener('DOMContentLoaded', function () {
             subLabels,
             values,
             subtitleText,
-            totalAktif,
-            totalSebelumnya,
+            totalAktif: Number(data.total_pemasukan || 0),
+            totalSebelumnya: Number(data.total_periode_sebelumnya || 0),
             status,
             pctDisplay
         };
     }
 
+    /* [Card Tren Pemasukan] Frontend Developer (Faqih) - Tampilan saat endpoint tren gagal, supaya tidak menampilkan grafik Rp0 yang menyesatkan */
+    function renderTrenError(chartContainer) {
+        chartContainer.innerHTML = '<div class="dashboard-empty-centered">Gagal memuat data tren pemasukan</div>';
+
+        const setText = (id, text) => {
+            const el = document.getElementById(id);
+            if (el) el.textContent = text;
+        };
+        setText('trenPemasukanSubtitle', 'Data tren tidak dapat dimuat');
+        setText('trenStatusRingkas', '-');
+        setText('trenStatusSub', '');
+        setText('trenTotalAktif', '-');
+        setText('trenTotalSebelumnya', '');
+        setText('trenHariTertinggi', '-');
+        setText('trenHariTertinggiTanggal', '');
+    }
+/////////////////////////////////////////////////////////////
     function updateTrenSummaryBox(trendData, period) {
         // Subtitle header
         const subtitleEl = document.getElementById('trenPemasukanSubtitle');
@@ -506,6 +496,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         const plotWidth = svgWidth - paddingLeft - paddingRight;
         const plotHeight = svgHeight - paddingTop - paddingBottom;
+        const bottomY = paddingTop + plotHeight;
 
         const maxVal = Math.max(...values, 0);
         let ceiling = 600000;
@@ -521,7 +512,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const points = values.map((val, idx) => {
             const x = paddingLeft + (stepX * idx);
             const ratio = ceiling > 0 ? (val / ceiling) : 0;
-            const y = (paddingTop + plotHeight) - (ratio * plotHeight);
+            const y = bottomY - (ratio * plotHeight);
             return { x, y, val, label: labels[idx], subLabel: subLabels[idx] };
         });
 
@@ -530,7 +521,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const gridLevels = [1, 2/3, 1/3, 0];
         gridLevels.forEach(lvl => {
             const valLevel = Math.round(ceiling * lvl);
-            const yPos = (paddingTop + plotHeight) - (lvl * plotHeight);
+            const yPos = bottomY - (lvl * plotHeight);
             gridHtml += `
                 <line x1="${paddingLeft}" y1="${yPos}" x2="${svgWidth - paddingRight}" y2="${yPos}" stroke="#ECEEF6" stroke-width="1" />
                 <text x="${paddingLeft - 12}" y="${yPos + 4}" fill="#8F92A1" font-family="'Poppins', sans-serif" font-size="11" font-weight="500" text-anchor="end">${formatRupiahSingkat(valLevel)}</text>
@@ -548,38 +539,47 @@ document.addEventListener('DOMContentLoaded', function () {
 
             pointsHtml += `
                 <g class="chart-point" data-index="${idx}" tabindex="0" role="button" aria-label="${pt.label}: ${formatRupiah(pt.val)}">
-                    <!-- Hit area kursor 20px -->
-                    <circle cx="${pt.x}" cy="${pt.y}" r="20" fill="transparent" class="chart-hit-area"></circle>
+                    <!-- Area klik/hover yang ramah kursor -->
+                    <circle cx="${pt.x}" cy="${pt.y}" r="22" fill="transparent" class="chart-hit-area"></circle>
                     <circle cx="${pt.x}" cy="${pt.y}" r="4.5" fill="#FFFFFF" stroke="#17186B" stroke-width="2.5" class="chart-dot"></circle>
                 </g>
             `;
         });
 
-        const bottomY = paddingTop + plotHeight;
         const polylinePoints = points.map(pt => `${pt.x.toFixed(1)},${pt.y.toFixed(1)}`).join(' ');
         const polygonPoints = points.length ? `${polylinePoints} ${points[points.length - 1].x.toFixed(1)},${bottomY} ${points[0].x.toFixed(1)},${bottomY}` : '';
 
-        // Tooltip default TERSEMBUNYI (hanya muncul saat kursor diarahkan sesuai permintaan user)
+        // Template SVG Lengkap dengan Garis Putus-Putus & Halo Titik (Figma Image 3)
         container.innerHTML = `
             <svg id="trendSvgElement" viewBox="0 0 ${svgWidth} ${svgHeight}" style="width:100%;height:auto;display:block;" role="img" aria-label="Grafik garis tren pemasukan">
                 <defs>
                     <linearGradient id="trendGradient" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stop-color="#17186B" stop-opacity="0.30" />
-                        <stop offset="60%" stop-color="#17186B" stop-opacity="0.10" />
+                        <stop offset="0%" stop-color="#17186B" stop-opacity="0.38" />
+                        <stop offset="55%" stop-color="#17186B" stop-opacity="0.14" />
                         <stop offset="100%" stop-color="#17186B" stop-opacity="0.0" />
                     </linearGradient>
                 </defs>
                 <g class="chart-grid-lines">${gridHtml}</g>
                 ${polygonPoints ? `<polygon points="${polygonPoints}" fill="url(#trendGradient)" />` : ''}
                 <polyline class="chart-line" fill="none" stroke="#17186B" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round" points="${polylinePoints}" />
-                <!-- Tooltip group yang hanya muncul saat hover -->
+
+                <!-- Tooltip group yang muncul saat hover atau diklik (Sesuai Kotak Merah Figma Image 3) -->
                 <g id="chartActiveTooltipGroup" class="chart-active-tooltip" pointer-events="none" style="display: none; opacity: 0; transition: opacity 0.15s ease;">
-                    <line id="chartGuideLine" x1="0" y1="0" x2="0" y2="0" stroke="#17186B" stroke-dasharray="4 4" stroke-width="1.5" opacity="0.4" />
+                    <!-- Garis Titik-Titik Vertikal ke Bawah Menuju Label Hari -->
+                    <line id="chartGuideLine" x1="0" y1="0" x2="0" y2="0" stroke="#A0A3BD" stroke-dasharray="4 4" stroke-width="1.5" />
+                    <!-- Halo Lingkaran Luar Transparan -->
+                    <circle id="chartActiveHalo" cx="0" cy="0" r="10" fill="rgba(23, 24, 107, 0.18)" />
+                    <!-- Titik Tengah Solid Navy -->
+                    <circle id="chartActiveDot" cx="0" cy="0" r="4.5" fill="#17186B" />
+
+                    <!-- Badge Tooltip di Atas Titik -->
                     <g class="chart-tooltip-badge">
                         <rect id="chartTooltipRect" x="0" y="0" width="120" height="28" rx="6" ry="6" fill="#17186B" />
+                        <polygon id="chartTooltipArrow" points="0,0 0,0 0,0" fill="#17186B" />
                         <text id="chartTooltipText" x="0" y="0" fill="#FFFFFF" font-family="'Poppins', sans-serif" font-size="11" font-weight="600" text-anchor="middle"></text>
                     </g>
                 </g>
+
                 <g class="chart-points">${pointsHtml}</g>
                 <g class="chart-x-axis">${xAxisHtml}</g>
             </svg>
@@ -588,9 +588,14 @@ document.addEventListener('DOMContentLoaded', function () {
         const svgEl = container.querySelector('#trendSvgElement');
         const tooltipGroup = container.querySelector('#chartActiveTooltipGroup');
         const guideLine = container.querySelector('#chartGuideLine');
+        const activeHalo = container.querySelector('#chartActiveHalo');
+        const activeDot = container.querySelector('#chartActiveDot');
         const tooltipRect = container.querySelector('#chartTooltipRect');
+        const tooltipArrow = container.querySelector('#chartTooltipArrow');
         const tooltipTextEl = container.querySelector('#chartTooltipText');
         const pointElements = container.querySelectorAll('.chart-point');
+
+        let lockedIdx = null;
 
         function showTooltip(idx) {
             if (!points[idx]) return;
@@ -605,15 +610,27 @@ document.addEventListener('DOMContentLoaded', function () {
             if (boxX + boxWidth > svgWidth - 10) boxX = svgWidth - 10 - boxWidth;
             const boxY = Math.max(pt.y - boxHeight - 12, 6);
 
+            // Garis vertikal putus-putus ke sumbu dasar bawah (Kotak Merah Figma Image 3)
             guideLine.setAttribute('x1', pt.x);
-            guideLine.setAttribute('y1', boxY + boxHeight);
+            guideLine.setAttribute('y1', pt.y);
             guideLine.setAttribute('x2', pt.x);
-            guideLine.setAttribute('y2', pt.y);
+            guideLine.setAttribute('y2', bottomY);
 
+            // Posisi lingkaran halo aktif
+            activeHalo.setAttribute('cx', pt.x);
+            activeHalo.setAttribute('cy', pt.y);
+            activeDot.setAttribute('cx', pt.x);
+            activeDot.setAttribute('cy', pt.y);
+
+            // Posisi kotak badge
             tooltipRect.setAttribute('x', boxX);
             tooltipRect.setAttribute('y', boxY);
             tooltipRect.setAttribute('width', boxWidth);
             tooltipRect.setAttribute('height', boxHeight);
+
+            // Panah penunjuk ke bawah
+            const arrowY = boxY + boxHeight;
+            tooltipArrow.setAttribute('points', `${pt.x - 5},${arrowY} ${pt.x + 5},${arrowY} ${pt.x},${arrowY + 5}`);
 
             tooltipTextEl.setAttribute('x', boxX + (boxWidth / 2));
             tooltipTextEl.setAttribute('y', boxY + 18);
@@ -627,26 +644,58 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         function hideTooltip() {
+            if (lockedIdx !== null) return;
             tooltipGroup.style.opacity = '0';
             tooltipGroup.style.display = 'none';
             pointElements.forEach(el => el.classList.remove('active'));
         }
 
-        // Event hover kursor
+        // Interaksi Hover dan Klik pada Titik Grafik (Sesuai Permintaan User)
         pointElements.forEach(pointEl => {
+            const idx = parseInt(pointEl.dataset.index, 10);
+
             pointEl.addEventListener('mouseenter', () => {
-                const idx = parseInt(pointEl.dataset.index, 10);
                 showTooltip(idx);
             });
+
             pointEl.addEventListener('focus', () => {
-                const idx = parseInt(pointEl.dataset.index, 10);
                 showTooltip(idx);
+            });
+
+            // Klik titik: kunci garis titik-titik dan tooltip pada titik tersebut
+            pointEl.addEventListener('click', (e) => {
+                e.stopPropagation();
+                if (lockedIdx === idx) {
+                    lockedIdx = null;
+                    tooltipGroup.style.opacity = '0';
+                    tooltipGroup.style.display = 'none';
+                    pointElements.forEach(el => el.classList.remove('active'));
+                } else {
+                    lockedIdx = idx;
+                    showTooltip(idx);
+                }
             });
         });
 
         if (svgEl) {
-            svgEl.addEventListener('mouseleave', hideTooltip);
+            svgEl.addEventListener('mouseleave', () => {
+                if (lockedIdx !== null) {
+                    showTooltip(lockedIdx);
+                } else {
+                    hideTooltip();
+                }
+            });
         }
+
+        // Klik di luar grafik untuk melepas kunci titik
+        document.addEventListener('click', (e) => {
+            if (!container.contains(e.target)) {
+                lockedIdx = null;
+                tooltipGroup.style.opacity = '0';
+                tooltipGroup.style.display = 'none';
+                pointElements.forEach(el => el.classList.remove('active'));
+            }
+        });
     }
 
     // ========================================
@@ -658,11 +707,23 @@ document.addEventListener('DOMContentLoaded', function () {
         state.layananSort = sort;
 
         const container = document.getElementById('layananPopulerListContainer');
+        const headEl = document.getElementById('layananTableHead');
+        const footerEl = document.getElementById('layananTerlarisFooter');
         const footerTotal = document.getElementById('layananTotalTerjual');
         if (!container) return;
 
         try {
-            container.innerHTML = '<div class="layanan-populer-empty">Memuat data layanan...</div>';
+            // Tampilan State Memuat (Sesuai Figma Image 2)
+            if (headEl) headEl.style.display = 'grid';
+            if (footerEl) footerEl.style.display = 'flex';
+            if (footerTotal) footerTotal.textContent = 'Total layanan terjual: -';
+
+            container.innerHTML = `
+                <div class="dashboard-loading-box box-layanan">
+                    <div class="dashboard-spinner spinner-lg"></div>
+                    <span>Memuat data layanan...</span>
+                </div>
+            `;
 
             const data = await fetchApi(`${dashboardApiUrl}?periode=${encodeURIComponent(period)}&tanggal=${getTodayString()}&limit=20`);
             let services = Array.isArray(data.layanan_populer) ? [...data.layanan_populer] : [];
@@ -674,16 +735,21 @@ document.addEventListener('DOMContentLoaded', function () {
                 return sort === 'terbanyak' ? (countB - countA) : (countA - countB);
             });
 
-            // Hitung total layanan terjual
             const totalTerjual = services.reduce((acc, curr) => acc + Number(curr.jumlah_terjual || 0), 0);
-            if (footerTotal) {
-                footerTotal.textContent = `Total layanan terjual: ${totalTerjual}`;
-            }
 
-            if (!services.length) {
-                container.innerHTML = '<div class="layanan-populer-empty">Belum ada data layanan pada periode ini</div>';
+            // Empty State: tampilkan pesan di tengah (sesuai Figma Image 3)
+            if (!services.length || totalTerjual === 0) {
+                if (headEl) headEl.style.display = 'grid';
+                if (footerEl) footerEl.style.display = 'flex';
+                if (footerTotal) footerTotal.textContent = 'Total layanan terjual: -';
+                container.innerHTML = '<div class="dashboard-empty-centered">Belum ada layanan populer periode ini</div>';
                 return;
             }
+
+            // Normal State dengan Data Tersedia
+            if (headEl) headEl.style.display = 'grid';
+            if (footerEl) footerEl.style.display = 'flex';
+            if (footerTotal) footerTotal.textContent = `Total layanan terjual: ${totalTerjual}`;
 
             const maxTerjual = Math.max(...services.map(s => Number(s.jumlah_terjual || 0)), 1);
 
@@ -704,7 +770,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
         } catch (error) {
             console.error('Error loadLayananTerlaris:', error);
-            container.innerHTML = '<div class="layanan-populer-empty">Data layanan gagal dimuat.</div>';
+            if (headEl) headEl.style.display = 'grid';
+            if (footerEl) footerEl.style.display = 'flex';
+            if (footerTotal) footerTotal.textContent = 'Total layanan terjual: -';
+            container.innerHTML = '<div class="dashboard-empty-centered">Belum ada layanan populer periode ini</div>';
         }
     }
 
@@ -712,9 +781,22 @@ document.addEventListener('DOMContentLoaded', function () {
     // BAGIAN: DISTRIBUSI PEMBAYARAN
     // ========================================
 
-    function renderDistribusiPembayaran(items, totalTransaksi) {
+    function renderDistribusiPembayaran(items, totalTransaksi, isLoading = false) {
+        const contentEl = document.getElementById('paymentChartContent');
+        const emptyEl = document.getElementById('paymentEmptyState');
+        const loadingEl = document.getElementById('paymentLoadingState');
         const donutEl = document.getElementById('dashboardPaymentDonut');
         const jumlahTrxEl = document.getElementById('dashboardJumlahTransaksi');
+
+        // State Memuat (Sesuai Figma Image 2)
+        if (isLoading) {
+            if (contentEl) contentEl.style.display = 'none';
+            if (emptyEl) emptyEl.style.display = 'none';
+            if (loadingEl) loadingEl.style.display = 'flex';
+            return;
+        }
+
+        if (loadingEl) loadingEl.style.display = 'none';
 
         const map = {
             cash: { jumlah_transaksi: 0, total_pemasukan: 0 },
@@ -740,6 +822,17 @@ document.addEventListener('DOMContentLoaded', function () {
         const transferNom = Number(map.transfer.total_pemasukan || 0);
 
         const grandTotalTrx = cashTrx + qrisTrx + transferTrx;
+
+        // Empty State Distribusi Pembayaran (Sesuai Figma Image 1)
+        if (grandTotalTrx === 0) {
+            if (contentEl) contentEl.style.display = 'none';
+            if (emptyEl) emptyEl.style.display = 'flex';
+            return;
+        }
+
+        // Tampilkan Konten Grafik Donat & Legend
+        if (emptyEl) emptyEl.style.display = 'none';
+        if (contentEl) contentEl.style.display = 'block';
 
         // Update nilai tengah donut
         if (jumlahTrxEl) {
@@ -770,13 +863,7 @@ document.addEventListener('DOMContentLoaded', function () {
         if (oldTransfer) oldTransfer.textContent = `(${transferTrx} trx) ${formatRupiah(transferNom)}`;
         if (oldQris) oldQris.textContent = `(${qrisTrx} trx) ${formatRupiah(qrisNom)}`;
 
-        // Render warna donat menggunakan CSS conic-gradient
         if (!donutEl) return;
-
-        if (grandTotalTrx === 0) {
-            donutEl.style.background = '#E8EAF2';
-            return;
-        }
 
         const pCash = (cashTrx / grandTotalTrx) * 100;
         const pTransfer = (transferTrx / grandTotalTrx) * 100;
@@ -797,18 +884,127 @@ document.addEventListener('DOMContentLoaded', function () {
     // ========================================
 
     function initResetPasswordSection() {
+        const emptyWrap = document.getElementById('resetEmptyWrap');
+        const cardBody = document.getElementById('resetCardBody');
+        const loadingEl = document.getElementById('resetLoadingState');
+        const userNameEl = document.getElementById('resetUserName');
         const btnReset = document.getElementById('btnActionResetPassword');
-        const userName = document.getElementById('resetUserName');
 
+        // Fungsi kontrol tampilan: kosong vs ada permintaan
+        function renderResetStatus(requestUser = null) {
+            if (!emptyWrap || !cardBody) return;
+
+            if (loadingEl) loadingEl.style.display = 'none';
+
+            if (requestUser && (requestUser.nama || requestUser.username)) {
+                // Ada permintaan: sembunyikan tulisan kosong & tampilkan user + tombol reset
+                emptyWrap.style.display = 'none';
+                cardBody.style.display = 'flex';
+                if (userNameEl) {
+                    userNameEl.textContent = requestUser.nama || requestUser.username || 'Barber';
+                    userNameEl.dataset.userId = requestUser.id_user || '';
+                }
+            } else {
+                // Tidak ada permintaan: tampilkan garis pemisah & tulisan "Belum ada permintaan password"
+                emptyWrap.style.display = 'block';
+                cardBody.style.display = 'none';
+            }
+        }
+
+        // Cek antrean permintaan reset password secara otomatis
+        function checkCurrentResetRequest() {
+            const savedRequest = localStorage.getItem('kataji:reset-request');
+            if (savedRequest) {
+                try {
+                    const parsed = JSON.parse(savedRequest);
+                    if (parsed && (parsed.nama || parsed.username)) {
+                        renderResetStatus(parsed);
+                        return;
+                    }
+                } catch (e) {}
+            }
+            // Kondisi default riil: tidak ada permintaan password
+            renderResetStatus(null);
+        }
+
+        if (loadingEl) loadingEl.style.display = 'flex';
+        window.setTimeout(checkCurrentResetRequest, 250);
+
+        // Handler tombol Reset Password
         if (btnReset) {
-            btnReset.addEventListener('click', function () {
-                const targetName = userName ? userName.textContent : 'User';
-                const confirmed = window.confirm(`Apakah Anda yakin ingin memproses reset password untuk ${targetName}?`);
-                if (confirmed) {
-                    alert(`Permintaan reset password untuk ${targetName} telah diproses.`);
+            btnReset.addEventListener('click', async function () {
+                const targetName = userNameEl ? userNameEl.textContent.trim() : 'Barber';
+                const userId = userNameEl ? userNameEl.dataset.userId : null;
+
+                const newPassword = window.prompt(
+                    `Masukkan password baru untuk ${targetName} (minimal 6 karakter):`,
+                    ''
+                );
+
+                if (newPassword === null) return;
+
+                if (!newPassword || newPassword.trim().length < 6) {
+                    alert('Password baru wajib diisi dan minimal 6 karakter.');
+                    return;
+                }
+
+                try {
+                    btnReset.disabled = true;
+                    btnReset.textContent = 'Memproses...';
+
+                    if (userId) {
+                        const response = await fetch('/KELOMPOK-5/api/barber/reset_password.php', {
+                            method: 'PUT',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                id_user: parseInt(userId, 10),
+                                password_baru: newPassword.trim()
+                            })
+                        });
+
+                        const result = await response.json();
+                        if (!response.ok || !result.success) {
+                            throw new Error(result.message || 'Gagal mereset password.');
+                        }
+                    }
+
+                    alert(`Password untuk ${targetName} berhasil direset!`);
+                    localStorage.removeItem('kataji:reset-request');
+                    renderResetStatus(null); // Otomatis kembali ke tulisan "Belum ada permintaan password"
+                } catch (err) {
+                    console.error('Error saat reset password:', err);
+                    alert(err.message || 'Terjadi kesalahan saat memproses reset password.');
+                } finally {
+                    btnReset.disabled = false;
+                    btnReset.textContent = 'Reset Password';
                 }
             });
         }
+
+        // Event listener saat ada request baru dari tab lain
+        window.addEventListener('kataji:reset-requested', function (e) {
+            renderResetStatus(e.detail || null);
+        });
+
+        window.addEventListener('storage', function (e) {
+            if (e.key === 'kataji:reset-request') {
+                checkCurrentResetRequest();
+            }
+        });
+
+        // Helper global untuk simulasi / testing request
+        window.simulasiRequestReset = function (nama = 'Erik') {
+            const req = { nama: nama, waktu: new Date().toISOString() };
+            localStorage.setItem('kataji:reset-request', JSON.stringify(req));
+            renderResetStatus(req);
+            console.log(`[Kataji] Permintaan reset password untuk "${nama}" aktif.`);
+        };
+
+        window.bersihkanRequestReset = function () {
+            localStorage.removeItem('kataji:reset-request');
+            renderResetStatus(null);
+            console.log('[Kataji] Permintaan reset password dibersihkan.');
+        };
     }
 
     // ========================================
@@ -866,6 +1062,7 @@ document.addEventListener('DOMContentLoaded', function () {
     // ========================================
 
     async function refreshAllDashboardData() {
+        renderDistribusiPembayaran([], 0, true);
         await loadAllTransactions();
         loadRingkasanHarian();
         loadRekapKeuangan(state.rekapPeriode);
