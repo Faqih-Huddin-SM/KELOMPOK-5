@@ -46,7 +46,7 @@ if (isset($_GET['both_empty'])) {
     <!-- Custom Style -->
     <link
         rel="stylesheet"
-        href="/KELOMPOK-5/assets/css/style.css"
+        href="/KELOMPOK-5/assets/css/style.css?v=55"
     >
 </head>
 
@@ -152,7 +152,7 @@ if (isset($_GET['both_empty'])) {
             </div>
 
             <div class="login-forgot">
-                <a href="#">Lupa Password?</a>
+                <a href="#" id="linkLupaPassword">Lupa Password?</a>
             </div>
 
             <button
@@ -173,7 +173,8 @@ if (isset($_GET['both_empty'])) {
 
 </div>
 
-<script src="/KELOMPOK-5/assets/js/script.js"></script>
+<script src="/KELOMPOK-5/assets/js/error-popup.js?v=1"></script>
+<script src="/KELOMPOK-5/assets/js/script.js?v=14"></script>
 
 </body>
 </html>
