@@ -234,7 +234,7 @@ $display_role = ($role === 'owner') ? 'Owner Kataji' : ($nama ?: 'Barber');
                 <!-- GRAFIK SVG LINE DENGAN TOOLTIP -->
                 <div class="line-chart-container">
                     <div class="line-chart" id="dashboardLineChart" aria-label="Grafik tren pemasukan" aria-live="polite">
-                        <div class="chart-empty-state">Memuat grafik pemasukan...</div>
+                        <div class="dashboard-empty-centered" id="trenEmptyState">Belum ada data untuk ditampilkan</div>
                     </div>
                 </div>
             </div>
