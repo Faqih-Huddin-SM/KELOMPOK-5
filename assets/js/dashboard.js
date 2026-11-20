@@ -374,7 +374,8 @@ document.addEventListener('DOMContentLoaded', function () {
             totalAktif: Number(data.total_pemasukan || 0),
             totalSebelumnya: Number(data.total_periode_sebelumnya || 0),
             status,
-            pctDisplay
+            pctDisplay,
+            adaData: data.ada_data !== undefined ? Boolean(data.ada_data) : values.some(v => Number(v) > 0)
         };
     }
 
@@ -486,6 +487,16 @@ document.addEventListener('DOMContentLoaded', function () {
         const labels = trendData.labels || [];
         const subLabels = trendData.subLabels || [];
         const values = trendData.values || [];
+
+        // Cek apakah ada data transaksi pada periode yang dipilih (Skenario: Periode tanpa data)
+        const hasData = (trendData.adaData !== undefined ? Boolean(trendData.adaData) : false) ||
+                        values.some(v => Number(v) > 0) ||
+                        Number(trendData.totalAktif || 0) > 0;
+
+        if (!hasData) {
+            container.innerHTML = '<div class="dashboard-empty-centered" id="trenEmptyState">Belum ada data untuk ditampilkan</div>';
+            return;
+        }
 
         const svgWidth = 800;
         const svgHeight = 220;

@@ -6486,12 +6486,12 @@ body .pengeluaran-toast[hidden] {
     display: grid !important;
     grid-template-columns: 24px 130px 1fr 40px !important;
     gap: 12px !important;
-    padding: 0 4px 8px !important;
+    padding: 0 4px 10px !important;
     border-bottom: 1px solid #ECEEF6 !important;
     font-size: 11.5px !important;
     font-weight: 300 !important;
     color: #6B6B6B !important;
-    margin-bottom: 10px !important;
+    margin-bottom: 0 !important;
 }
 
 .dashboard-page .col-head-qty {
@@ -6504,8 +6504,8 @@ body .pengeluaran-toast[hidden] {
     flex: 1 !important;
     display: flex !important;
     flex-direction: column !important;
-    gap: 12px !important;
-    padding: 4px 0 !important;
+    gap: 0 !important;
+    padding: 0 !important;
 }
 
 .dashboard-page .layanan-item-row {
@@ -6513,6 +6513,8 @@ body .pengeluaran-toast[hidden] {
     grid-template-columns: 24px 130px 1fr 40px !important;
     gap: 12px !important;
     align-items: center !important;
+    padding: 10px 4px !important;
+    border-bottom: 1px solid #ECEEF6 !important;
 }
 
 .dashboard-page .layanan-row-no {
@@ -6556,9 +6558,9 @@ body .pengeluaran-toast[hidden] {
     display: flex !important;
     align-items: center !important;
     justify-content: space-between !important;
-    padding-top: 18px !important;
-    margin-top: 14px !important;
-    border-top: 1px solid #ECEEF6 !important;
+    padding-top: 12px !important;
+    margin-top: 0 !important;
+    border-top: none !important;
     font-size: 11.5px !important;
     color: #6B6B6B !important;
 }
@@ -6863,6 +6865,16 @@ body .pengeluaran-toast[hidden] {
 
 /* paymentEmptyState juga pakai warna & font yang sama */
 .dashboard-page #paymentEmptyState {
+    font-size: 14px !important;
+    font-weight: 400 !important;
+    color: #6B6B6B !important;
+    font-family: 'Poppins', sans-serif !important;
+}
+
+/* trenEmptyState di dalam line-chart memiliki tinggi yang sama dengan canvas grafik */
+.dashboard-page .line-chart .dashboard-empty-centered,
+.dashboard-page #trenEmptyState {
+    min-height: 220px !important;
     font-size: 14px !important;
     font-weight: 400 !important;
     color: #6B6B6B !important;
