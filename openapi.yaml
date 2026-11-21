@@ -1326,6 +1326,168 @@ paths:
               schema: { $ref: "#/components/schemas/Error" }
         "500": { $ref: "#/components/responses/ServerError" }
 
+  /barber/foto.php:
+    post:
+      tags: [Akun Barber]
+      summary: Unggah atau ganti foto barber (owner)
+      description: |
+        Mengunggah foto profil barber. Bila barber sudah punya foto, foto baru menggantikan
+        foto lama dan file lama dihapus dari penyimpanan. Bila unggahan gagal, foto sebelumnya
+        tidak berubah.
+
+        Validasi: format **JPG atau PNG** (tipe diperiksa dari isi file, bukan ekstensi),
+        ukuran maksimal **10 MB**. Nama file di server diacak. Hanya owner.
+      operationId: unggahFotoBarber
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [id_user, foto]
+              properties:
+                id_user: { type: integer, minimum: 1, example: 7 }
+                foto:
+                  {
+                    type: string,
+                    format: binary,
+                    description: "File JPG atau PNG, maksimal 10 MB",
+                  }
+      responses:
+        "200":
+          description: Foto berhasil diunggah atau diganti
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean, example: true }
+                  message:
+                    { type: string, example: Foto barber berhasil diunggah. }
+                  data:
+                    type: object
+                    properties:
+                      id_user: { type: integer, example: 7 }
+                      foto:
+                        {
+                          type: string,
+                          example: uploads/barber/23c4b424cf496c217f513b2c30112523.jpg,
+                        }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/ForbiddenOwner" }
+        "404":
+          description: Akun barber tidak ditemukan (`NOT_FOUND`)
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "422":
+          description: |
+            Validasi gagal (`UNPROCESSABLE_ENTITY`). Pesan: `Format foto harus JPG atau PNG`,
+            `Ukuran foto maksimal 10 MB`, `Pilih foto yang akan diunggah.`, atau `ID user tidak valid.`
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+              examples:
+                formatSalah:
+                  value:
+                    {
+                      success: false,
+                      message: Format foto harus JPG atau PNG,
+                      error_code: UNPROCESSABLE_ENTITY,
+                    }
+                terlaluBesar:
+                  value:
+                    {
+                      success: false,
+                      message: Ukuran foto maksimal 10 MB,
+                      error_code: UNPROCESSABLE_ENTITY,
+                    }
+        "500":
+          description: Unggahan gagal di server (`INTERNAL_SERVER_ERROR`)
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+              example:
+                {
+                  success: false,
+                  message: Foto gagal diunggah. Silakan coba lagi,
+                  error_code: INTERNAL_SERVER_ERROR,
+                }
+    delete:
+      tags: [Akun Barber]
+      summary: Hapus foto barber (owner)
+      description: Menghapus foto barber dan file-nya dari penyimpanan. Hanya owner.
+      operationId: hapusFotoBarber
+      parameters:
+        - {
+            name: id_user,
+            in: query,
+            required: true,
+            schema: { type: integer, minimum: 1 },
+          }
+      responses:
+        "200":
+          description: Foto dihapus
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean, example: true }
+                  message:
+                    { type: string, example: Foto barber berhasil dihapus. }
+                  data:
+                    type: object
+                    properties:
+                      id_user: { type: integer, example: 7 }
+                      foto: { type: string, nullable: true, example: null }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/ForbiddenOwner" }
+        "404":
+          description: Akun barber tidak ditemukan, atau barber belum memiliki foto (`NOT_FOUND`)
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "422":
+          description: id_user tidak valid (`UNPROCESSABLE_ENTITY`)
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+
+  /barber/publik.php:
+    get:
+      tags: [Barber]
+      summary: Daftar barber aktif untuk halaman publik (tanpa login)
+      description: |
+        Hanya barber dengan `role = barber` dan `aktif = 1`. Barber nonaktif dan akun owner
+        tidak ikut. `foto` bernilai `null` bila belum diunggah.
+      operationId: listBarberPublik
+      security: []
+      responses:
+        "200":
+          description: Daftar barber aktif
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean, example: true }
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id_user: { type: integer, example: 7 }
+                        nama: { type: string, example: Budi }
+                        spesialisasi:
+                          { type: string, nullable: true, example: Coloring }
+                        foto:
+                          {
+                            type: string,
+                            nullable: true,
+                            example: uploads/barber/23c4b424cf496c217f513b2c30112523.jpg,
+                          }
+
   /barber/reset_password.php:
     put:
       tags: [Akun Barber]
@@ -2212,6 +2374,12 @@ components:
         username: { type: string, example: budi }
         nama: { type: string, example: Budi }
         spesialisasi: { type: string, nullable: true, example: Coloring }
+        foto:
+          {
+            type: string,
+            nullable: true,
+            example: uploads/barber/23c4b424cf496c217f513b2c30112523.jpg,
+          }
         role: { type: string, example: barber }
         aktif: { type: integer, enum: [0, 1], example: 1 }
 

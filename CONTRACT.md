@@ -1583,7 +1583,7 @@ Akun yang dinonaktifkan tidak muncul di daftar ini. Pengelolaan akun barber (tam
 | `password`     | Ya    | Minimal 6 karakter, disimpan sebagai hash     |
 | `spesialisasi` | Tidak | Maksimal 100 karakter; kosong disimpan `null` |
 
-Berhasil `201`: `data` berisi `id_user`, `username`, `nama`, `spesialisasi`, `role` (`barber`), `aktif` (`1`). Password tidak pernah ikut di respons. Username sudah dipakai atau data tidak valid → `422`.
+Berhasil `201`: `data` berisi `id_user`, `username`, `nama`, `spesialisasi`, `foto` (`null`), `role` (`barber`), `aktif` (`1`). Password tidak pernah ikut di respons. Username sudah dipakai atau data tidak valid → `422`.
 
 ### 10.3 Ubah profil
 
@@ -1619,11 +1619,70 @@ Memperbarui akun yang ada (aktif maupun nonaktif); username tidak berubah dan ti
 
 `password_baru` minimal 6 karakter (`422`). Password lama tidak berlaku lagi. Akun yang tidak ada atau tidak aktif → `404` dengan pesan `Akun tidak ditemukan atau tidak aktif`. Berhasil `200`.
 
-### 10.6 Kode respons
+### 10.6 Foto barber (unggah, ganti, hapus)
+
+Hanya owner. Barber mendapat `403 FORBIDDEN` ("Anda tidak memiliki izin mengakses halaman ini"). Tanpa login → `401`.
+
+**Unggah atau ganti** — `POST /api/barber/foto.php`, `Content-Type: multipart/form-data`
+
+| Field     | Tipe    | Keterangan                   |
+| --------- | ------- | ---------------------------- |
+| `id_user` | integer | ID akun barber               |
+| `foto`    | file    | JPG atau PNG, maksimal 10 MB |
+
+Berhasil `200`:
+
+```json
+{
+  "success": true,
+  "message": "Foto barber berhasil diunggah.",
+  "data": {
+    "id_user": 7,
+    "foto": "uploads/barber/23c4b424cf496c217f513b2c30112523.jpg"
+  }
+}
+```
+
+Bila barber sudah punya foto, pesannya "Foto barber berhasil diganti." dan file lama dihapus dari penyimpanan. Bila unggahan gagal, foto sebelumnya tidak berubah.
+
+| Status | Pesan                                  | Penyebab                                  |
+| ------ | -------------------------------------- | ----------------------------------------- |
+| `422`  | Format foto harus JPG atau PNG         | Tipe file (diperiksa dari isi file) salah |
+| `422`  | Ukuran foto maksimal 10 MB             | Ukuran lebih dari 10 MB                   |
+| `422`  | Pilih foto yang akan diunggah.         | Field `foto` tidak dikirim                |
+| `404`  | Akun barber tidak ditemukan.           | `id_user` bukan barber                    |
+| `500`  | Foto gagal diunggah. Silakan coba lagi | Kegagalan di server                       |
+
+Nama file di server diacak. Nilai `foto` adalah path relatif; di frontend tampilkan dengan `/KELOMPOK-5/` + `foto`. Bila `foto` bernilai `null`, tampilkan avatar inisial.
+
+**Hapus** — `DELETE /api/barber/foto.php?id_user=7` → `200` dengan `data: { id_user: 7, foto: null }`. Barber tanpa foto → `404` ("Barber ini belum memiliki foto.").
+
+Field `foto` (path atau `null`) juga ada pada `GET /api/barber/akun.php`, dan pada `data` hasil tambah (`POST`) serta ubah profil (`PUT`).
+
+### 10.7 Daftar barber untuk halaman publik
+
+`GET /api/barber/publik.php` — **tanpa login**. Hanya barber aktif (`role = barber`, `aktif = 1`); barber nonaktif dan owner tidak ikut.
+
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id_user": 7,
+      "nama": "Budi",
+      "spesialisasi": "Coloring",
+      "foto": "uploads/barber/23c4....jpg"
+    },
+    { "id_user": 9, "nama": "Sandi", "spesialisasi": null, "foto": null }
+  ]
+}
+```
+
+### 10.8 Kode respons
 
 | HTTP  | Keterangan                                                         |
 | ----- | ------------------------------------------------------------------ |
-| `200` | Berhasil (daftar, ubah profil, status, reset password)             |
+| `200` | Berhasil (daftar, ubah profil, status, reset password, foto)       |
 | `201` | Akun barber ditambahkan                                            |
 | `400` | Body bukan JSON (`BAD_REQUEST`)                                    |
 | `401` | Belum login, sesi habis, atau akun tidak aktif (`UNAUTHORIZED`)    |
@@ -1639,7 +1698,7 @@ Database: `kataji_barber` (MySQL/MariaDB, `utf8mb4`). File skema lengkap beserta
 
 | Tabel              | Kolom utama                                                                                                                                                                                            | Keterangan                                      |
 | ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------- |
-| `users`            | `id_user` PK, `username` (unik), `password_hash`, `nama`, `role` (`owner`/`barber`), `spesialisasi` (NULL, maks 100 karakter), `aktif`, `dibuat_pada`                                                  | Akun login. Hanya `aktif = 1` yang dapat login. |
+| `users`            | `id_user` PK, `username` (unik), `password_hash`, `nama`, `role` (`owner`/`barber`), `spesialisasi` (NULL, maks 100 karakter), `foto` (NULL, path relatif), `aktif`, `dibuat_pada`                     | Akun login. Hanya `aktif = 1` yang dapat login. |
 | `layanan`          | `id_layanan` PK, `nama_layanan`, `harga` (> 0), `hpp` (NULL atau ≥ 0), `icon_layanan` (NULL), `aktif`, `dibuat_pada`                                                                                   | `aktif = 0` berarti nonaktif.                   |
 | `pelanggan`        | `id_pelanggan` PK, `nama`, `no_hp` (NULL), `dibuat_pada`, `dihapus_pada` (NULL)                                                                                                                        | Soft delete lewat `dihapus_pada`.               |
 | `transaksi`        | `id_transaksi` PK, `id_pencatat` FK, `id_barber` FK, `id_pelanggan` FK (NULL), `tanggal`, `waktu`, `total_harga`, `metode_pembayaran` (`cash`/`qris`/`transfer`), `dibuat_pada`, `dihapus_pada` (NULL) | Soft delete lewat `dihapus_pada`.               |
