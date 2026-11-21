@@ -38,7 +38,7 @@ unset($_SESSION['login_notification']);
     <!-- Custom Style -->
     <link
         rel="stylesheet"
-        href="/KELOMPOK-5/assets/css/style.css?v=51"
+        href="/KELOMPOK-5/assets/css/style.css?v=55"
     >
 </head>
 
@@ -126,7 +126,7 @@ unset($_SESSION['login_notification']);
         href="/KELOMPOK-5/pages/pengeluaran.php"
         class="sidebar-link <?= $current_page === 'pengeluaran.php' ? 'active' : '' ?>"
     >
-        <span>Pengeluaran/HPP</span>
+        <span>Pengeluaran</span>
     </a>
 
     <!-- LAPORAN -->

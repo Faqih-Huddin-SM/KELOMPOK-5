@@ -56,7 +56,7 @@ include __DIR__ . '/../includes/header.php';
                 <!-- [Card 5.2] Loading state awal daftar pelanggan -->
                 <div class="pelanggan-list-loading-wrap" role="status" aria-live="polite">
                     <span class="pelanggan-loading-spinner" aria-hidden="true"></span>
-                    <span>Memuat daftar pelanggan...</span>
+                    <span>Memuat data pelanggan...</span>
                 </div>
             </div>
         </section>
@@ -124,6 +124,6 @@ include __DIR__ . '/../includes/header.php';
 </div>
 
 <!-- [Card 5.2] Script Frontend Pelanggan & Riwayat Layanan -->
-<script src="/KELOMPOK-5/assets/js/pelanggan.js?v=9"></script>
+<script src="/KELOMPOK-5/assets/js/pelanggan.js?v=10"></script>
 
 <?php include __DIR__ . '/../includes/footer.php'; ?>

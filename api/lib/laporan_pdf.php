@@ -243,19 +243,21 @@ class LaporanBulananPdf extends FPDF
             $pdf->AddPage();
         }
 
-        $pdf->SetTextColor(20, 20, 20);
+       $pdf->SetTextColor(20, 20, 20);
         $pdf->SetFont('Helvetica', '', 8.5);
+
+        $pdf->Ln(8); // <-- tambahan: menurunkan seluruh blok tanda tangan
 
         $pdf->SetX(135);
         $pdf->Cell(50, 4, $pdf->t('Mengetahui,'), 0, 1, 'C');
         $pdf->SetX(135);
-        $pdf->Cell(50, 4, $pdf->t('Pemilik'), 0, 1, 'C');
+        $pdf->Cell(50, 4, $pdf->t('Owner'), 0, 1, 'C');
 
         $pdf->Ln(15);
         $pdf->SetX(135);
         $pdf->Cell(50, 0.3, '', 'T', 1, 'C');
         $pdf->SetX(135);
-        $pdf->Cell(50, 4.5, $pdf->t('(Nama Pemilik)'), 0, 1, 'C');
+        $pdf->Cell(50, 4.5, $pdf->t('Owner Kataji'), 0, 1, 'C');
 
         return $pdf->Output('S');
     }

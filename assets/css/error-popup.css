@@ -1,0 +1,48 @@
+/* ==============================================================================
+   [Card X.Y] Frontend Developer (Faqih) - Popup "Gagal Memuat Data" (error server)
+   Memakai kelas .connection-modal-* yang sudah ada di style.css; file ini hanya
+   menambahkan bagian yang belum ada (kode kesalahan & animasi muncul).
+   ============================================================================== */
+
+/* Jarak deskripsi dirapatkan saat baris "Kode kesalahan" ditampilkan */
+.connection-modal-description--tight {
+    margin-bottom: 6px;
+}
+
+.status-modal-code {
+    margin: 0 0 18px;
+    color: #737584;
+    font-size: 10px;
+    font-weight: 400;
+    line-height: 1.4;
+}
+
+.status-modal-code[hidden] {
+    display: none;
+}
+
+/* Animasi muncul halus */
+.status-modal-overlay:not([hidden]) {
+    animation: statusModalFade 0.18s ease-out;
+}
+
+.status-modal-overlay:not([hidden]) .connection-modal-dialog {
+    animation: statusModalPop 0.2s ease-out;
+}
+
+@keyframes statusModalFade {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+@keyframes statusModalPop {
+    from { opacity: 0; transform: translateY(8px) scale(0.98); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .status-modal-overlay:not([hidden]),
+    .status-modal-overlay:not([hidden]) .connection-modal-dialog {
+        animation: none;
+    }
+}

@@ -22,8 +22,11 @@ $nama = $_SESSION['nama'] ?? '';
 
     <!-- [Card 6.7] Header Judul Halaman Sesuai Desain Figma -->
     <div class="laporan-header-row">
-        <h1 class="laporan-title">Laporan</h1>
-        <p class="laporan-subtitle">Rekap pemasukan dan pengeluaran bulanan barbershop.</p>
+        <div>
+            <h1 class="laporan-title">Laporan</h1>
+            <p class="laporan-subtitle">Rekap pemasukan dan pengeluaran bulanan barbershop.</p>
+        </div>
+        <div id="laporanFeedback" class="laporan-feedback-alert" role="alert" style="display: none;"></div>
     </div>
 
     <!-- [Card 6.7] =============================================================
@@ -39,7 +42,7 @@ $nama = $_SESSION['nama'] ?? '';
             <div class="laporan-ekspor-controls">
                 <!-- [Card 6.7] Pemilih Bulan Periode Laporan (Bawaan Bulan Berjalan) -->
                 <div class="laporan-picker-col">
-                    <label for="laporanBulanInput" class="laporan-form-label">Periode laporan</label>
+                    <label for="laporanBulanInput" class="laporan-form-label">Periode Laporan</label>
                     <div class="laporan-picker-box" id="laporanPickerBox" title="Klik untuk memilih bulan">
                         <span class="laporan-picker-display" id="laporanBulanDisplay">Memuat periode...</span>
                         <svg class="laporan-picker-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -76,9 +79,6 @@ $nama = $_SESSION['nama'] ?? '';
                     </button>
                 </div>
             </div>
-
-            <!-- [Card 6.7] Alert Feedback Respons BE (Pesan: "Belum ada data...", "Laporan gagal dibuat...", dsb) -->
-            <div id="laporanFeedback" class="laporan-feedback-alert" role="alert" style="display: none;"></div>
         </div>
     </section>
 
@@ -199,10 +199,10 @@ $nama = $_SESSION['nama'] ?? '';
         <p class="laporan-modal-description" id="laporanExportDescription">Laporan bulanan akan diunduh dalam format PDF.</p>
 
         <!-- [Card 6.7] Alert Error Saat Ekspor Gagal (Figma Image 6) -->
-        <div class="laporan-dialog-error" id="laporanExportError" role="alert" hidden>
-            <svg class="laporan-dialog-error-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#DC2626" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <div class="laporan-dialog-error" id="laporanExportError" role="alert" aria-live="assertive" hidden>
+            <svg class="laporan-dialog-error-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                 <circle cx="12" cy="12" r="10"></circle>
-                <line x1="12" y1="8" x2="12" y2="12"></line>
+                <line x1="12" y1="9" x2="12" y2="13"></line>
                 <line x1="12" y1="16" x2="12.01" y2="16"></line>
             </svg>
             <span id="laporanExportErrorText">Laporan gagal dibuat. Silakan coba lagi</span>
@@ -275,7 +275,7 @@ $nama = $_SESSION['nama'] ?? '';
 
         <!-- [Card 6.7] Footer Pratinjau dengan Informasi Halaman Sesuai Figma (Image 5) -->
         <div class="laporan-modal-actions laporan-preview-actions">
-            <span class="laporan-preview-page-info">Halaman 1 dari 1</span>
+            <span class="laporan-preview-page-info"></span>
             <div class="laporan-preview-buttons">
                 <button type="button" class="laporan-button laporan-button-secondary" data-close-preview>Tutup</button>
                 <button type="button" class="laporan-button laporan-button-primary" id="btnPreviewEkspor">

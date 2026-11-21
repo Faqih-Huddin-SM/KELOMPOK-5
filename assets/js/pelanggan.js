@@ -33,6 +33,7 @@ document.addEventListener('DOMContentLoaded', function () {
     let semuaPelanggan = [];
     let pelangganAktifId = null;
     let debounceTimer = null;
+    let idPencarian = 0;
     const cacheKunjungan = new Map(); // Menyimpan jumlah kunjungan per pelanggan (id_pelanggan -> count)
 
     // ==========================================================================
@@ -85,7 +86,7 @@ document.addEventListener('DOMContentLoaded', function () {
     /**
      * Memuat daftar seluruh pelanggan dari /api/pelanggan/index.php
      */
-    async function muatDaftarPelanggan(keyword = '') {
+    async function muatDaftarPelanggan(keyword = '', requestId = idPencarian) {
         const waktuMulai = performance.now();
 
         try {
@@ -113,6 +114,13 @@ document.addEventListener('DOMContentLoaded', function () {
                 throw new Error(result.message || 'Gagal memuat pelanggan.');
             }
 
+            if (keyword.trim() && (
+                requestId !== idPencarian
+                || keyword.trim().toLowerCase() !== (inputCari?.value || '').trim().toLowerCase()
+            )) {
+                return;
+            }
+
             const semuaRaw = Array.isArray(result.data) ? result.data : [];
 
             // [Card 5.2] Simpan jumlah kunjungan ke cache dari API
@@ -124,9 +132,23 @@ document.addEventListener('DOMContentLoaded', function () {
 
             // [Card 5.2] Filter: hanya tampilkan pelanggan yang sudah pernah bertransaksi (jumlah_kunjungan > 0)
             // Pelanggan dengan 0 kunjungan tidak ditampilkan di daftar sesuai permintaan
-            semuaPelanggan = semuaRaw.filter(p => Number(p.jumlah_kunjungan || 0) > 0);
+            const pelangganHasilApi = semuaRaw.filter(p => Number(p.jumlah_kunjungan || 0) > 0);
 
-            renderDaftarPelanggan(semuaPelanggan);
+            if (keyword.trim()) {
+                renderDaftarPelanggan(pelangganHasilApi, 'Tidak ada pelanggan yang cocok dengan pencarian.');
+                return;
+            }
+
+            /* [Card 5.2] Frontend Developer (Faqih) - Pertahankan daftar utama agar hasil pencarian tidak menggantikannya. */
+            semuaPelanggan = pelangganHasilApi;
+            const keywordAktif = (inputCari?.value || '').trim().toLowerCase();
+            const daftarAwal = keywordAktif
+                ? semuaPelanggan.filter(p => (p.nama || '').toLowerCase().includes(keywordAktif))
+                : semuaPelanggan;
+            renderDaftarPelanggan(
+                daftarAwal,
+                keywordAktif ? 'Tidak ada pelanggan yang cocok dengan pencarian.' : undefined
+            );
 
             // [Card 5.2] Auto-select pelanggan (hanya dari yang sudah pernah bertransaksi):
             // 1. Sesuai parameter URL (?id=...) jika ada
@@ -150,6 +172,8 @@ document.addEventListener('DOMContentLoaded', function () {
             }
 
         } catch (error) {
+            if (keyword.trim() && requestId !== idPencarian) return;
+
             console.error('[Card 5.2] Gagal memuat daftar pelanggan:', error);
             tampilkanDaftarKosong('Gagal memuat data pelanggan.');
             if (profileNama) profileNama.textContent = 'Gagal memuat pelanggan';
@@ -178,7 +202,7 @@ document.addEventListener('DOMContentLoaded', function () {
      * [Card 5.2] Render Daftar Pelanggan — hanya tampilkan yang sudah pernah bertransaksi
      * List sudah difilter sebelum masuk ke sini (jumlah_kunjungan > 0)
      */
-    function renderDaftarPelanggan(list) {
+    function renderDaftarPelanggan(list, pesanKosong = 'Belum ada pelanggan dengan riwayat transaksi.') {
         if (!listContainer) return;
         listContainer.classList.remove('is-loading');
 
@@ -186,7 +210,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const listBertransaksi = list.filter(p => Number(p.jumlah_kunjungan || 0) > 0);
 
         if (listBertransaksi.length === 0) {
-            tampilkanDaftarKosong('Belum ada pelanggan dengan riwayat transaksi.');
+            tampilkanDaftarKosong(pesanKosong);
             return;
         }
 
@@ -512,6 +536,7 @@ document.addEventListener('DOMContentLoaded', function () {
     if (inputCari) {
         inputCari.addEventListener('input', function () {
             clearTimeout(debounceTimer);
+            const requestId = ++idPencarian;
             const keyword = inputCari.value.toLowerCase().trim();
 
             debounceTimer = setTimeout(() => {
@@ -522,11 +547,11 @@ document.addEventListener('DOMContentLoaded', function () {
                     const hasilFilter = semuaPelanggan.filter(p =>
                         (p.nama || '').toLowerCase().includes(keyword)
                     );
-                    renderDaftarPelanggan(hasilFilter);
+                    renderDaftarPelanggan(hasilFilter, 'Tidak ada pelanggan yang cocok dengan pencarian.');
 
                     // Jika tidak ada di lokal atau keyword panjang, query ke server
                     if (hasilFilter.length === 0 && keyword.length >= 2) {
-                        muatDaftarPelanggan(keyword);
+                        muatDaftarPelanggan(keyword, requestId);
                     }
                 }
             }, 250);

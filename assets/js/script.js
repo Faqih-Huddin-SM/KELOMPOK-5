@@ -9,6 +9,235 @@ document.addEventListener('DOMContentLoaded', function () {
     console.log('DOM SIAP');
 
     // ======================================================
+    // 0. NOTIFIKASI KONEKSI
+    // ======================================================
+
+    const connectionModal = document.createElement('div');
+    connectionModal.className = 'connection-modal-overlay';
+    connectionModal.hidden = true;
+    connectionModal.innerHTML = `
+        <section class="connection-modal-dialog" role="dialog" aria-modal="true"
+            aria-labelledby="connectionModalTitle" aria-describedby="connectionModalDescription">
+            <div class="connection-modal-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 20h.01"></path>
+                    <path d="M8.5 16.5a5 5 0 0 1 7 0"></path>
+                    <path d="M5 13.5a10 10 0 0 1 5.17-2.84"></path>
+                    <path d="M19 13.5a10 10 0 0 0-2.43-1.81"></path>
+                    <path d="M2 10.5a15 15 0 0 1 20 0"></path>
+                    <line x1="2" y1="2" x2="22" y2="22"></line>
+                </svg>
+            </div>
+            <h2 class="connection-modal-title" id="connectionModalTitle">Tidak Ada Koneksi</h2>
+            <p class="connection-modal-description" id="connectionModalDescription">
+                Halaman tidak dapat dimuat karena koneksi terputus. Periksa jaringan internet kamu, lalu coba lagi.
+            </p>
+            <div class="connection-modal-actions">
+                <button type="button" class="connection-modal-retry">Coba Lagi</button>
+                <button type="button" class="connection-modal-close">Tutup</button>
+            </div>
+        </section>
+    `;
+    document.body.appendChild(connectionModal);
+
+    const connectionDescription = connectionModal.querySelector('#connectionModalDescription');
+    const retryConnectionButton = connectionModal.querySelector('.connection-modal-retry');
+    const closeConnectionButton = connectionModal.querySelector('.connection-modal-close');
+    const networkConnection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+    let connectionIssueActive = false;
+    let previousFocusedElement = null;
+
+    function isConnectionVerySlow() {
+        if (!networkConnection) return false;
+
+        const effectiveType = String(networkConnection.effectiveType || '').toLowerCase();
+        const roundTripTime = Number(networkConnection.rtt);
+        const downlink = Number(networkConnection.downlink);
+
+        return effectiveType === 'slow-2g'
+            || effectiveType === '2g'
+            || (Number.isFinite(roundTripTime) && roundTripTime >= 1800)
+            || (Number.isFinite(downlink) && downlink > 0 && downlink <= 0.2);
+    }
+
+    function showConnectionModal() {
+        if (!connectionModal.hidden) return;
+
+        previousFocusedElement = document.activeElement;
+        connectionDescription.textContent =
+            'Halaman tidak dapat dimuat karena koneksi terputus. Periksa jaringan internet kamu, lalu coba lagi.';
+        connectionModal.hidden = false;
+        retryConnectionButton.focus();
+    }
+
+    function hideConnectionModal(restoreFocus) {
+        if (connectionModal.hidden) return;
+
+        connectionModal.hidden = true;
+        if (restoreFocus && previousFocusedElement instanceof HTMLElement) {
+            previousFocusedElement.focus();
+        }
+    }
+
+    function updateConnectionStatus() {
+        const connectionIsImpaired = navigator.onLine === false || isConnectionVerySlow();
+
+        if (connectionIsImpaired) {
+            if (!connectionIssueActive) {
+                connectionIssueActive = true;
+                showConnectionModal();
+            }
+            return;
+        }
+
+        connectionIssueActive = false;
+        hideConnectionModal(false);
+    }
+
+    closeConnectionButton.addEventListener('click', function () {
+        hideConnectionModal(true);
+    });
+
+    connectionModal.addEventListener('keydown', function (event) {
+        if (event.key === 'Escape') {
+            event.preventDefault();
+            hideConnectionModal(true);
+            return;
+        }
+
+        if (event.key === 'Tab') {
+            const focusableButtons = Array.from(
+                connectionModal.querySelectorAll('button:not(:disabled)')
+            );
+            const firstButton = focusableButtons[0];
+            const lastButton = focusableButtons[focusableButtons.length - 1];
+
+            if (event.shiftKey && document.activeElement === firstButton) {
+                event.preventDefault();
+                lastButton.focus();
+            } else if (!event.shiftKey && document.activeElement === lastButton) {
+                event.preventDefault();
+                firstButton.focus();
+            }
+        }
+    });
+
+    retryConnectionButton.addEventListener('click', async function () {
+        if (retryConnectionButton.disabled) return;
+
+        const controller = new AbortController();
+        const timeoutId = window.setTimeout(function () {
+            controller.abort();
+        }, 5000);
+
+        retryConnectionButton.disabled = true;
+
+        try {
+            await fetch('/KELOMPOK-5/pages/login.php?connection_check=' + Date.now(), {
+                method: 'GET',
+                credentials: 'same-origin',
+                cache: 'no-store',
+                signal: controller.signal
+            });
+            window.location.reload();
+        } catch {
+            connectionIssueActive = true;
+            connectionModal.hidden = false;
+        } finally {
+            window.clearTimeout(timeoutId);
+            retryConnectionButton.disabled = false;
+            retryConnectionButton.textContent = 'Coba Lagi';
+        }
+    });
+
+    window.addEventListener('online', updateConnectionStatus);
+    window.addEventListener('offline', updateConnectionStatus);
+    networkConnection?.addEventListener?.('change', updateConnectionStatus);
+    updateConnectionStatus();
+
+    // API failures are observed here so all page modules show the same status message.
+    let apiErrorNotification = null;
+    let apiErrorNotificationTimer = null;
+    const nativeFetch = window.fetch.bind(window);
+
+    function showApiErrorNotification(message) {
+        if (!apiErrorNotification || !apiErrorNotification.isConnected) {
+            apiErrorNotification = document.createElement('div');
+            apiErrorNotification.className = 'transaction-success transaction-error';
+            apiErrorNotification.setAttribute('role', 'alert');
+            apiErrorNotification.setAttribute('aria-live', 'assertive');
+            document.body.appendChild(apiErrorNotification);
+        }
+
+        window.clearTimeout(apiErrorNotificationTimer);
+        apiErrorNotification.textContent = message;
+        apiErrorNotification.classList.remove('show');
+        requestAnimationFrame(function () {
+            apiErrorNotification.classList.add('show');
+        });
+
+        apiErrorNotificationTimer = window.setTimeout(function () {
+            if (!apiErrorNotification) return;
+            apiErrorNotification.classList.remove('show');
+            apiErrorNotification.remove();
+            apiErrorNotification = null;
+        }, 4000);
+    }
+
+    function isKatajiApiRequest(input) {
+        try {
+            const requestUrl = input instanceof Request ? input.url : input;
+            const url = new URL(requestUrl, window.location.href);
+            return url.origin === window.location.origin
+                && url.pathname.startsWith('/KELOMPOK-5/api/');
+        } catch (error) {
+            return false;
+        }
+    }
+
+    window.fetch = async function (input, init) {
+        const isApiRequest = isKatajiApiRequest(input);
+
+        try {
+            const response = await nativeFetch(input, init);
+
+            if (isApiRequest && (response.status === 404 || response.status >= 500)) {
+                const title = response.status === 404
+                    ? 'Data tidak ditemukan'
+                    : 'Server sedang bermasalah';
+                const fallbackMessage = response.status === 404
+                    ? 'Data yang diminta tidak tersedia.'
+                    : 'Silakan coba lagi beberapa saat.';
+
+                response.clone().json().then(function (payload) {
+                    const detail = response.status === 404 && typeof payload.message === 'string'
+                        ? payload.message
+                        : fallbackMessage;
+                    showApiErrorNotification(`${title}. ${detail}`);
+                }).catch(function () {
+                    showApiErrorNotification(`${title}. ${fallbackMessage}`);
+                });
+            }
+
+            return response;
+        } catch (error) {
+            if (
+                isApiRequest
+                && error.name !== 'AbortError'
+                && navigator.onLine !== false
+                && !isConnectionVerySlow()
+            ) {
+                showApiErrorNotification(
+                    'Gagal memuat data. Periksa koneksi internet, lalu coba lagi.'
+                );
+            }
+
+            throw error;
+        }
+    };
+
+    // ======================================================
     // 1. NOTIFIKASI LOGIN
     // ======================================================
 
@@ -201,6 +430,11 @@ document.addEventListener('DOMContentLoaded', function () {
                     ? loginButton.value
                     : loginButton.textContent
                 : '';
+            const loginRequestController = new AbortController();
+            const loginTimeoutId = window.setTimeout(
+                () => loginRequestController.abort(),
+                15000
+            );
 
             try {
                 clearLoginError();
@@ -224,6 +458,7 @@ document.addEventListener('DOMContentLoaded', function () {
                             'Content-Type': 'application/json',
                             'Accept': 'application/json'
                         },
+                        signal: loginRequestController.signal,
                         body: JSON.stringify({
                             username: username,
                             password: password
@@ -253,11 +488,15 @@ document.addEventListener('DOMContentLoaded', function () {
                 console.error('Login API gagal:', error);
 
                 showLoginError(
-                    error.message || 'Tidak dapat terhubung ke server.',
+                    error.name === 'AbortError'
+                        ? 'Server terlalu lama merespons. Silakan coba lagi.'
+                        : error.message || 'Tidak dapat terhubung ke server.',
                     true,
                     true
                 );
             } finally {
+                window.clearTimeout(loginTimeoutId);
+
                 if (loginButton) {
                     loginButton.disabled = false;
 
@@ -268,6 +507,32 @@ document.addEventListener('DOMContentLoaded', function () {
                     }
                 }
             }
+        });
+    }
+
+    // Handler Lupa Password pada halaman Login
+    const linkLupaPassword = document.getElementById('linkLupaPassword');
+    if (linkLupaPassword) {
+        linkLupaPassword.addEventListener('click', function (e) {
+            e.preventDefault();
+            const inputUser = document.getElementById('username')?.value.trim();
+            const nama = window.prompt(
+                'Masukkan nama atau username barber yang membutuhkan reset password:',
+                inputUser || ''
+            );
+
+            if (!nama || !nama.trim()) return;
+
+            const reqData = {
+                nama: nama.trim(),
+                username: nama.trim().toLowerCase(),
+                waktu: new Date().toISOString()
+            };
+
+            localStorage.setItem('kataji:reset-request', JSON.stringify(reqData));
+            window.dispatchEvent(new CustomEvent('kataji:reset-requested', { detail: reqData }));
+
+            alert(`Permintaan reset password untuk "${nama.trim()}" telah diajukan ke Owner. Silakan hubungi Owner untuk konfirmasi.`);
         });
     }
 
@@ -1186,21 +1451,34 @@ document.addEventListener('DOMContentLoaded', function () {
                         kosong.textContent = 'Pelanggan tidak ditemukan';
                         saranPelanggan.appendChild(kosong);
                     } else {
-                        const pelangganUnik = [];
-                        const namaPelangganSudahAda = new Set();
+                        const pelangganUnik = new Map();
 
                         result.data.forEach(function (pelanggan) {
                             const namaUnik = String(pelanggan.nama || '')
                                 .trim()
                                 .toLowerCase();
 
-                            if (!namaUnik || namaPelangganSudahAda.has(namaUnik)) {
-                                return;
-                            }
+                            if (!namaUnik) return;
 
-                            namaPelangganSudahAda.add(namaUnik);
-                            pelangganUnik.push(pelanggan);
+                            const pelangganTersimpan = pelangganUnik.get(namaUnik);
+
+                            if (
+                                !pelangganTersimpan ||
+                                Number(pelanggan.id_pelanggan) <
+                                    Number(pelangganTersimpan.id_pelanggan)
+                            ) {
+                                pelangganUnik.set(namaUnik, pelanggan);
+                            }
                         });
+
+                        const namaDicari = kataKunci.toLowerCase();
+                        const pelangganCocok = pelangganUnik.get(namaDicari);
+
+                        if (pelangganCocok) {
+                            selectedPelangganId = Number(
+                                pelangganCocok.id_pelanggan
+                            );
+                        }
 
                         pelangganUnik.forEach(function (pelanggan) {
                             const tombol = document.createElement('button');

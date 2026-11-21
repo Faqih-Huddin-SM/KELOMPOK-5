@@ -7,7 +7,7 @@
  * 1. Pemilih bulan periode laporan (bawaan bulan berjalan) & rentang tanggal WIB.
  * 2. Tombol "Ekspor PDF" dengan indikator memuat dan pencegahan klik berulang.
  * 3. Unduh file PDF dari endpoint GET /api/rekap/laporan_pdf.php?bulan=YYYY-MM.
- * 4. Tampilkan pesan "Belum ada data pada periode ini" bila tidak ada transaksi & pengeluaran.
+ * 4. Tampilkan notifikasi halaman saat periode laporan tidak memiliki data.
  * 5. Tampilkan pesan "Laporan gagal dibuat. Silakan coba lagi" bila terjadi kesalahan.
  * 6. Tiga kartu ringkasan KPI (Total Pemasukan, Total Pengeluaran, Saldo Bersih).
  * 7. Tabel detail rekap dengan tab Pemasukan & Pengeluaran, pencarian, dan paginasi.
@@ -78,6 +78,8 @@ document.addEventListener('DOMContentLoaded', function () {
     let halamanAktif = 1;
     let barisPerHalaman = 10;
     let rekapRequestId = 0;
+    let laporanHasData = null;
+    let feedbackTimeout;
 
     // Cache Data Rekap Bulanan
     let rawPemasukanList = [];
@@ -174,25 +176,25 @@ document.addEventListener('DOMContentLoaded', function () {
      */
     function showFeedback(tipe, pesan) {
         if (!feedbackAlert) return;
-        feedbackAlert.className = `laporan-feedback-alert alert-${tipe}`;
+        window.clearTimeout(feedbackTimeout);
+        const isError = tipe === 'warning' || tipe === 'danger';
+        feedbackAlert.className = `transaction-success laporan-feedback-alert${isError ? ' transaction-error' : ''}`;
 
         let iconSvg = '';
-        if (tipe === 'warning') {
-            iconSvg = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>`;
-        } else if (tipe === 'danger') {
-            iconSvg = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>`;
-        } else if (tipe === 'success') {
-            iconSvg = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>`;
+        if (tipe === 'danger') {
+            iconSvg = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>`;
         }
 
         feedbackAlert.innerHTML = `${iconSvg} <span>${escapeHtml(pesan)}</span>`;
         feedbackAlert.style.display = 'flex';
+        feedbackAlert.classList.remove('show');
+        requestAnimationFrame(() => feedbackAlert.classList.add('show'));
+        feedbackTimeout = window.setTimeout(hideFeedback, 4000);
     }
 
     function hideFeedback() {
         if (feedbackAlert) {
-            feedbackAlert.style.display = 'none';
-            feedbackAlert.innerHTML = '';
+            feedbackAlert.classList.remove('show');
         }
     }
 
@@ -252,6 +254,10 @@ document.addEventListener('DOMContentLoaded', function () {
         // Tombol utama membuka konfirmasi ekspor terlebih dahulu.
         btnEkspor.addEventListener('click', function (e) {
             e.preventDefault();
+            if (laporanHasData === false) {
+                showFeedback('warning', 'Belum ada data pada periode ini');
+                return;
+            }
             bukaDialogEkspor();
         });
 
@@ -481,11 +487,9 @@ document.addEventListener('DOMContentLoaded', function () {
             const hasil = await ambilLaporanPdf(bulanTerpilih);
             if (hasil.empty) {
                 exportCanRetry = false;
-                if (exportError) {
-                    const errTextEl = document.getElementById('laporanExportErrorText');
-                    if (errTextEl) errTextEl.textContent = 'Belum ada data pada periode ini';
-                    exportError.hidden = false;
-                }
+                exportModal?.classList.remove('is-open');
+                if (exportModal) exportModal.hidden = true;
+                showFeedback('warning', 'Belum ada data pada periode ini');
                 return;
             }
 
@@ -494,13 +498,15 @@ document.addEventListener('DOMContentLoaded', function () {
                 exportModal.classList.remove('is-open');
                 exportModal.hidden = true;
             }
-            showFeedback('success', `Laporan keuangan periode ${formatBulanNama(bulanTerpilih)} berhasil diunduh.`);
+            showFeedback('success', 'Laporan berhasil diunduh');
         } catch (error) {
             console.error('[Card 6.7] Gagal mengekspor laporan PDF:', error);
             exportCanRetry = true;
             if (exportError) {
                 const errTextEl = document.getElementById('laporanExportErrorText');
-                if (errTextEl) errTextEl.textContent = error.message || 'Laporan gagal dibuat. Silakan coba lagi';
+                if (errTextEl) {
+                    errTextEl.textContent = 'Laporan gagal dibuat. Silakan coba lagi';
+                }
                 exportError.hidden = false;
             }
             if (btnDialogEksporText) btnDialogEksporText.textContent = 'Coba Lagi';
@@ -668,6 +674,7 @@ document.addEventListener('DOMContentLoaded', function () {
         if (!bulan) return;
 
         const requestId = ++rekapRequestId;
+        laporanHasData = null;
         const tanggalAwal = `${bulan}-01`;
         setRekapLoading();
 
@@ -718,12 +725,14 @@ document.addEventListener('DOMContentLoaded', function () {
                 const tgl = String(t.tanggal || '');
                 return tgl.startsWith(bulan);
             });
+            laporanHasData = countTransaksi > 0 || countPengeluaran > 0;
 
             // 6. Render Tabel Rekap
             renderTabelRekap();
 
         } catch (error) {
             if (requestId !== rekapRequestId) return;
+            laporanHasData = null;
             console.error('[Card 6.7] Gagal memuat rekap bulanan:', error);
             setRekapError('Gagal memuat rekap data bulanan. Silakan coba lagi.');
         } finally {
@@ -734,7 +743,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     // ==========================================================================
-    // [Card 6.7] 5. LOGIKA TABEL REKAP & PAGINASI
+    // [Card 6.7] 5. LOGIKA CLICK TABEL REKAP & PAGINASI
     // ==========================================================================
 
     function initTabelControls() {
@@ -817,7 +826,7 @@ document.addEventListener('DOMContentLoaded', function () {
         let filtered = rawPemasukanList;
         if (keywordPencarian) {
             filtered = rawPemasukanList.filter(item => {
-                const idTrx = `TRX-${String(item.id_transaksi).padStart(4, '0')}`.toLowerCase();
+                const idTrx = `TRX-${String(item.id_transaksi).padStart(4, '0')}`.toLowerCase();// Format ID Transaksi: "TRX-0001" (4 digit, leading zero)
                 const namaPelanggan = (item.nama_pelanggan || '').toLowerCase();
                 const namaBarber = (item.nama_barber || '').toLowerCase();
                 const layanan = (item.layanan_teks || '').toLowerCase();
@@ -852,7 +861,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         tableBody.innerHTML = pageData.map((trx, index) => {
             const noUrut = startIdx + index + 1;
-            const idFormat = `TRX-${String(trx.id_transaksi).padStart(4, '0')}`;
+            const idFormat = `KTJ-${String(trx.id_transaksi).padStart(4, '0')}`; // Format ID Transaksi: "KTJ-0001" (4 digit, leading zero)
 
             // Format Tanggal & Waktu: "31-10-2026 17.45"
             let waktuTeks = trx.waktu ? trx.waktu.slice(0, 5).replace(':', '.') : '';
@@ -1097,13 +1106,13 @@ document.addEventListener('DOMContentLoaded', function () {
     // ==========================================================================
     // [Card 6.2] BAGIAN LAYANAN TERLARIS (Sprint Berjalan - Tetap Dipertahankan)
     // ==========================================================================
-    const dashboardUrl = '/KELOMPOK-5/api/rekap/dashboard.php';
-    const periodeSelect = document.getElementById('layananPeriode');
-    const urutanSelect = document.getElementById('layananUrutan');
-    const statusElement = document.getElementById('layananTerlarisStatus');
-    const listElement = document.getElementById('layananTerlarisList');
+    //const dashboardUrl = '/KELOMPOK-5/api/rekap/dashboard.php';
+    //const periodeSelect = document.getElementById('layananPeriode');
+    //const urutanSelect = document.getElementById('layananUrutan');
+    //const statusElement = document.getElementById('layananTerlarisStatus');
+    //const listElement = document.getElementById('layananTerlarisList');
 
-    if (periodeSelect && urutanSelect && statusElement && listElement) {
+    //if (periodeSelect && urutanSelect && statusElement && listElement) {
         function renderDataLayanan(layanan) {
             const urutan = urutanSelect.value === 'jarang' ? -1 : 1;
             const terurut = layanan
@@ -1175,5 +1184,5 @@ document.addEventListener('DOMContentLoaded', function () {
         periodeSelect.addEventListener('change', muatLayananTerlaris);
         urutanSelect.addEventListener('change', muatLayananTerlaris);
         muatLayananTerlaris();
-    }
+    //}
 });
