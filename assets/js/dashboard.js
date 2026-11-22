@@ -9,6 +9,8 @@
  */
 
 document.addEventListener('DOMContentLoaded', function () {
+    if (!document.querySelector('.dashboard-page')) return;
+
     const dashboardApiUrl = '/KELOMPOK-5/api/rekap/dashboard.php';
     const transaksiApiUrl = '/KELOMPOK-5/api/transaksi/index.php';
     const trenApiUrl = '/KELOMPOK-5/api/rekap/tren.php';
@@ -342,7 +344,7 @@ document.addEventListener('DOMContentLoaded', function () {
             subLabels.push(`${day}/${m}`);
         }
 
-        const subtitleText = `Pemasukan per hari, ${subLabels[0]} - ${subLabels[subLabels.length - 1]}`;
+        const subtitleText = `Pemasukkan per hari, ${subLabels[0]} - ${subLabels[subLabels.length - 1]}`;
 
         // Hitung pemasukan harian dari state.allTransactions
         const values = dates.map(item => {
@@ -448,7 +450,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 labels.push(hariIndoList[(d.getDay() + 6) % 7]);
                 subLabels.push(`${pad2(d.getDate())}/${pad2(d.getMonth() + 1)}`);
             });
-            subtitleText = `Pemasukan per hari, ${subLabels[0]} - ${subLabels[subLabels.length - 1]}`;
+            subtitleText = `Pemasukkan per hari, ${subLabels[0]} - ${subLabels[subLabels.length - 1]}`;
         } else if (period === 'minggu') {
             titik.forEach(t => {
                 const a = parseTanggalIso(t.tanggal_awal);
@@ -456,11 +458,11 @@ document.addEventListener('DOMContentLoaded', function () {
                 labels.push(t.label);
                 subLabels.push(`${pad2(a.getDate())} - ${pad2(b.getDate())}`);
             });
-            subtitleText = `Pemasukan per minggu, ${bulanNamaLengkap[awalPeriode.getMonth()]} ${awalPeriode.getFullYear()}`;
+            subtitleText = `Pemasukkan per minggu, ${bulanNamaLengkap[awalPeriode.getMonth()]} ${awalPeriode.getFullYear()}`;
         } else {
             labels = titik.map((t, i) => bulanIndoList[i] || t.label);
             subLabels = titik.map(() => String(awalPeriode.getFullYear()));
-            subtitleText = `Pemasukan per bulan, Tahun ${awalPeriode.getFullYear()}`;
+            subtitleText = `Pemasukkan per bulan, Tahun ${awalPeriode.getFullYear()}`;
         }
 
         // Persentase dan status (naik/turun/stabil) dihitung BE; ambang stabil mengikuti BE
@@ -526,26 +528,26 @@ document.addEventListener('DOMContentLoaded', function () {
 
         if (statusText) statusText.textContent = `${statusWord} ${trendData.pctDisplay}`;
 
-        let labelSub = 'dibanding periode sebelumnya';
+        let labelSub = 'dibanding 7 hari sebelumnya';
         if (period === '7_hari') labelSub = 'dibanding 7 hari sebelumnya';
-        else if (period === 'minggu') labelSub = 'dibanding bulan sebelumnya';
-        else if (period === 'bulan') labelSub = 'dibanding tahun sebelumnya';
+        else if (period === 'minggu') labelSub = 'dibanding minggu sebelumnya';
+        else if (period === 'bulan') labelSub = 'dibanding bulan sebelumnya';
         if (statusSub) statusSub.textContent = labelSub;
 
-        // Icon SVG yang sesuai persis Figma
+        // Icon SVG yang sesuai persis Figma (arrow-up-right, arrow-down-right, arrow-right)
         if (badgeIcon) {
             if (trendData.status === 'turun') {
                 badgeIcon.innerHTML = `
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#B42318" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                        <polyline points="23 18 13.5 8.5 8.5 13.5 1 6"></polyline>
-                        <polyline points="17 18 23 18 23 12"></polyline>
+                        <line x1="7" y1="7" x2="17" y2="17"></line>
+                        <polyline points="17 7 17 17 7 17"></polyline>
                     </svg>
                 `;
             } else if (trendData.status === 'naik') {
                 badgeIcon.innerHTML = `
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0E7B3B" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                        <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline>
-                        <polyline points="17 6 23 6 23 12"></polyline>
+                        <line x1="7" y1="17" x2="17" y2="7"></line>
+                        <polyline points="7 7 17 7 17 17"></polyline>
                     </svg>
                 `;
             } else {
