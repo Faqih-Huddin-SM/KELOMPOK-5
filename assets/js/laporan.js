@@ -17,6 +17,7 @@
  */
 
 document.addEventListener('DOMContentLoaded', function () {
+    if (!document.querySelector('.laporan-page')) return;
 
     // ==========================================================================
     // [Card 6.7] 1. STATE & KONFIGURASI EKSPOR LAPORAN

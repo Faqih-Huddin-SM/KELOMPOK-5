@@ -9,6 +9,8 @@
  */
 
 document.addEventListener('DOMContentLoaded', function () {
+    if (!document.querySelector('.dashboard-page')) return;
+
     const dashboardApiUrl = '/KELOMPOK-5/api/rekap/dashboard.php';
     const transaksiApiUrl = '/KELOMPOK-5/api/transaksi/index.php';
     const trenApiUrl = '/KELOMPOK-5/api/rekap/tren.php';
@@ -366,7 +368,7 @@ document.addEventListener('DOMContentLoaded', function () {
             : 'stabil';
 
         return {
-            period,
+            period: '7_hari',
             labels,
             subLabels,
             values,
@@ -374,7 +376,8 @@ document.addEventListener('DOMContentLoaded', function () {
             totalAktif: Number(data.total_pemasukan || 0),
             totalSebelumnya: Number(data.total_periode_sebelumnya || 0),
             status,
-            pctDisplay
+            pctDisplay,
+            adaData: totalAktif > 0
         };
     }
 
@@ -412,26 +415,26 @@ document.addEventListener('DOMContentLoaded', function () {
 
         if (statusText) statusText.textContent = `${statusWord} ${trendData.pctDisplay}`;
 
-        let labelSub = 'dibanding periode sebelumnya';
+        let labelSub = 'dibanding 7 hari sebelumnya';
         if (period === '7_hari') labelSub = 'dibanding 7 hari sebelumnya';
-        else if (period === 'minggu') labelSub = 'dibanding bulan sebelumnya';
-        else if (period === 'bulan') labelSub = 'dibanding tahun sebelumnya';
+        else if (period === 'minggu') labelSub = 'dibanding minggu sebelumnya';
+        else if (period === 'bulan') labelSub = 'dibanding bulan sebelumnya';
         if (statusSub) statusSub.textContent = labelSub;
 
-        // Icon SVG yang sesuai persis Figma
+        // Icon SVG yang sesuai persis Figma (arrow-up-right, arrow-down-right, arrow-right)
         if (badgeIcon) {
             if (trendData.status === 'turun') {
                 badgeIcon.innerHTML = `
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#B42318" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                        <polyline points="23 18 13.5 8.5 8.5 13.5 1 6"></polyline>
-                        <polyline points="17 18 23 18 23 12"></polyline>
+                        <line x1="7" y1="7" x2="17" y2="17"></line>
+                        <polyline points="17 7 17 17 7 17"></polyline>
                     </svg>
                 `;
             } else if (trendData.status === 'naik') {
                 badgeIcon.innerHTML = `
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0E7B3B" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                        <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline>
-                        <polyline points="17 6 23 6 23 12"></polyline>
+                        <line x1="7" y1="17" x2="17" y2="7"></line>
+                        <polyline points="7 7 17 7 17 17"></polyline>
                     </svg>
                 `;
             } else {
@@ -486,6 +489,16 @@ document.addEventListener('DOMContentLoaded', function () {
         const labels = trendData.labels || [];
         const subLabels = trendData.subLabels || [];
         const values = trendData.values || [];
+
+        // Cek apakah ada data transaksi pada periode yang dipilih (Skenario: Periode tanpa data)
+        const hasData = (trendData.adaData !== undefined ? Boolean(trendData.adaData) : false) ||
+                        values.some(v => Number(v) > 0) ||
+                        Number(trendData.totalAktif || 0) > 0;
+
+        if (!hasData) {
+            container.innerHTML = '<div class="dashboard-empty-centered" id="trenEmptyState">Belum ada data untuk ditampilkan</div>';
+            return;
+        }
 
         const svgWidth = 800;
         const svgHeight = 220;

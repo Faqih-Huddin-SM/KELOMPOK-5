@@ -181,7 +181,7 @@ $display_role = ($role === 'owner') ? 'Owner Kataji' : ($nama ?: 'Barber');
             <div class="trend-chart-header">
                 <div>
                     <h2 class="dashboard-card-title" id="trenPemasukanJudul">Tren Pemasukkan</h2>
-                    <span class="trend-card-subtitle" id="trenPemasukanSubtitle">Pemasukan per hari</span>
+                    <span class="trend-card-subtitle" id="trenPemasukanSubtitle">Pemasukkan per hari</span>
                 </div>
                 <!-- FILTER PILL TREN (FIGMA) -->
                 <div class="trend-period-pill-group" role="group" aria-label="Periode tren pemasukan">
