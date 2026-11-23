@@ -4,6 +4,7 @@ require_login();
 
 // Halaman ini hanya dapat diakses oleh owner.
 $role = $_SESSION['role'] ?? '';
+$nama = $_SESSION['nama'] ?? '';
 
 if ($role !== 'owner') {
     header('Location: dashboard.php');
@@ -13,7 +14,7 @@ if ($role !== 'owner') {
 include __DIR__ . '/../includes/header.php';
 ?>
 
-<main class="pengeluaran-page">
+<div class="pengeluaran-page">
 
     <!-- Judul halaman -->
     <header class="pengeluaran-heading">
@@ -73,50 +74,63 @@ include __DIR__ . '/../includes/header.php';
 
         <form id="formPengeluaranHarian" class="pengeluaran-form" novalidate>
 
-            <div class="pengeluaran-form-group">
-                <label for="kategoriPengeluaranHarian">Kategori</label>
+            <div class="pengeluaran-form-grid">
+                <div class="pengeluaran-form-group">
+                    <label for="kategoriPengeluaranHarian">Kategori</label>
 
-                <select id="kategoriPengeluaranHarian"
-                    name="kategori" required>
-                    <option value="">Pilih kategori</option>
-                    <option value="Bahan">Bahan</option>
-                    <option value="Operasional">Operasional</option>
-                    <option value="Peralatan">Peralatan</option>
-                    <option value="Lainnya">Lainnya</option>
-                </select>
+                    <select id="kategoriPengeluaranHarian"
+                        name="kategori" required>
+                        <option value="">Pilih kategori</option>
+                        <option value="Bahan">Bahan</option>
+                        <option value="Operasional">Operasional</option>
+                        <option value="Peralatan">Peralatan</option>
+                        <option value="Lainnya">Lainnya</option>
+                    </select>
 
-                <small
-                    id="errorKategoriPengeluaranHarian"
-                    class="pengeluaran-validation-error"
-                    role="alert"
-                ></small>
+                    <small
+                        id="errorKategoriPengeluaranHarian"
+                        class="pengeluaran-validation-error"
+                        role="alert"
+                    ></small>
+                </div>
 
-                <div class="pengeluaran-form-actions">
-                    <button type="submit" id="btnSimpanPengeluaran">
-                        Simpan
-                    </button>
+                <div class="pengeluaran-form-group">
+                    <label for="nominalPengeluaranHarian">Nominal</label>
+
+                    <input
+                        type="number"
+                        id="nominalPengeluaranHarian"
+                        name="nominal"
+                        min="1"
+                        step="1"
+                        placeholder="Masukkan nominal"
+                        aria-describedby="errorNominalPengeluaranHarian"
+                        required
+                    >
+
+                    <small
+                        id="errorNominalPengeluaranHarian"
+                        class="pengeluaran-validation-error"
+                        role="alert"
+                    ></small>
+                </div>
+
+                <div class="pengeluaran-form-group">
+                    <label for="dicatatOlehPengeluaranHarian">Dicatat Oleh</label>
+
+                    <input
+                        type="text"
+                        id="dicatatOlehPengeluaranHarian"
+                        value="<?= htmlspecialchars($nama ?: 'Owner Kataji') ?>"
+                        readonly
+                    >
                 </div>
             </div>
 
-            <div class="pengeluaran-form-group">
-                <label for="nominalPengeluaranHarian">Nominal</label>
-
-                <input
-                    type="number"
-                    id="nominalPengeluaranHarian"
-                    name="nominal"
-                    min="1"
-                    step="1"
-                    placeholder="Masukkan nominal"
-                    aria-describedby="errorNominalPengeluaranHarian"
-                    required
-                >
-
-                <small
-                    id="errorNominalPengeluaranHarian"
-                    class="pengeluaran-validation-error"
-                    role="alert"
-                ></small>
+            <div class="pengeluaran-form-actions">
+                <button type="submit" id="btnSimpanPengeluaran">
+                    Simpan
+                </button>
             </div>
 
         </form>
@@ -147,10 +161,11 @@ include __DIR__ . '/../includes/header.php';
             <table class="pengeluaran-table">
                 <thead>
                     <tr>
-                        <th scope="col">Tanggal</th>
                         <th scope="col">Kategori</th>
                         <th scope="col">Nominal</th>
-                        <th scope="col">Aksi</th>
+                        <th scope="col">Dicatat Oleh</th>
+                        <th scope="col">Waktu</th>
+                        <th scope="col" style="text-align: right;">Aksi</th>
                     </tr>
                 </thead>
 
@@ -176,7 +191,7 @@ include __DIR__ . '/../includes/header.php';
                 <thead>
                     <tr>
                         <th scope="col">Layanan</th>
-                        <th scope="col">Terjual</th>
+                        <th scope="col" style="text-align: center;">Terjual</th>
                         <th scope="col">Pendapatan</th>
                         <th scope="col">HPP</th>
                     </tr>
@@ -185,7 +200,7 @@ include __DIR__ . '/../includes/header.php';
                 <tbody id="daftarHppLayanan">
                     <tr>
                         <td colspan="4" class="pengeluaran-hpp-empty">
-                            Data HPP belum tersedia.
+                            Memuat data HPP layanan...
                         </td>
                     </tr>
                 </tbody>
@@ -194,8 +209,8 @@ include __DIR__ . '/../includes/header.php';
 
     </section>
 
-</main>
+</div>
 
-<script src="/KELOMPOK-5/assets/js/pengeluaran.js?v=8"></script>
+<script src="/KELOMPOK-5/assets/js/pengeluaran.js?v=9"></script>
 
 <?php include __DIR__ . '/../includes/footer.php'; ?>

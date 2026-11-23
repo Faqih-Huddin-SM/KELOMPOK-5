@@ -4,6 +4,8 @@
  */
 
 document.addEventListener('DOMContentLoaded', () => {
+    if (!document.querySelector('.pengeluaran-page')) return;
+
     const API_URL = '/KELOMPOK-5/api/pengeluaran/index.php';
     const DASHBOARD_API_URL = '/KELOMPOK-5/api/rekap/dashboard.php';
     let periodeAktif = 'hari';
@@ -440,7 +442,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const baris = document.createElement('tr');
         const sel = document.createElement('td');
 
-        sel.colSpan = 4;
+        sel.colSpan = 5;
         sel.className = 'pengeluaran-empty';
         sel.textContent = pesan;
 
@@ -817,9 +819,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 item.akun_login = data.akun_login || '';
                 const baris = document.createElement('tr');
 
-                baris.appendChild(buatSel(formatTanggal(item.tanggal)));
                 baris.appendChild(buatSel(item.kategori || '-'));
                 baris.appendChild(buatSel(formatRupiah(item.nominal)));
+                baris.appendChild(buatSel(item.nama_user || '-'));
+                baris.appendChild(buatSel(formatWaktuPengeluaran(item.dibuat_pada || item.tanggal)));
 
                 const selAksi = document.createElement('td');
                 selAksi.className = 'pengeluaran-action-cell';
@@ -862,15 +865,27 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const daftarHpp = document.getElementById('daftarHppLayanan');
         if (daftarHpp) {
-            const baris = document.createElement('tr');
-            const sel = document.createElement('td');
-            sel.colSpan = 4;
-            sel.className = 'pengeluaran-hpp-empty';
-            sel.textContent = data.hpp_lengkap === false
-                ? 'API menyediakan total HPP, tetapi ada transaksi yang belum memiliki data HPP. Rincian HPP per layanan belum tersedia.'
-                : 'API menyediakan total HPP, tetapi belum menyediakan rincian HPP per layanan.';
-            baris.appendChild(sel);
-            daftarHpp.replaceChildren(baris);
+            const rincianHpp = Array.isArray(data.rincian_hpp_layanan)
+                ? data.rincian_hpp_layanan
+                : [];
+            if (rincianHpp.length === 0) {
+                const baris = document.createElement('tr');
+                const sel = document.createElement('td');
+                sel.colSpan = 4;
+                sel.className = 'pengeluaran-hpp-empty';
+                sel.textContent = 'Belum ada data HPP layanan pada periode ini.';
+                baris.appendChild(sel);
+                daftarHpp.replaceChildren(baris);
+            } else {
+                daftarHpp.innerHTML = rincianHpp.map((item) => `
+                    <tr>
+                        <td>${escapeHtml(item.nama_layanan || '-')}</td>
+                        <td style="text-align: center;">${item.jumlah_terjual ?? 0}</td>
+                        <td>${formatRupiah(item.pendapatan || 0)}</td>
+                        <td>${formatRupiah(item.hpp || 0)}</td>
+                    </tr>
+                `).join('');
+            }
         }
     }
 
@@ -933,22 +948,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const keuangan = hasil.data?.keuangan || {};
         const ringkasanHpp = document.getElementById('ringkasanHppLayanan');
         const ringkasanOperasional = document.getElementById('totalRingkasanPengeluaran');
-        const daftarHpp = document.getElementById('daftarHppLayanan');
 
         if (ringkasanHpp) ringkasanHpp.textContent = formatRupiah(keuangan.hpp || 0);
         if (ringkasanOperasional) ringkasanOperasional.textContent = formatRupiah(keuangan.biaya_operasional || 0);
-
-        if (daftarHpp) {
-            const baris = document.createElement('tr');
-            const sel = document.createElement('td');
-            sel.colSpan = 4;
-            sel.className = 'pengeluaran-hpp-empty';
-            sel.textContent = keuangan.hpp_lengkap === false
-                ? 'API menyediakan total HPP, tetapi ada transaksi yang belum memiliki data HPP. Rincian HPP per layanan belum tersedia.'
-                : 'API menyediakan total HPP, tetapi belum menyediakan rincian HPP per layanan.';
-            baris.appendChild(sel);
-            daftarHpp.replaceChildren(baris);
-        }
     }
 
     // ======================================================
