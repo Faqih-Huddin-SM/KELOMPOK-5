@@ -54,7 +54,7 @@ function cariBarberFoto(PDO $pdo, int $id): array
     $stmt = $pdo->prepare(
         "SELECT id_user, nama, foto, aktif
          FROM users
-         WHERE id_user = ? AND role = 'barber'
+         WHERE id_user = ?
          LIMIT 1"
     );
     $stmt->execute([$id]);

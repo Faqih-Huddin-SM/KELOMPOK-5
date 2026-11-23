@@ -65,9 +65,9 @@ try {
         ]);
     }
 
-    // Hanya akun barber yang aktif yang bisa di-reset.
+    // Hanya akun yang aktif yang bisa di-reset.
     $stmtCek = $pdo->prepare(
-        "SELECT 1 FROM users WHERE id_user = ? AND role = 'barber' AND aktif = 1 LIMIT 1"
+        "SELECT 1 FROM users WHERE id_user = ? AND aktif = 1 LIMIT 1"
     );
     $stmtCek->execute([$id]);
 
