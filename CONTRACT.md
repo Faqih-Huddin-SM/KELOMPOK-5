@@ -1661,22 +1661,7 @@ Field `foto` (path atau `null`) juga ada pada `GET /api/barber/akun.php`, dan pa
 
 ### 10.7 Daftar barber untuk halaman publik
 
-`GET /api/barber/publik.php` — **tanpa login**. Hanya barber aktif (`role = barber`, `aktif = 1`); barber nonaktif dan owner tidak ikut.
-
-```json
-{
-  "success": true,
-  "data": [
-    {
-      "id_user": 7,
-      "nama": "Budi",
-      "spesialisasi": "Coloring",
-      "foto": "uploads/barber/23c4....jpg"
-    },
-    { "id_user": 9, "nama": "Sandi", "spesialisasi": null, "foto": null }
-  ]
-}
-```
+Lihat bagian 12.1 (`GET /api/barber/publik.php`).
 
 ### 10.8 Kode respons
 
@@ -1715,3 +1700,80 @@ Foreign key:
 - `pengeluaran.id_user` → `users.id_user` (`ON DELETE RESTRICT`).
 
 Data awal pada skema: akun `erik` (owner), `sandi` (barber), `ujang` (barber), serta tiga layanan contoh. Ganti password akun awal sebelum dipakai sungguhan.
+
+## 12. API Publik (Halaman Publik) — Kartu 6.4.3
+
+Endpoint untuk pengunjung **tanpa login**: daftar barber aktif dan layanan aktif. Dua endpoint dipisah, jadi bila satu gagal dimuat, yang lain tetap berjalan. Respons hanya memuat data yang tampil (tanpa username, status akun, HPP, atau data transaksi).
+
+### 12.1 Barber aktif
+
+`GET /api/barber/publik.php` → `200`, urut abjad nama. Hanya `role = barber` dan `aktif = 1`; barber nonaktif dan owner tidak ikut.
+
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "nama": "Budi",
+      "spesialisasi": "Coloring",
+      "foto": "uploads/barber/23c4b424cf496c217f513b2c30112523.jpg"
+    },
+    { "nama": "Sandi", "spesialisasi": null, "foto": null }
+  ]
+}
+```
+
+- `spesialisasi` `null` → tampilkan kosong atau teks pengganti.
+- `foto` `null` (barber tanpa foto) → tampilkan avatar inisial. Bila ada, tampilkan dengan `/KELOMPOK-5/` + `foto`.
+- Tanpa barber aktif → `200` dengan `data: []`.
+- Foto barber nonaktif **tidak dapat diakses publik**: `404` (`NOT_FOUND`, "Foto tidak ditemukan."). Owner yang login masih bisa melihatnya di halaman kelola barber.
+
+### 12.2 Layanan aktif
+
+`GET /api/layanan/publik.php` → `200`. Hanya `aktif = 1`, urutan sama dengan Kasir (ID layanan terbaru dulu). Harga selalu harga terbaru.
+
+```json
+{
+  "success": true,
+  "data": [
+    { "nama_layanan": "Creambath", "harga": 100000 },
+    { "nama_layanan": "Potong rambut reguler", "harga": 50000 }
+  ]
+}
+```
+
+Tanpa layanan aktif → `200` dengan `data: []`. Harga adalah bilangan bulat rupiah; format tampilannya (misalnya `Rp 50.000`) dilakukan frontend.
+
+### 12.3 Batas laju
+
+Kedua endpoint dibatasi **60 permintaan per menit per pengunjung** (berdasarkan alamat IP, hitungan terpisah untuk tiap endpoint). Permintaan ke-61 pada menit yang sama ditolak:
+
+`429 Too Many Requests`
+
+```json
+{
+  "success": false,
+  "message": "Terlalu banyak permintaan. Silakan coba lagi sebentar lagi",
+  "error_code": "TOO_MANY_REQUESTS"
+}
+```
+
+Header respons: `X-RateLimit-Limit` (60), `X-RateLimit-Remaining` (sisa), dan pada `429` juga `Retry-After` (detik sampai menit berikutnya). Setelah pergantian menit, permintaan diterima lagi. Frontend sebaiknya menampilkan pesan dari `message` dan tidak mengulang permintaan otomatis berkali-kali.
+
+**Memakai batas laju pada endpoint publik lain** (misalnya info usaha, kartu 6.6.3): di bagian atas endpoint, setelah `require config.php`, tambahkan
+
+```php
+require_once __DIR__ . '/../middleware/rate_limit.php';
+batasiLaju('nama-endpoint');          // 60 per menit
+// batasiLaju('nama-endpoint', 30, 60); // contoh batas lain
+```
+
+Middleware: `api/middleware/rate_limit.php`. Hitungan disimpan di folder sementara server; bila tidak bisa diakses, permintaan tetap dilayani.
+
+| HTTP  | Keterangan                                             |
+| ----- | ------------------------------------------------------ |
+| `200` | Berhasil (daftar boleh kosong)                         |
+| `404` | Foto barber nonaktif atau tidak ada (`NOT_FOUND`)      |
+| `405` | Method selain GET (`METHOD_NOT_ALLOWED`)               |
+| `429` | Melebihi 60 permintaan per menit (`TOO_MANY_REQUESTS`) |
+| `500` | Kesalahan server (`INTERNAL_SERVER_ERROR`)             |

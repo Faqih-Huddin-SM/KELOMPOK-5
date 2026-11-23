@@ -1459,13 +1459,30 @@ paths:
       tags: [Barber]
       summary: Daftar barber aktif untuk halaman publik (tanpa login)
       description: |
-        Hanya barber dengan `role = barber` dan `aktif = 1`. Barber nonaktif dan akun owner
-        tidak ikut. `foto` bernilai `null` bila belum diunggah.
+        Hanya barber dengan `role = barber` dan `aktif = 1`, urut abjad nama. Barber nonaktif
+        dan akun owner tidak ikut. Respons hanya memuat data yang tampil (tanpa username,
+        status akun, atau ID). `spesialisasi` dan `foto` bernilai `null` bila belum diisi.
+
+        Foto diambil dari alamat pada `foto` (tambahkan `/KELOMPOK-5/` di depannya). Foto
+        barber nonaktif tidak dapat diakses publik (`404`).
+
+        Dibatasi **60 permintaan per menit per pengunjung** (lihat respons `429`).
       operationId: listBarberPublik
       security: []
       responses:
         "200":
-          description: Daftar barber aktif
+          description: Daftar barber aktif (boleh kosong)
+          headers:
+            X-RateLimit-Limit:
+              {
+                schema: { type: integer, example: 60 },
+                description: Batas permintaan per menit,
+              }
+            X-RateLimit-Remaining:
+              {
+                schema: { type: integer, example: 59 },
+                description: Sisa permintaan pada menit ini,
+              }
           content:
             application/json:
               schema:
@@ -1477,7 +1494,6 @@ paths:
                     items:
                       type: object
                       properties:
-                        id_user: { type: integer, example: 7 }
                         nama: { type: string, example: Budi }
                         spesialisasi:
                           { type: string, nullable: true, example: Coloring }
@@ -1487,6 +1503,51 @@ paths:
                             nullable: true,
                             example: uploads/barber/23c4b424cf496c217f513b2c30112523.jpg,
                           }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+        "500": { $ref: "#/components/responses/ServerError" }
+
+  /layanan/publik.php:
+    get:
+      tags: [Layanan]
+      summary: Daftar layanan aktif untuk halaman publik (tanpa login)
+      description: |
+        Hanya layanan dengan `aktif = 1`, urutan sama dengan Kasir (ID layanan terbaru dulu).
+        Respons hanya memuat nama dan harga (tanpa HPP, status, atau data lain). Harga selalu
+        harga terbaru; layanan yang dinonaktifkan tidak ikut.
+
+        Dibatasi **60 permintaan per menit per pengunjung** (lihat respons `429`).
+      operationId: listLayananPublik
+      security: []
+      responses:
+        "200":
+          description: Daftar layanan aktif (boleh kosong)
+          headers:
+            X-RateLimit-Limit:
+              {
+                schema: { type: integer, example: 60 },
+                description: Batas permintaan per menit,
+              }
+            X-RateLimit-Remaining:
+              {
+                schema: { type: integer, example: 59 },
+                description: Sisa permintaan pada menit ini,
+              }
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean, example: true }
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        nama_layanan:
+                          { type: string, example: Potong rambut reguler }
+                        harga: { type: integer, example: 50000 }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+        "500": { $ref: "#/components/responses/ServerError" }
 
   /barber/reset_password.php:
     put:
@@ -2242,6 +2303,26 @@ components:
                   message: Akun Anda tidak aktif. Silakan hubungi owner.,
                   error_code: UNAUTHORIZED,
                 }
+    TooManyRequests:
+      description: |
+        Melebihi batas 60 permintaan per menit per pengunjung (`TOO_MANY_REQUESTS`).
+        Header `Retry-After` berisi sisa detik sampai menit berikutnya; setelah itu permintaan
+        diterima lagi.
+      headers:
+        Retry-After:
+          {
+            schema: { type: integer, example: 42 },
+            description: Detik sampai boleh mencoba lagi,
+          }
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+          example:
+            {
+              success: false,
+              message: Terlalu banyak permintaan. Silakan coba lagi sebentar lagi,
+              error_code: TOO_MANY_REQUESTS,
+            }
     ForbiddenOwner:
       description: Akses hanya untuk owner (`FORBIDDEN`)
       content:
