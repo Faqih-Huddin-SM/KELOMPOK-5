@@ -123,7 +123,8 @@ try {
         $stmt = $pdo->query(
             "SELECT id_user, username, nama, spesialisasi, foto, role, aktif
              FROM users
-             ORDER BY (CASE WHEN role = 'owner' THEN 0 ELSE 1 END) ASC, nama ASC, id_user ASC"
+             WHERE role = 'barber'
+             ORDER BY nama ASC, id_user ASC"
         );
 
         kirimJsonAkun(200, [
@@ -204,7 +205,7 @@ try {
         $nama = validasiNamaAkun($data);
 
         $stmtAda = $pdo->prepare(
-            "SELECT id_user, spesialisasi FROM users WHERE id_user = ? LIMIT 1"
+            "SELECT id_user, spesialisasi FROM users WHERE id_user = ? AND role = 'barber' LIMIT 1"
         );
         $stmtAda->execute([$id]);
         $lama = $stmtAda->fetch(PDO::FETCH_ASSOC);
