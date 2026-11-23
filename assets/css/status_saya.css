@@ -1,0 +1,315 @@
+/* ======================================================
+   STATUS SAYA (ROLE: BARBER) - FIGMA PIXEL PERFECT
+   Kataji Barber
+====================================================== */
+
+.app-content:has(.status-page),
+.app-main:has(.status-page) .app-content {
+    padding: 24px !important;
+}
+
+.status-page {
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    box-sizing: border-box;
+    font-family: inherit;
+}
+
+/* ======================================================
+   1. HEADING
+====================================================== */
+
+.status-heading {
+    margin-bottom: 20px;
+}
+
+.status-heading h1 {
+    margin: 0;
+    color: var(--text-main, #1A1A1A);
+    font-size: 28px;
+    font-weight: 800;
+    line-height: 1.2;
+}
+
+.status-heading p {
+    margin: 4px 0 0;
+    color: #8F92A1;
+    font-size: 13px;
+    font-weight: 400;
+}
+
+/* ======================================================
+   2. MAIN PROFILE CARD
+====================================================== */
+
+.status-card {
+    position: relative;
+    background: #FFFFFF;
+    border-radius: 14px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+    padding: 26px 30px;
+    box-sizing: border-box;
+    transition: padding 0.2s ease;
+}
+
+/* Saat sedang memuat, card membingkai wadah loading abu-abu sesuai Figma */
+.status-card.is-loading {
+    padding: 16px !important;
+}
+
+/* Top Right Badge: Hanya Baca */
+.status-badge-readonly {
+    position: absolute;
+    top: 24px;
+    right: 28px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: #EEF0F7;
+    color: #4A4D68;
+    padding: 5px 13px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    user-select: none;
+}
+
+.status-badge-readonly svg {
+    width: 13px;
+    height: 13px;
+    fill: currentColor;
+    flex-shrink: 0;
+}
+
+/* Card Content: Avatar + Info */
+.status-profile-content {
+    display: flex;
+    align-items: center;
+    gap: 32px;
+}
+
+/* Avatar Circle with subtle outer ring border */
+.status-avatar-container {
+    flex-shrink: 0;
+    width: 114px;
+    height: 114px;
+    border-radius: 50%;
+    position: relative;
+    box-shadow: 0 0 0 3px #FFFFFF, 0 0 0 5px #E2E5F6, 0 4px 14px rgba(23, 24, 107, 0.08);
+}
+
+.status-avatar-img {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+    display: block;
+}
+
+.status-avatar-initial {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background-color: var(--primary-navy, #17186B);
+    color: #FFFFFF;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 50px;
+    font-weight: 800;
+    text-transform: uppercase;
+}
+
+/* Details list */
+.status-info-list {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.status-info-row {
+    padding: 8px 0 12px;
+    border-bottom: 1px solid #E4E7F4;
+}
+
+.status-info-row:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.status-info-row:first-child {
+    padding-top: 0;
+}
+
+.status-info-label {
+    font-size: 12px;
+    color: #8F92A1;
+    font-weight: 500;
+    margin-bottom: 3px;
+}
+
+.status-info-name {
+    font-size: 24px;
+    font-weight: 800;
+    color: #1A1A1A;
+    line-height: 1.25;
+}
+
+.status-info-spec {
+    font-size: 15px;
+    font-weight: 500;
+    color: #292929;
+    line-height: 1.35;
+}
+
+.status-badge-aktif {
+    display: inline-block;
+    background-color: #E6F4EC;
+    color: #2E9E5B;
+    font-size: 12px;
+    font-weight: 700;
+    padding: 3px 14px;
+    border-radius: 12px;
+    margin-top: 2px;
+}
+
+.status-badge-nonaktif {
+    display: inline-block;
+    background-color: #FBEAEA;
+    color: #D64545;
+    font-size: 12px;
+    font-weight: 700;
+    padding: 3px 14px;
+    border-radius: 12px;
+    margin-top: 2px;
+}
+
+/* ======================================================
+   3. LOADING STATE (PRESISI FIGMA SCREENSHOT)
+====================================================== */
+
+.status-loading-box {
+    width: 100%;
+    min-height: 180px;
+    background-color: #F4F5FB;
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 24px;
+    box-sizing: border-box;
+}
+
+.status-spinner {
+    width: 38px;
+    height: 38px;
+    border: 3.5px solid rgba(23, 24, 107, 0.08);
+    border-top-color: #17186B;
+    border-right-color: #17186B;
+    border-radius: 50%;
+    animation: statusSpin 0.85s infinite linear;
+}
+
+@keyframes statusSpin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.status-loading-text {
+    font-size: 13px;
+    color: #8A8D9F;
+    font-weight: 500;
+}
+
+/* ======================================================
+   4. NOTICE BANNER (FIGMA ACCURACY)
+====================================================== */
+
+.status-notice-banner {
+    margin-top: 12px;
+    background: #EEF0FA;
+    border: 1.5px solid #D2D6FA;
+    border-radius: 14px;
+    padding: 12px 20px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    box-sizing: border-box;
+}
+
+.status-notice-icon {
+    width: 34px;
+    height: 34px;
+    background: var(--primary-navy, #17186B);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #FFFFFF;
+    flex-shrink: 0;
+}
+
+.status-notice-icon svg {
+    width: 17px;
+    height: 17px;
+    fill: currentColor;
+}
+
+.status-notice-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.status-notice-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--primary-navy, #17186B);
+    line-height: 1.3;
+}
+
+.status-notice-desc {
+    font-size: 11.5px;
+    color: #62657A;
+    font-weight: 400;
+    line-height: 1.35;
+}
+
+/* ======================================================
+   5. RESPONSIVE (MOBILE & TABLET)
+====================================================== */
+
+@media (max-width: 680px) {
+    .status-card {
+        padding: 24px 20px;
+    }
+
+    .status-badge-readonly {
+        position: static;
+        margin-bottom: 16px;
+        align-self: flex-start;
+    }
+
+    .status-profile-content {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        gap: 20px;
+    }
+
+    .status-info-list {
+        width: 100%;
+        text-align: center;
+    }
+
+    .status-notice-banner {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+        padding: 14px 16px;
+    }
+}
