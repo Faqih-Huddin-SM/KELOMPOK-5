@@ -273,9 +273,7 @@ document.addEventListener('DOMContentLoaded', function () {
     /* [Card Tren Pemasukan] Frontend Developer (Faqih) - Penomoran request agar respons lama tidak menimpa grafik saat pill periode diklik cepat */
     let trenRequestId = 0;
 
-    /* [Card Tren Pemasukan] Frontend Developer (Faqih) - Memuat data grafik tren.
-       Untuk '7_hari', dihitung di frontend agar menampilkan transaksi hari ini + 6 hari terakhir.
-       Untuk 'minggu' dan 'bulan', memuat dari endpoint BE (api/rekap/tren.php). */
+    /* [Card Tren Pemasukan] Frontend Developer (Faqih) - Memuat data grafik tren dari endpoint BE (api/rekap/tren.php), bukan lagi dihitung di browser */
     async function loadTrenPemasukan(period = '7_hari') {
         state.trenPeriode = period;
         const chartContainer = document.getElementById('dashboardLineChart');
@@ -290,20 +288,10 @@ document.addEventListener('DOMContentLoaded', function () {
         if (wrapTren) wrapTren.style.display = 'none';
 
         try {
-            let trendData;
-            if (period === '7_hari') {
-                // Pastikan transaksi terbaru sudah dimuat di frontend
-                if (!state.allTransactions || state.allTransactions.length === 0) {
-                    await loadAllTransactions();
-                }
-                if (requestId !== trenRequestId) return;
-                trendData = calculate7HariTrendData();
-            } else {
-                const data = await fetchApi(`${trenApiUrl}?periode=${encodeURIComponent(period)}`);
-                if (requestId !== trenRequestId) return; // ada permintaan lebih baru, abaikan
-                trendData = mapTrenApiToTrendData(data, period);
-            }
+            const data = await fetchApi(`${trenApiUrl}?periode=${encodeURIComponent(period)}`);
+            if (requestId !== trenRequestId) return; // ada permintaan lebih baru, abaikan
 
+            const trendData = mapTrenApiToTrendData(data, period);
             updateTrenSummaryBox(trendData, period);
             renderSvgLineChart(chartContainer, trendData);
         } catch (error) {
@@ -314,107 +302,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
         if (loadingTren) loadingTren.style.display = 'none';
         if (wrapTren) wrapTren.style.display = 'block';
-    }
-
-    /* [Card Tren Pemasukan] Frontend - Hitung tren 7 hari terakhir (hari ini + 6 hari sebelumnya) dari data transaksi */
-    function calculate7HariTrendData() {
-        const today = getToday();
-        today.setHours(0, 0, 0, 0);
-
-        const labels = [];
-        const subLabels = [];
-        const dates = [];
-
-        // 7 hari terakhir: 6 hari sebelumnya + hari ini (total 7 hari)
-        for (let i = 6; i >= 0; i--) {
-            const d = new Date(today);
-            d.setDate(today.getDate() - i);
-            const y = d.getFullYear();
-            const m = pad2(d.getMonth() + 1);
-            const day = pad2(d.getDate());
-            const strDate = `${y}-${m}-${day}`;
-
-            dates.push({
-                date: d,
-                strDate: strDate,
-                dayName: hariIndoList[(d.getDay() + 6) % 7],
-                subLabel: `${day}/${m}`
-            });
-            labels.push(hariIndoList[(d.getDay() + 6) % 7]);
-            subLabels.push(`${day}/${m}`);
-        }
-
-        const subtitleText = `Pemasukkan per hari, ${subLabels[0]} - ${subLabels[subLabels.length - 1]}`;
-
-        // Hitung pemasukan harian dari state.allTransactions
-        const values = dates.map(item => {
-            return (state.allTransactions || [])
-                .filter(t => {
-                    const trxDate = String(t.tanggal || '').split(' ')[0].split('T')[0];
-                    return trxDate === item.strDate;
-                })
-                .reduce((sum, t) => sum + Number(t.total_harga || 0), 0);
-        });
-
-        const totalAktif = values.reduce((a, b) => a + b, 0);
-
-        // Periode pembanding: 7 hari sebelumnya (H-13 s/d H-7)
-        const prevDates = [];
-        for (let i = 13; i >= 7; i--) {
-            const d = new Date(today);
-            d.setDate(today.getDate() - i);
-            const y = d.getFullYear();
-            const m = pad2(d.getMonth() + 1);
-            const day = pad2(d.getDate());
-            prevDates.push(`${y}-${m}-${day}`);
-        }
-
-        const totalSebelumnya = (state.allTransactions || [])
-            .filter(t => {
-                const trxDate = String(t.tanggal || '').split(' ')[0].split('T')[0];
-                return prevDates.includes(trxDate);
-            })
-            .reduce((sum, t) => sum + Number(t.total_harga || 0), 0);
-
-        // Ambang stabil mengikuti standar BE (5%)
-        let persentase = null;
-        let status = 'stabil';
-        const ambangStabil = 5;
-
-        if (totalSebelumnya === 0) {
-            persentase = totalAktif > 0 ? null : 0;
-            status = totalAktif > 0 ? 'naik' : 'stabil';
-        } else {
-            persentase = ((totalAktif - totalSebelumnya) / totalSebelumnya) * 100;
-            if (Math.abs(persentase) < ambangStabil) {
-                status = 'stabil';
-            } else if (persentase > 0) {
-                status = 'naik';
-            } else {
-                status = 'turun';
-            }
-        }
-
-        let pctDisplay;
-        if (persentase === null) {
-            pctDisplay = '100%';
-        } else {
-            const absPct = Math.abs(persentase);
-            pctDisplay = (absPct % 1 === 0 ? absPct.toFixed(0) : absPct.toFixed(1)) + '%';
-        }
-
-        return {
-            period: '7_hari',
-            labels,
-            subLabels,
-            values,
-            subtitleText,
-            totalAktif,
-            totalSebelumnya,
-            status,
-            pctDisplay,
-            adaData: totalAktif > 0
-        };
     }
 
     /* [Card Tren Pemasukan] Frontend Developer (Faqih) - Helper format tanggal dari BE (YYYY-MM-DD) tanpa geseran zona waktu */
@@ -450,7 +337,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 labels.push(hariIndoList[(d.getDay() + 6) % 7]);
                 subLabels.push(`${pad2(d.getDate())}/${pad2(d.getMonth() + 1)}`);
             });
-            subtitleText = `Pemasukkan per hari, ${subLabels[0]} - ${subLabels[subLabels.length - 1]}`;
+            subtitleText = `Pemasukan per hari, ${subLabels[0]} - ${subLabels[subLabels.length - 1]}`;
         } else if (period === 'minggu') {
             titik.forEach(t => {
                 const a = parseTanggalIso(t.tanggal_awal);
@@ -458,11 +345,11 @@ document.addEventListener('DOMContentLoaded', function () {
                 labels.push(t.label);
                 subLabels.push(`${pad2(a.getDate())} - ${pad2(b.getDate())}`);
             });
-            subtitleText = `Pemasukkan per minggu, ${bulanNamaLengkap[awalPeriode.getMonth()]} ${awalPeriode.getFullYear()}`;
+            subtitleText = `Pemasukan per minggu, ${bulanNamaLengkap[awalPeriode.getMonth()]} ${awalPeriode.getFullYear()}`;
         } else {
             labels = titik.map((t, i) => bulanIndoList[i] || t.label);
             subLabels = titik.map(() => String(awalPeriode.getFullYear()));
-            subtitleText = `Pemasukkan per bulan, Tahun ${awalPeriode.getFullYear()}`;
+            subtitleText = `Pemasukan per bulan, Tahun ${awalPeriode.getFullYear()}`;
         }
 
         // Persentase dan status (naik/turun/stabil) dihitung BE; ambang stabil mengikuti BE
@@ -481,7 +368,7 @@ document.addEventListener('DOMContentLoaded', function () {
             : 'stabil';
 
         return {
-            period,
+            period: '7_hari',
             labels,
             subLabels,
             values,
@@ -490,7 +377,7 @@ document.addEventListener('DOMContentLoaded', function () {
             totalSebelumnya: Number(data.total_periode_sebelumnya || 0),
             status,
             pctDisplay,
-            adaData: data.ada_data !== undefined ? Boolean(data.ada_data) : values.some(v => Number(v) > 0)
+            adaData: totalAktif > 0
         };
     }
 
