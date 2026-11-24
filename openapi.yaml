@@ -85,6 +85,8 @@ tags:
     description: Pencatatan pengeluaran harian (khusus owner)
   - name: Rekap
     description: Rekap dan tren pemasukan (khusus owner)
+  - name: Info Usaha
+    description: Alamat, jam buka, kontak, dan media sosial usaha. Ubah khusus owner, baca publik tanpa login
 
 security:
   - sessionCookie: []
@@ -1454,6 +1456,61 @@ paths:
             application/json:
               schema: { $ref: "#/components/schemas/Error" }
 
+  /barber/profil.php:
+    get:
+      tags: [Akun Barber]
+      summary: Profil sendiri barber (halaman Status Saya)
+      description: |
+        Hanya untuk **barber yang sedang login**. Identitas diambil dari sesi login, bukan dari
+        parameter id. Hanya mengembalikan data barber itu sendiri: nama, spesialisasi, foto,
+        dan status akun. Perubahan dari owner (nama, spesialisasi, foto) langsung terlihat.
+
+        Parameter `id_user` atau `id` tidak diperlukan. Bila dikirim dan menunjuk barber lain
+        (atau bukan angka), permintaan ditolak `403`. Owner juga mendapat `403`.
+        Akun yang dinonaktifkan owner mendapat `401` pada permintaan berikutnya.
+      operationId: profilSendiriBarber
+      responses:
+        "200":
+          description: Profil barber yang sedang login
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean, example: true }
+                  data:
+                    type: object
+                    properties:
+                      nama: { type: string, example: Sandi }
+                      spesialisasi:
+                        { type: string, nullable: true, example: Fade & Beard }
+                      foto:
+                        {
+                          type: string,
+                          nullable: true,
+                          example: uploads/barber/23c4b424cf496c217f513b2c30112523.jpg,
+                        }
+                      aktif:
+                        {
+                          type: integer,
+                          enum: [0, 1],
+                          example: 1,
+                          description: Status akun (1 = aktif),
+                        }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403":
+          description: |
+            Bukan barber (owner), atau meminta profil barber lain (`FORBIDDEN`).
+            Pesan: `Anda tidak memiliki izin mengakses halaman ini`
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "405":
+          description: Method selain GET (`METHOD_NOT_ALLOWED`)
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+
   /barber/publik.php:
     get:
       tags: [Barber]
@@ -2248,7 +2305,125 @@ paths:
                   error_code: INTERNAL_SERVER_ERROR,
                 }
 
-# =============================================================================
+  # =============================================================================
+  # ===========================================================================
+  # INFO USAHA (kartu 6.6.3)
+  # ===========================================================================
+  /info_usaha/index.php:
+    get:
+      tags: [Info Usaha]
+      summary: Baca info usaha untuk halaman Pengaturan (owner)
+      description: |
+        Mengembalikan isian info usaha apa adanya (nomor WhatsApp seperti yang diketik, username tanpa "@").
+        Bila belum pernah diisi, `data` bernilai `null` (bukan error). Barber menerima 403
+        "Anda tidak memiliki izin mengakses halaman ini".
+      operationId: getInfoUsaha
+      responses:
+        "200":
+          description: Info usaha atau `null` bila belum diisi
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean, example: true }
+                  data:
+                    nullable: true
+                    allOf:
+                      - $ref: "#/components/schemas/InfoUsaha"
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/ForbiddenAkses" }
+        "500": { $ref: "#/components/responses/ServerError" }
+    put:
+      tags: [Info Usaha]
+      summary: Simpan info usaha (owner)
+      description: |
+        Menyimpan seluruh isian sekaligus (menimpa data sebelumnya). Bila penyimpanan gagal,
+        data lama tidak berubah dan respons `500` berisi pesan
+        "Info usaha gagal disimpan. Silakan coba lagi". Daftar lengkap aturan dan pesan validasi:
+        bagian 13 CONTRACT.md.
+      operationId: putInfoUsaha
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/InfoUsahaInput" }
+      responses:
+        "200":
+          description: Tersimpan; `data` berisi hasil simpan
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean, example: true }
+                  message:
+                    { type: string, example: Info usaha berhasil disimpan. }
+                  data: { $ref: "#/components/schemas/InfoUsaha" }
+        "400":
+          description: Body bukan JSON yang valid
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/ForbiddenAkses" }
+        "422":
+          description: Validasi gagal. `message` salah satu pesan di bagian 13 CONTRACT.md, `field` nama isian yang salah.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean, example: false }
+                  message:
+                    { type: string, example: Jam tutup harus setelah jam buka }
+                  error_code: { type: string, example: UNPROCESSABLE_ENTITY }
+                  field: { type: string, example: jam_tutup }
+        "500":
+          description: Gagal menyimpan (data lama tetap)
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+
+  /info_usaha/publik.php:
+    get:
+      tags: [Info Usaha]
+      summary: Info usaha untuk halaman publik (tanpa login)
+      description: |
+        Memuat alamat, tautan peta, jam buka, nomor WhatsApp beserta `whatsapp_link`, media sosial
+        (`username` dan `url` dibuat sistem), tagline, dan teks "Tentang". Isian media sosial yang kosong bernilai `null`.
+        Belum pernah diisi: `200` dengan `data: null`.
+
+        Dibatasi **60 permintaan per menit per pengunjung** (middleware yang sama dengan kartu 6.4.3).
+      operationId: getInfoUsahaPublik
+      security: []
+      responses:
+        "200":
+          description: Info usaha publik atau `null`
+          headers:
+            X-RateLimit-Limit:
+              {
+                schema: { type: integer, example: 60 },
+                description: Batas permintaan per menit,
+              }
+            X-RateLimit-Remaining:
+              {
+                schema: { type: integer, example: 59 },
+                description: Sisa permintaan pada menit ini,
+              }
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean, example: true }
+                  data:
+                    nullable: true
+                    allOf:
+                      - $ref: "#/components/schemas/InfoUsahaPublik"
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+        "500": { $ref: "#/components/responses/ServerError" }
+
 components:
   securitySchemes:
     sessionCookie:
@@ -2366,6 +2541,136 @@ components:
             }
 
   schemas:
+    InfoUsahaInput:
+      type: object
+      required:
+        [
+          alamat,
+          tautan_peta,
+          hari_awal,
+          hari_akhir,
+          jam_buka,
+          jam_tutup,
+          nomor_whatsapp,
+        ]
+      properties:
+        alamat:
+          {
+            type: string,
+            maxLength: 255,
+            example: "Jl. Merdeka No. 1, Majalengka",
+          }
+        tautan_peta:
+          {
+            type: string,
+            format: uri,
+            example: "https://maps.app.goo.gl/abc123",
+          }
+        hari_awal:
+          {
+            type: integer,
+            minimum: 1,
+            maximum: 7,
+            description: "1 = Senin ... 7 = Minggu",
+            example: 1,
+          }
+        hari_akhir:
+          {
+            type: integer,
+            minimum: 1,
+            maximum: 7,
+            description: "Tidak boleh sebelum hari_awal",
+            example: 6,
+          }
+        jam_buka:
+          {
+            type: string,
+            pattern: '^([01]\d|2[0-3]):[0-5]\d$',
+            example: "09:00",
+          }
+        jam_tutup:
+          {
+            type: string,
+            pattern: '^([01]\d|2[0-3]):[0-5]\d$',
+            description: Harus setelah jam_buka,
+            example: "21:00",
+          }
+        nomor_whatsapp:
+          {
+            type: string,
+            description: "Diawali 08 atau +62, 10-15 angka",
+            example: "081234567890",
+          }
+        instagram:
+          {
+            type: string,
+            nullable: true,
+            description: 'Username, boleh diawali "@" (dibuang saat disimpan)',
+            example: kataji.barber,
+          }
+        tiktok: { type: string, nullable: true, example: kataji_barber }
+        facebook: { type: string, nullable: true, example: kataji.barber }
+        tagline:
+          {
+            type: string,
+            nullable: true,
+            maxLength: 100,
+            example: Rapi setiap hari,
+          }
+        tentang: { type: string, nullable: true, maxLength: 500 }
+    InfoUsaha:
+      type: object
+      properties:
+        alamat: { type: string }
+        tautan_peta: { type: string }
+        hari_awal: { type: integer }
+        hari_akhir: { type: integer }
+        jam_buka: { type: string, example: "09:00" }
+        jam_tutup: { type: string, example: "21:00" }
+        nomor_whatsapp: { type: string, example: "081234567890" }
+        instagram: { type: string, nullable: true }
+        tiktok: { type: string, nullable: true }
+        facebook: { type: string, nullable: true }
+        tagline: { type: string, nullable: true }
+        tentang: { type: string, nullable: true }
+    SosialPublik:
+      type: object
+      nullable: true
+      properties:
+        username: { type: string, example: kataji.barber }
+        url:
+          { type: string, example: "https://www.instagram.com/kataji.barber" }
+    InfoUsahaPublik:
+      type: object
+      properties:
+        alamat: { type: string }
+        tautan_peta: { type: string }
+        jam_buka:
+          type: object
+          properties:
+            hari_awal: { type: integer, example: 1 }
+            hari_akhir: { type: integer, example: 6 }
+            nama_hari_awal: { type: string, example: Senin }
+            nama_hari_akhir: { type: string, example: Sabtu }
+            jam_buka: { type: string, example: "09:00" }
+            jam_tutup: { type: string, example: "21:00" }
+        nomor_whatsapp:
+          {
+            type: string,
+            description: Ditampilkan seperti yang diisi owner,
+            example: "081234567890",
+          }
+        whatsapp_link:
+          {
+            type: string,
+            description: "Nomor dinormalisasi 08 menjadi 62",
+            example: "https://wa.me/6281234567890",
+          }
+        instagram: { $ref: "#/components/schemas/SosialPublik" }
+        tiktok: { $ref: "#/components/schemas/SosialPublik" }
+        facebook: { $ref: "#/components/schemas/SosialPublik" }
+        tagline: { type: string, nullable: true }
+        tentang: { type: string, nullable: true }
     Error:
       type: object
       properties:
