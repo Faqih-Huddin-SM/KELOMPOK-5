@@ -69,6 +69,22 @@ erDiagram
         string keterangan
         timestamp dibuat_pada
     }
+        INFO_USAHA {
+        tinyint id_info PK "selalu 1"
+        string alamat
+        string tautan_peta
+        tinyint hari_awal
+        tinyint hari_akhir
+        time jam_buka
+        time jam_tutup
+        string nomor_whatsapp
+        string instagram
+        string tiktok
+        string facebook
+        string tagline
+        string tentang
+        timestamp diperbarui_pada
+    }
 ```
 
 ## Relasi Antar Tabel

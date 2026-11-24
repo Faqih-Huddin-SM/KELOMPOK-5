@@ -1677,18 +1677,48 @@ Lihat bagian 12.1 (`GET /api/barber/publik.php`).
 | `422` | Validasi gagal (`UNPROCESSABLE_ENTITY`); penyebab ada di `message` |
 | `500` | Kesalahan server (`INTERNAL_SERVER_ERROR`)                         |
 
+### 10.9 Profil sendiri barber (halaman Status Saya)
+
+`GET /api/barber/profil.php` — untuk **barber yang sedang login**. Identitas diambil dari sesi login, bukan dari parameter id. Tidak perlu mengirim `id_user`.
+
+```json
+{
+  "success": true,
+  "data": {
+    "nama": "Sandi",
+    "spesialisasi": "Fade & Beard",
+    "foto": "uploads/barber/23c4b424cf496c217f513b2c30112523.jpg",
+    "aktif": 1
+  }
+}
+```
+
+- Hanya memuat data barber yang login: `nama`, `spesialisasi`, `foto`, `aktif` (status akun). Tanpa username, ID, atau data barber lain.
+- `spesialisasi` dan `foto` bernilai `null` bila belum diisi. Bila `foto` ada, tampilkan dengan `/KELOMPOK-5/` + `foto`; bila `null`, tampilkan avatar inisial.
+- Perubahan oleh owner (nama, spesialisasi, foto) langsung terlihat pada permintaan berikutnya.
+
+| Status | Kondisi                                                                                                                            |
+| ------ | ---------------------------------------------------------------------------------------------------------------------------------- |
+| `200`  | Berhasil                                                                                                                           |
+| `401`  | Belum login, atau akun dinonaktifkan owner                                                                                         |
+| `403`  | Owner yang memanggil, atau parameter `id_user`/`id` menunjuk barber lain (pesan: "Anda tidak memiliki izin mengakses halaman ini") |
+| `405`  | Method selain GET                                                                                                                  |
+
+Mengirim `?id_user=` berisi ID sendiri tetap diterima, tetapi tidak diperlukan.
+
 ## 11. Skema Database
 
 Database: `kataji_barber` (MySQL/MariaDB, `utf8mb4`). File skema lengkap beserta data awal: `database/kataji_barber.sql`. Tanggal bertipe `DATE`, waktu bertipe `TIME`, dan seluruh nilai uang berupa bilangan bulat rupiah (`INT`).
 
-| Tabel              | Kolom utama                                                                                                                                                                                            | Keterangan                                      |
-| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------- |
-| `users`            | `id_user` PK, `username` (unik), `password_hash`, `nama`, `role` (`owner`/`barber`), `spesialisasi` (NULL, maks 100 karakter), `foto` (NULL, path relatif), `aktif`, `dibuat_pada`                     | Akun login. Hanya `aktif = 1` yang dapat login. |
-| `layanan`          | `id_layanan` PK, `nama_layanan`, `harga` (> 0), `hpp` (NULL atau ≥ 0), `icon_layanan` (NULL), `aktif`, `dibuat_pada`                                                                                   | `aktif = 0` berarti nonaktif.                   |
-| `pelanggan`        | `id_pelanggan` PK, `nama`, `no_hp` (NULL), `dibuat_pada`, `dihapus_pada` (NULL)                                                                                                                        | Soft delete lewat `dihapus_pada`.               |
-| `transaksi`        | `id_transaksi` PK, `id_pencatat` FK, `id_barber` FK, `id_pelanggan` FK (NULL), `tanggal`, `waktu`, `total_harga`, `metode_pembayaran` (`cash`/`qris`/`transfer`), `dibuat_pada`, `dihapus_pada` (NULL) | Soft delete lewat `dihapus_pada`.               |
-| `detail_transaksi` | `id_detail` PK, `id_transaksi` FK, `id_layanan` FK (NULL), `nama_layanan_saat_transaksi`, `harga_saat_transaksi`, `hpp_saat_transaksi` (NULL), `jumlah` (1–100)                                        | Snapshot data layanan saat transaksi.           |
-| `pengeluaran`      | `id_pengeluaran` PK, `id_user` FK, `tanggal`, `kategori`, `nominal` (> 0), `keterangan` (NULL), `dibuat_pada`                                                                                          | Dicatat owner.                                  |
+| Tabel              | Kolom utama                                                                                                                                                                                                           | Keterangan                                      |
+| ------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------- |
+| `users`            | `id_user` PK, `username` (unik), `password_hash`, `nama`, `role` (`owner`/`barber`), `spesialisasi` (NULL, maks 100 karakter), `foto` (NULL, path relatif), `aktif`, `dibuat_pada`                                    | Akun login. Hanya `aktif = 1` yang dapat login. |
+| `layanan`          | `id_layanan` PK, `nama_layanan`, `harga` (> 0), `hpp` (NULL atau ≥ 0), `icon_layanan` (NULL), `aktif`, `dibuat_pada`                                                                                                  | `aktif = 0` berarti nonaktif.                   |
+| `pelanggan`        | `id_pelanggan` PK, `nama`, `no_hp` (NULL), `dibuat_pada`, `dihapus_pada` (NULL)                                                                                                                                       | Soft delete lewat `dihapus_pada`.               |
+| `transaksi`        | `id_transaksi` PK, `id_pencatat` FK, `id_barber` FK, `id_pelanggan` FK (NULL), `tanggal`, `waktu`, `total_harga`, `metode_pembayaran` (`cash`/`qris`/`transfer`), `dibuat_pada`, `dihapus_pada` (NULL)                | Soft delete lewat `dihapus_pada`.               |
+| `detail_transaksi` | `id_detail` PK, `id_transaksi` FK, `id_layanan` FK (NULL), `nama_layanan_saat_transaksi`, `harga_saat_transaksi`, `hpp_saat_transaksi` (NULL), `jumlah` (1–100)                                                       | Snapshot data layanan saat transaksi.           |
+| `pengeluaran`      | `id_pengeluaran` PK, `id_user` FK, `tanggal`, `kategori`, `nominal` (> 0), `keterangan` (NULL), `dibuat_pada`                                                                                                         | Dicatat owner.                                  |
+| `info_usaha`       | `id_info` PK (selalu 1), `alamat`, `tautan_peta`, `hari_awal`, `hari_akhir`, `jam_buka`, `jam_tutup`, `nomor_whatsapp`, `instagram`/`tiktok`/`facebook` (NULL), `tagline` (NULL), `tentang` (NULL), `diperbarui_pada` | Info usaha, satu baris saja (kartu 6.6.3).      |
 
 Foreign key:
 
@@ -1777,3 +1807,116 @@ Middleware: `api/middleware/rate_limit.php`. Hitungan disimpan di folder sementa
 | `405` | Method selain GET (`METHOD_NOT_ALLOWED`)               |
 | `429` | Melebihi 60 permintaan per menit (`TOO_MANY_REQUESTS`) |
 | `500` | Kesalahan server (`INTERNAL_SERVER_ERROR`)             |
+
+## 13. API Info Usaha — Kartu 6.6.3
+
+Data usaha untuk halaman Pengaturan (owner) dan halaman publik.
+
+| Method | Endpoint                     | Akses                         |
+| ------ | ---------------------------- | ----------------------------- |
+| `GET`  | `/api/info_usaha/index.php`  | Owner (barber `403`)          |
+| `PUT`  | `/api/info_usaha/index.php`  | Owner (barber `403`)          |
+| `GET`  | `/api/info_usaha/publik.php` | Publik, tanpa login, 60/menit |
+
+### Keputusan struktur penyimpanan
+
+- Satu tabel `info_usaha` berisi **satu baris** (`id_info` selalu `1`, dijaga `CHECK`). Simpan memakai satu perintah `INSERT ... ON DUPLICATE KEY UPDATE`, sehingga bila gagal data lama tidak berubah.
+- Jam buka disimpan sebagai `hari_awal`, `hari_akhir` (1 = Senin ... 7 = Minggu), `jam_buka`, `jam_tutup`. Satu rentang hari dengan satu jam yang sama.
+- Media sosial disimpan sebagai **username tanpa "@"**; tautan dibuat sistem saat respons publik.
+- Nomor WhatsApp **disimpan dan ditampilkan seperti yang diketik owner**. Tautan `whatsapp_link` memakai format `https://wa.me/62...` (awalan `08` diganti `62`, tanda `+` dibuang).
+- Belum pernah diisi: kedua `GET` mengembalikan `200` dengan `"data": null`, bukan error.
+
+Skema: `database/migrations/migrasi-info-usaha.sql`.
+
+### GET /api/info_usaha/index.php (owner)
+
+```json
+{
+  "success": true,
+  "data": {
+    "alamat": "Jl. Merdeka No. 1, Majalengka",
+    "tautan_peta": "https://maps.app.goo.gl/abc123",
+    "hari_awal": 1,
+    "hari_akhir": 6,
+    "jam_buka": "09:00",
+    "jam_tutup": "21:00",
+    "nomor_whatsapp": "081234567890",
+    "instagram": "kataji.barber",
+    "tiktok": "kataji_barber",
+    "facebook": null,
+    "tagline": "Rapi setiap hari",
+    "tentang": "..."
+  }
+}
+```
+
+### PUT /api/info_usaha/index.php (owner)
+
+Body JSON berisi seluruh isian di atas (`instagram`, `tiktok`, `facebook`, `tagline`, `tentang` boleh kosong atau tidak dikirim). Berhasil: `200` dengan `message` "Info usaha berhasil disimpan." dan `data` hasil simpan.
+
+### Aturan validasi dan pesan (sumber tunggal)
+
+Pemeriksaan berjalan berurutan; yang pertama gagal dikembalikan sebagai `422` dengan `error_code` `UNPROCESSABLE_ENTITY` dan `field` (nama isian).
+
+| Isian                     | Aturan                                                                    | Pesan                                      |
+| ------------------------- | ------------------------------------------------------------------------- | ------------------------------------------ |
+| `alamat`                  | Wajib, tidak kosong                                                       | `Alamat wajib diisi`                       |
+| `alamat`                  | Maksimal 255 karakter                                                     | `Alamat maksimal 255 karakter`             |
+| `tautan_peta`             | Wajib, URL `http`/`https` valid (host memuat titik), maks 500             | `Tautan peta harus berupa URL yang valid`  |
+| `hari_awal`, `hari_akhir` | Bilangan 1–7                                                              | `Jam buka tidak valid`                     |
+| `jam_buka`, `jam_tutup`   | Format `HH:MM` 24 jam                                                     | `Jam buka tidak valid`                     |
+| `hari_akhir`              | Tidak boleh lebih kecil dari `hari_awal`                                  | `Hari akhir tidak boleh sebelum hari awal` |
+| `jam_tutup`               | Harus lebih besar dari `jam_buka`                                         | `Jam tutup harus setelah jam buka`         |
+| `nomor_whatsapp`          | Wajib; diawali `08` atau `+62`; sisanya angka; 10–15 angka (tanpa `+`)    | `Nomor WhatsApp tidak valid`               |
+| `instagram`               | Opsional; "@" di depan dibuang; huruf, angka, titik, garis bawah; maks 50 | `Username Instagram tidak valid`           |
+| `tiktok`                  | Aturan sama                                                               | `Username TikTok tidak valid`              |
+| `facebook`                | Aturan sama                                                               | `Username Facebook tidak valid`            |
+| `tagline`                 | Opsional, maksimal 100 karakter                                           | `Tagline maksimal 100 karakter`            |
+| `tentang`                 | Opsional, maksimal 500 karakter                                           | `Tentang maksimal 500 karakter`            |
+
+Kesalahan lain:
+
+| HTTP  | Pesan                                            | Keterangan                         |
+| ----- | ------------------------------------------------ | ---------------------------------- |
+| `400` | `Body harus berupa JSON yang valid.`             | Body bukan JSON                    |
+| `401` | `Silakan login terlebih dahulu.`                 | Belum login                        |
+| `403` | `Anda tidak memiliki izin mengakses halaman ini` | Barber                             |
+| `405` | `Method tidak didukung.`                         | Header `Allow` diisi               |
+| `500` | `Info usaha gagal disimpan. Silakan coba lagi`   | PUT gagal; data lama tidak berubah |
+
+### GET /api/info_usaha/publik.php (publik)
+
+Tanpa login. Memakai `batasiLaju('info-usaha-publik')` dari kartu 6.4.3 (60 permintaan per menit per pengunjung; `429` seperti bagian 12).
+
+```json
+{
+  "success": true,
+  "data": {
+    "alamat": "Jl. Merdeka No. 1, Majalengka",
+    "tautan_peta": "https://maps.app.goo.gl/abc123",
+    "jam_buka": {
+      "hari_awal": 1,
+      "hari_akhir": 6,
+      "nama_hari_awal": "Senin",
+      "nama_hari_akhir": "Sabtu",
+      "jam_buka": "09:00",
+      "jam_tutup": "21:00"
+    },
+    "nomor_whatsapp": "081234567890",
+    "whatsapp_link": "https://wa.me/6281234567890",
+    "instagram": {
+      "username": "kataji.barber",
+      "url": "https://www.instagram.com/kataji.barber"
+    },
+    "tiktok": {
+      "username": "kataji_barber",
+      "url": "https://www.tiktok.com/@kataji_barber"
+    },
+    "facebook": null,
+    "tagline": "Rapi setiap hari",
+    "tentang": "..."
+  }
+}
+```
+
+Tautan media sosial dibuat sistem: `instagram.com/<username>`, `tiktok.com/@<username>`, `facebook.com/<username>`. Isian yang kosong bernilai `null`; frontend menyembunyikan ikonnya.
