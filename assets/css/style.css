@@ -9915,12 +9915,12 @@ body.barber-modal-open {
 /* Badge Owner */
 .barber-owner-badge {
     display: inline-block;
-    margin-left: 4px;
-    padding: 1px 8px;
+    margin-left: 6px;
+    padding: 2px 10px;
     border-radius: 999px;
     background: #FFD900;
     color: #1A1A1A;
-    font-size: 10px;
+    font-size: 11px;
     font-weight: 700;
     line-height: 1.4;
     vertical-align: middle;

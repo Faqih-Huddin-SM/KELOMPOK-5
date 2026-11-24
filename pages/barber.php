@@ -298,6 +298,6 @@ include __DIR__ . '/../includes/header.php';
     </div>
 </div>
 
-<script src="/KELOMPOK-5/assets/js/barber.js?v=6"></script>
+<script src="/KELOMPOK-5/assets/js/barber.js?v=7"></script>
 
 <?php include __DIR__ . '/../includes/footer.php'; ?>

@@ -288,7 +288,12 @@ document.addEventListener('DOMContentLoaded', function () {
             if (filterAktif === 'aktif')    return Number(b.aktif) === 1;
             if (filterAktif === 'nonaktif') return Number(b.aktif) === 0;
             return true;
-        }).filter(cocokPencarian);
+        }).filter(cocokPencarian).sort(function (a, b) {
+            const aOwner = adalahOwner(a) ? 0 : 1;
+            const bOwner = adalahOwner(b) ? 0 : 1;
+            if (aOwner !== bOwner) return aOwner - bOwner;
+            return (a.nama || '').localeCompare(b.nama || '');
+        });
 
         if (filtered.length === 0) {
             if (emptyText) {
