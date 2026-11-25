@@ -195,6 +195,7 @@ document.addEventListener('DOMContentLoaded', function () {
             loadingState.hidden = false;
             tableWrapper.hidden = true;
             emptyState.hidden = true;
+            if (footerTabel) footerTabel.hidden = true;
         } else {
             loadingState.hidden = true;
         }
