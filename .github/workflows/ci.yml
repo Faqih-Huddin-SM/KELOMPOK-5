@@ -1,0 +1,152 @@
+name: CI
+
+# Berjalan untuk setiap pull request ke main dan setiap push ke main atau branch backend-zaki.
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main, backend-zaki]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  # 1) Cek cepat: sintaks PHP dan dokumen OpenAPI
+  cek-kode:
+    name: Lint PHP dan validasi OpenAPI
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.2"
+          extensions: pdo_mysql, mbstring, fileinfo
+          coverage: none
+
+      - name: Lint semua file PHP
+        run: |
+          find . -name '*.php' -not -path './node_modules/*' -print0 \
+            | xargs -0 -n1 php -l > /tmp/lint.txt
+          grep -v '^No syntax errors detected' /tmp/lint.txt || true
+
+      - name: Validasi openapi.yaml
+        run: |
+          pip install --quiet pyyaml openapi-spec-validator
+          python - <<'PY'
+          import yaml
+          from openapi_spec_validator import validate_spec
+
+          class Loader(yaml.SafeLoader):
+              pass
+
+          def tanpa_kunci_ganda(loader, node, deep=False):
+              kunci = set()
+              for k, _ in node.value:
+                  nama = loader.construct_object(k)
+                  if nama in kunci:
+                      raise ValueError(f"Kunci YAML ganda: {nama} (baris {k.start_mark.line + 1})")
+                  kunci.add(nama)
+              return yaml.SafeLoader.construct_mapping(loader, node, deep)
+
+          Loader.add_constructor(yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG, tanpa_kunci_ganda)
+          with open('openapi.yaml', encoding='utf-8') as f:
+              validate_spec(yaml.load(f, Loader))
+          print('openapi.yaml valid')
+          PY
+
+  # 2) Uji API: database MySQL + server PHP + koleksi Postman lewat Newman
+  uji-api:
+    name: Uji API (Newman)
+    runs-on: ubuntu-latest
+    needs: cek-kode
+    # Hapus baris ini setelah uji pertama hijau agar kegagalan benar-benar memblokir PR.
+    continue-on-error: true
+
+    services:
+      mysql:
+        image: mariadb:10.11
+        env:
+          MYSQL_ROOT_PASSWORD: root
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="healthcheck.sh --connect --innodb_initialized"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=20
+
+    env:
+      BASE_URL: http://127.0.0.1:8000
+      OWNER_USER: erik
+      OWNER_PASS: erik123
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.2"
+          extensions: pdo_mysql, mbstring, fileinfo
+          coverage: none
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Impor skema database
+        run: |
+          mysql -h 127.0.0.1 -uroot -proot < "database/migrations/kataji_barber (1).sql"
+          # Migrasi tambahan (migrasi-*.sql) dijalankan berurutan menurut nama file; semuanya boleh diulang.
+          for f in database/migrations/migrasi-*.sql; do
+            [ -e "$f" ] || continue
+            echo "Menjalankan $f"
+            mysql -h 127.0.0.1 -uroot -proot kataji_barber < "$f"
+          done
+
+      - name: Setel password akun owner untuk pengujian
+        run: |
+          HASH=$(php -r 'echo password_hash(getenv("OWNER_PASS"), PASSWORD_DEFAULT);')
+          mysql -h 127.0.0.1 -uroot -proot kataji_barber \
+            -e "UPDATE users SET password_hash='${HASH}' WHERE username='${OWNER_USER}'"
+
+      - name: Buat config/config.php
+        run: |
+          cp config/config.example.php config/config.php
+          sed -i "s/define('DB_HOST', 'localhost')/define('DB_HOST', '127.0.0.1')/" config/config.php
+          sed -i "s/define('DB_PASS', '')/define('DB_PASS', 'root')/" config/config.php
+
+      - name: Jalankan server PHP
+        run: |
+          mkdir -p uploads/barber
+          php -S 127.0.0.1:8000 -t . > /tmp/php-server.log 2>&1 &
+          for i in $(seq 1 20); do
+            curl -s -o /dev/null http://127.0.0.1:8000/api/auth/me.php && break
+            sleep 1
+          done
+
+      - name: Pasang Newman
+        run: npm install -g newman newman-reporter-htmlextra
+
+      - name: Jalankan koleksi Newman
+        run: |
+          mkdir -p reports
+          newman run tests/api/KATAJI-API.postman_collection.json \
+            --env-var baseUrl="$BASE_URL" \
+            --env-var owner_username="$OWNER_USER" \
+            --env-var password="$OWNER_PASS" \
+            --reporters cli,htmlextra \
+            --reporter-htmlextra-export reports/newman.html
+
+      - name: Unggah laporan
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: laporan-newman
+          path: |
+            reports/newman.html
+            /tmp/php-server.log
