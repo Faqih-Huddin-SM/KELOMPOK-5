@@ -1107,8 +1107,8 @@ paths:
   /barber/akun.php:
     get:
       tags: [Akun Barber]
-      summary: Daftar akun barber, termasuk nonaktif (owner)
-      description: Semua akun dengan role `barber`, urut nama A–Z. Barber menerima 403 "Anda tidak memiliki izin mengakses halaman ini".
+      summary: Daftar akun owner dan barber, termasuk nonaktif (owner)
+      description: Semua akun, yaitu owner dan barber, termasuk yang nonaktif, urut `id_user` (urutan data masuk). Field `role` membedakan owner dan barber. Barber menerima 403 "Anda tidak memiliki izin mengakses halaman ini".
       operationId: listAkunBarber
       responses:
         "200":
@@ -2766,7 +2766,7 @@ components:
             nullable: true,
             example: uploads/barber/23c4b424cf496c217f513b2c30112523.jpg,
           }
-        role: { type: string, example: barber }
+        role: { type: string, enum: [owner, barber], example: barber }
         aktif: { type: integer, enum: [0, 1], example: 1 }
 
     AkunBarberInput:

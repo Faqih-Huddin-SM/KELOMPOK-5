@@ -50,13 +50,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/auth/me.php",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "auth",
-                "me.php"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "me.php"]
             }
           }
         },
@@ -83,13 +78,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/auth/login.php",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "auth",
-                "login.php"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "login.php"]
             }
           }
         },
@@ -120,13 +110,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/auth/login.php",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "auth",
-                "login.php"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "login.php"]
             },
             "body": {
               "mode": "raw",
@@ -166,13 +151,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/auth/login.php",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "auth",
-                "login.php"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "login.php"]
             },
             "body": {
               "mode": "raw",
@@ -212,13 +192,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/auth/login.php",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "auth",
-                "login.php"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "login.php"]
             },
             "body": {
               "mode": "raw",
@@ -258,13 +233,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/auth/login.php",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "auth",
-                "login.php"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "login.php"]
             },
             "body": {
               "mode": "raw",
@@ -304,13 +274,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/auth/login.php",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "auth",
-                "login.php"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "login.php"]
             },
             "body": {
               "mode": "raw",
@@ -350,13 +315,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/auth/login.php",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "auth",
-                "login.php"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "login.php"]
             },
             "body": {
               "mode": "raw",
@@ -391,13 +351,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/auth/me.php",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "auth",
-                "me.php"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "me.php"]
             }
           }
         }
@@ -428,13 +383,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/layanan/index.php",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "layanan",
-                "index.php"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["layanan", "index.php"]
             }
           }
         },
@@ -465,13 +415,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/layanan/index.php",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "layanan",
-                "index.php"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["layanan", "index.php"]
             },
             "body": {
               "mode": "raw",
@@ -506,13 +451,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/layanan/index.php",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "layanan",
-                "index.php"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["layanan", "index.php"]
             },
             "body": {
               "mode": "formdata",
@@ -563,13 +503,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/layanan/index.php",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "layanan",
-                "index.php"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["layanan", "index.php"]
             },
             "body": {
               "mode": "raw",
@@ -609,13 +544,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/layanan/index.php",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "layanan",
-                "index.php"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["layanan", "index.php"]
             },
             "body": {
               "mode": "raw",
@@ -655,13 +585,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/layanan/index.php",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "layanan",
-                "index.php"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["layanan", "index.php"]
             },
             "body": {
               "mode": "raw",
@@ -701,13 +626,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/layanan/index.php",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "layanan",
-                "index.php"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["layanan", "index.php"]
             },
             "body": {
               "mode": "raw",
@@ -747,13 +667,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/layanan/index.php",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "layanan",
-                "index.php"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["layanan", "index.php"]
             },
             "body": {
               "mode": "raw",
@@ -793,13 +708,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/layanan/index.php",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "layanan",
-                "index.php"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["layanan", "index.php"]
             },
             "body": {
               "mode": "raw",
@@ -834,13 +744,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/layanan/index.php",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "layanan",
-                "index.php"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["layanan", "index.php"]
             },
             "body": {
               "mode": "formdata",
@@ -901,13 +806,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/layanan/index.php",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "layanan",
-                "index.php"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["layanan", "index.php"]
             },
             "body": {
               "mode": "raw",
@@ -947,13 +847,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/layanan/index.php",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "layanan",
-                "index.php"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["layanan", "index.php"]
             },
             "body": {
               "mode": "raw",
@@ -992,13 +887,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/layanan/index.php",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "layanan",
-                "index.php"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["layanan", "index.php"]
             },
             "body": {
               "mode": "raw",
@@ -1033,13 +923,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/layanan/index.php",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "layanan",
-                "index.php"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["layanan", "index.php"]
             }
           }
         },
@@ -1070,13 +955,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/layanan/index.php",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "layanan",
-                "index.php"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["layanan", "index.php"]
             },
             "body": {
               "mode": "raw",
@@ -1116,13 +996,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/layanan/index.php",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "layanan",
-                "index.php"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["layanan", "index.php"]
             },
             "body": {
               "mode": "raw",
@@ -1162,13 +1037,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/layanan/index.php",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "layanan",
-                "index.php"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["layanan", "index.php"]
             },
             "body": {
               "mode": "raw",
@@ -1207,13 +1077,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/layanan/index.php",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "layanan",
-                "index.php"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["layanan", "index.php"]
             },
             "body": {
               "mode": "raw",
@@ -1253,13 +1118,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/barber/index.php",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "barber",
-                "index.php"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["barber", "index.php"]
             }
           }
         },
@@ -1290,13 +1150,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/barber/index.php",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "barber",
-                "index.php"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["barber", "index.php"]
             },
             "body": {
               "mode": "raw",
@@ -1341,13 +1196,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/transaksi/index.php",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "transaksi",
-                "index.php"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["transaksi", "index.php"]
             },
             "body": {
               "mode": "raw",
@@ -1387,13 +1237,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/transaksi/index.php",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "transaksi",
-                "index.php"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["transaksi", "index.php"]
             },
             "body": {
               "mode": "raw",
@@ -1433,13 +1278,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/transaksi/index.php",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "transaksi",
-                "index.php"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["transaksi", "index.php"]
             },
             "body": {
               "mode": "raw",
@@ -1479,13 +1319,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/transaksi/index.php",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "transaksi",
-                "index.php"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["transaksi", "index.php"]
             },
             "body": {
               "mode": "raw",
@@ -1525,13 +1360,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/transaksi/index.php",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "transaksi",
-                "index.php"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["transaksi", "index.php"]
             },
             "body": {
               "mode": "raw",
@@ -1571,13 +1401,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/transaksi/index.php",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "transaksi",
-                "index.php"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["transaksi", "index.php"]
             },
             "body": {
               "mode": "raw",
@@ -1617,13 +1442,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/transaksi/index.php",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "transaksi",
-                "index.php"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["transaksi", "index.php"]
             },
             "body": {
               "mode": "raw",
@@ -1663,13 +1483,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/transaksi/index.php",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "transaksi",
-                "index.php"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["transaksi", "index.php"]
             },
             "body": {
               "mode": "raw",
@@ -1709,13 +1524,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/transaksi/index.php",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "transaksi",
-                "index.php"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["transaksi", "index.php"]
             },
             "body": {
               "mode": "raw",
@@ -1755,13 +1565,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/transaksi/index.php",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "transaksi",
-                "index.php"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["transaksi", "index.php"]
             },
             "body": {
               "mode": "raw",
@@ -1801,13 +1606,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/transaksi/index.php",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "transaksi",
-                "index.php"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["transaksi", "index.php"]
             },
             "body": {
               "mode": "raw",
@@ -1842,13 +1642,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/transaksi/index.php",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "transaksi",
-                "index.php"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["transaksi", "index.php"],
               "query": [
                 {
                   "key": "tanggal",
@@ -1880,13 +1675,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/transaksi/index.php",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "transaksi",
-                "index.php"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["transaksi", "index.php"],
               "query": [
                 {
                   "key": "tanggal",
@@ -1918,13 +1708,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/transaksi/index.php",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "transaksi",
-                "index.php"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["transaksi", "index.php"],
               "query": [
                 {
                   "key": "tanggal",
@@ -1956,13 +1741,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/transaksi/detail.php",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "transaksi",
-                "detail.php"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["transaksi", "detail.php"],
               "query": [
                 {
                   "key": "id",
@@ -1994,13 +1774,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/transaksi/detail.php",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "transaksi",
-                "detail.php"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["transaksi", "detail.php"],
               "query": [
                 {
                   "key": "id",
@@ -2032,13 +1807,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/transaksi/detail.php",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "transaksi",
-                "detail.php"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["transaksi", "detail.php"],
               "query": [
                 {
                   "key": "id",
@@ -2070,13 +1840,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/transaksi/detail.php",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "transaksi",
-                "detail.php"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["transaksi", "detail.php"]
             }
           }
         },
@@ -2102,13 +1867,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/pelanggan/index.php",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "pelanggan",
-                "index.php"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["pelanggan", "index.php"],
               "query": [
                 {
                   "key": "q",
@@ -2140,13 +1900,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/pelanggan/index.php",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "pelanggan",
-                "index.php"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["pelanggan", "index.php"],
               "query": [
                 {
                   "key": "q",
@@ -2188,13 +1943,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/pengeluaran/index.php",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "pengeluaran",
-                "index.php"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["pengeluaran", "index.php"]
             },
             "body": {
               "mode": "raw",
@@ -2229,13 +1979,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/pengeluaran/index.php",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "pengeluaran",
-                "index.php"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["pengeluaran", "index.php"],
               "query": [
                 {
                   "key": "tanggal",
@@ -2272,13 +2017,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/pengeluaran/index.php",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "pengeluaran",
-                "index.php"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["pengeluaran", "index.php"]
             },
             "body": {
               "mode": "raw",
@@ -2318,13 +2058,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/pengeluaran/index.php",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "pengeluaran",
-                "index.php"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["pengeluaran", "index.php"]
             },
             "body": {
               "mode": "raw",
@@ -2364,13 +2099,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/pengeluaran/index.php",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "pengeluaran",
-                "index.php"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["pengeluaran", "index.php"]
             },
             "body": {
               "mode": "raw",
@@ -2410,13 +2140,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/pengeluaran/index.php",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "pengeluaran",
-                "index.php"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["pengeluaran", "index.php"]
             },
             "body": {
               "mode": "raw",
@@ -2456,13 +2181,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/pengeluaran/index.php",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "pengeluaran",
-                "index.php"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["pengeluaran", "index.php"]
             },
             "body": {
               "mode": "raw",
@@ -2502,13 +2222,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/pengeluaran/index.php",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "pengeluaran",
-                "index.php"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["pengeluaran", "index.php"]
             },
             "body": {
               "mode": "raw",
@@ -2548,13 +2263,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/pengeluaran/index.php",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "pengeluaran",
-                "index.php"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["pengeluaran", "index.php"]
             },
             "body": {
               "mode": "raw",
@@ -2589,13 +2299,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/pengeluaran/index.php",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "pengeluaran",
-                "index.php"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["pengeluaran", "index.php"],
               "query": [
                 {
                   "key": "tanggal",
@@ -2632,13 +2337,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/pengeluaran/index.php",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "pengeluaran",
-                "index.php"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["pengeluaran", "index.php"]
             },
             "body": {
               "mode": "raw",
@@ -2673,13 +2373,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/pengeluaran/index.php",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "pengeluaran",
-                "index.php"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["pengeluaran", "index.php"],
               "query": [
                 {
                   "key": "id_pengeluaran",
@@ -2710,13 +2405,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/pengeluaran/index.php",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "pengeluaran",
-                "index.php"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["pengeluaran", "index.php"],
               "query": [
                 {
                   "key": "id_pengeluaran",
@@ -2752,13 +2442,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/pengeluaran/index.php",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "pengeluaran",
-                "index.php"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["pengeluaran", "index.php"]
             },
             "body": {
               "mode": "raw",
@@ -2793,13 +2478,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/pengeluaran/index.php",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "pengeluaran",
-                "index.php"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["pengeluaran", "index.php"],
               "query": [
                 {
                   "key": "id_pengeluaran",
@@ -2831,13 +2511,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/pengeluaran/index.php",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "pengeluaran",
-                "index.php"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["pengeluaran", "index.php"],
               "query": [
                 {
                   "key": "id_pengeluaran",
@@ -2848,7 +2523,7 @@
           }
         },
         {
-          "name": "Pengeluaran - method PUT ditolak (405)",
+          "name": "Pengeluaran - method PATCH ditolak (405)",
           "event": [
             {
               "listen": "test",
@@ -2865,7 +2540,7 @@
             }
           ],
           "request": {
-            "method": "PUT",
+            "method": "PATCH",
             "header": [
               {
                 "key": "Content-Type",
@@ -2874,13 +2549,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/pengeluaran/index.php",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "pengeluaran",
-                "index.php"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["pengeluaran", "index.php"]
             },
             "body": {
               "mode": "raw",
@@ -2920,13 +2590,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/rekap/pemasukan.php",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "rekap",
-                "pemasukan.php"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["rekap", "pemasukan.php"],
               "query": [
                 {
                   "key": "tanggal",
@@ -2958,13 +2623,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/rekap/pemasukan.php",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "rekap",
-                "pemasukan.php"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["rekap", "pemasukan.php"],
               "query": [
                 {
                   "key": "tanggal",
@@ -2996,13 +2656,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/rekap/pemasukan.php",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "rekap",
-                "pemasukan.php"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["rekap", "pemasukan.php"],
               "query": [
                 {
                   "key": "tanggal",
@@ -3034,13 +2689,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/rekap/tren.php",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "rekap",
-                "tren.php"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["rekap", "tren.php"]
             }
           }
         },
@@ -3056,7 +2706,7 @@
                   "pm.test('Respons berformat JSON', () => pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'));",
                   "const j = pm.response.json();",
                   "pm.test('success = true', () => pm.expect(j.success).to.eql(true));",
-                  "pm.test('periode = minggu', () => pm.expect(j.data.periode).to.eql('minggu'));\npm.test('labels & pemasukan sama panjang (7)', () => { pm.expect(j.data.labels).to.have.lengthOf(7); pm.expect(j.data.pemasukan).to.have.lengthOf(7); });\npm.test('status_tren valid', () => pm.expect(j.data.status_tren).to.be.oneOf(['naik','turun','stabil']));\npm.test('ada_data konsisten dengan pemasukan', () => pm.expect(j.data.ada_data).to.eql(j.data.pemasukan.some(v => v > 0)));\npm.test('total_pemasukan = jumlah pemasukan', () => pm.expect(j.data.total_pemasukan).to.eql(j.data.pemasukan.reduce((a, b) => a + b, 0)));"
+                  "pm.test('periode = minggu', () => pm.expect(j.data.periode).to.eql('minggu'));\npm.test('labels & pemasukan sama panjang (4, Minggu 1-4)', () => { pm.expect(j.data.labels).to.have.lengthOf(4); pm.expect(j.data.pemasukan).to.have.lengthOf(4); });\npm.test('status_tren valid', () => pm.expect(j.data.status_tren).to.be.oneOf(['naik','turun','stabil']));\npm.test('ada_data konsisten dengan pemasukan', () => pm.expect(j.data.ada_data).to.eql(j.data.pemasukan.some(v => v > 0)));\npm.test('total_pemasukan = jumlah pemasukan', () => pm.expect(j.data.total_pemasukan).to.eql(j.data.pemasukan.reduce((a, b) => a + b, 0)));"
                 ]
               }
             }
@@ -3066,13 +2716,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/rekap/tren.php",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "rekap",
-                "tren.php"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["rekap", "tren.php"],
               "query": [
                 {
                   "key": "periode",
@@ -3104,13 +2749,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/rekap/tren.php",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "rekap",
-                "tren.php"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["rekap", "tren.php"],
               "query": [
                 {
                   "key": "periode",
@@ -3142,13 +2782,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/rekap/tren.php",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "rekap",
-                "tren.php"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["rekap", "tren.php"],
               "query": [
                 {
                   "key": "periode",
@@ -3186,13 +2821,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/transaksi/hapus.php",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "transaksi",
-                "hapus.php"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["transaksi", "hapus.php"]
             }
           }
         },
@@ -3218,13 +2848,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/transaksi/hapus.php",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "transaksi",
-                "hapus.php"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["transaksi", "hapus.php"],
               "query": [
                 {
                   "key": "id_transaksi",
@@ -3256,13 +2881,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/transaksi/hapus.php",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "transaksi",
-                "hapus.php"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["transaksi", "hapus.php"]
             }
           }
         },
@@ -3288,13 +2908,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/transaksi/hapus.php",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "transaksi",
-                "hapus.php"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["transaksi", "hapus.php"],
               "query": [
                 {
                   "key": "id_transaksi",
@@ -3325,13 +2940,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/transaksi/hapus.php",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "transaksi",
-                "hapus.php"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["transaksi", "hapus.php"],
               "query": [
                 {
                   "key": "id_transaksi",
@@ -3363,13 +2973,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/transaksi/index.php",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "transaksi",
-                "index.php"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["transaksi", "index.php"],
               "query": [
                 {
                   "key": "id",
@@ -3401,13 +3006,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/transaksi/index.php",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "transaksi",
-                "index.php"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["transaksi", "index.php"],
               "query": [
                 {
                   "key": "id",
@@ -3438,13 +3038,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/transaksi/index.php",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "transaksi",
-                "index.php"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["transaksi", "index.php"],
               "query": [
                 {
                   "key": "id",
@@ -3476,13 +3071,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/transaksi/index.php",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "transaksi",
-                "index.php"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["transaksi", "index.php"],
               "query": [
                 {
                   "key": "id",
@@ -3514,13 +3104,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/transaksi/detail.php",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "transaksi",
-                "detail.php"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["transaksi", "detail.php"],
               "query": [
                 {
                   "key": "id",
@@ -3552,13 +3137,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/transaksi/index.php",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "transaksi",
-                "index.php"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["transaksi", "index.php"],
               "query": [
                 {
                   "key": "tanggal",
@@ -3600,13 +3180,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/auth/login.php",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "auth",
-                "login.php"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "login.php"]
             },
             "body": {
               "mode": "raw",
@@ -3646,13 +3221,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/transaksi/index.php",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "transaksi",
-                "index.php"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["transaksi", "index.php"]
             },
             "body": {
               "mode": "raw",
@@ -3687,13 +3257,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/transaksi/index.php",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "transaksi",
-                "index.php"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["transaksi", "index.php"]
             }
           }
         },
@@ -3718,13 +3283,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/transaksi/detail.php",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "transaksi",
-                "detail.php"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["transaksi", "detail.php"],
               "query": [
                 {
                   "key": "id",
@@ -3756,13 +3316,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/transaksi/detail.php",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "transaksi",
-                "detail.php"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["transaksi", "detail.php"],
               "query": [
                 {
                   "key": "id",
@@ -3793,13 +3348,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/pelanggan/index.php",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "pelanggan",
-                "index.php"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["pelanggan", "index.php"],
               "query": [
                 {
                   "key": "q",
@@ -3830,13 +3380,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/barber/index.php",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "barber",
-                "index.php"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["barber", "index.php"]
             }
           }
         },
@@ -3862,13 +3407,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/transaksi/index.php",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "transaksi",
-                "index.php"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["transaksi", "index.php"],
               "query": [
                 {
                   "key": "id",
@@ -3900,13 +3440,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/transaksi/hapus.php",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "transaksi",
-                "hapus.php"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["transaksi", "hapus.php"],
               "query": [
                 {
                   "key": "id_transaksi",
@@ -3943,13 +3478,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/layanan/index.php",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "layanan",
-                "index.php"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["layanan", "index.php"]
             },
             "body": {
               "mode": "raw",
@@ -3989,13 +3519,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/layanan/index.php",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "layanan",
-                "index.php"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["layanan", "index.php"]
             },
             "body": {
               "mode": "raw",
@@ -4035,13 +3560,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/layanan/index.php",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "layanan",
-                "index.php"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["layanan", "index.php"]
             },
             "body": {
               "mode": "raw",
@@ -4076,13 +3596,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/pengeluaran/index.php",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "pengeluaran",
-                "index.php"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["pengeluaran", "index.php"]
             }
           }
         },
@@ -4108,13 +3623,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/rekap/pemasukan.php",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "rekap",
-                "pemasukan.php"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["rekap", "pemasukan.php"]
             }
           }
         },
@@ -4140,13 +3650,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/rekap/tren.php",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "rekap",
-                "tren.php"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["rekap", "tren.php"]
             }
           }
         }
@@ -4181,13 +3686,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/auth/login.php",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "auth",
-                "login.php"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "login.php"]
             },
             "body": {
               "mode": "raw",
@@ -4221,13 +3721,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/transaksi/index.php",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "transaksi",
-                "index.php"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["transaksi", "index.php"],
               "query": [
                 {
                   "key": "id",
@@ -4264,13 +3759,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/layanan/index.php",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "layanan",
-                "index.php"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["layanan", "index.php"]
             },
             "body": {
               "mode": "raw",
@@ -4309,13 +3799,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/layanan/index.php",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "layanan",
-                "index.php"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["layanan", "index.php"]
             },
             "body": {
               "mode": "raw",
@@ -4355,13 +3840,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/layanan/index.php",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "layanan",
-                "index.php"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["layanan", "index.php"]
             },
             "body": {
               "mode": "raw",
@@ -4401,13 +3881,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/layanan/index.php",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "layanan",
-                "index.php"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["layanan", "index.php"]
             },
             "body": {
               "mode": "raw",
@@ -4446,13 +3921,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/layanan/index.php",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "layanan",
-                "index.php"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["layanan", "index.php"]
             },
             "body": {
               "mode": "raw",
@@ -4491,13 +3961,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/layanan/index.php",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "layanan",
-                "index.php"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["layanan", "index.php"]
             },
             "body": {
               "mode": "raw",
