@@ -81,7 +81,7 @@ jobs:
           --health-retries=20
 
     env:
-      BASE_URL: http://127.0.0.1:8000
+      BASE_URL: http://127.0.0.1:8000/api
       OWNER_USER: erik
       OWNER_PASS: erik123
 
