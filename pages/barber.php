@@ -47,10 +47,9 @@ include __DIR__ . '/../includes/header.php';
         </div>
 
         <!-- Loading State -->
-        <div id="barberLoadingState" class="barber-loading-state" hidden>
-            <div class="barber-skeleton-row"></div>
-            <div class="barber-skeleton-row"></div>
-            <div class="barber-skeleton-row"></div>
+        <div id="barberLoadingState" class="barber-loading-state" role="status" aria-live="polite">
+            <span class="barber-spinner" aria-hidden="true"></span>
+            <span class="barber-loading-text">Memuat data barber...</span>
         </div>
 
         <!-- Empty State -->
@@ -63,7 +62,7 @@ include __DIR__ . '/../includes/header.php';
         </div>
 
         <!-- Table -->
-        <div class="barber-table-wrapper" id="barberTableWrapper">
+        <div class="barber-table-wrapper" id="barberTableWrapper" hidden>
             <table class="barber-table">
                 <thead>
                     <tr>
@@ -298,6 +297,6 @@ include __DIR__ . '/../includes/header.php';
     </div>
 </div>
 
-<script src="/KELOMPOK-5/assets/js/barber.js?v=7"></script>
+<script src="/KELOMPOK-5/assets/js/barber.js?v=8"></script>
 
 <?php include __DIR__ . '/../includes/footer.php'; ?>

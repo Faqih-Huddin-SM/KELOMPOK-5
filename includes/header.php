@@ -145,6 +145,14 @@ unset($_SESSION['login_notification']);
         <span>Pelanggan</span>
     </a>
 
+    <!-- KONTEN WEB -->
+    <a
+        href="/KELOMPOK-5/pages/publik/konten_web/konten_web.php"
+        class="sidebar-link <?= $current_page === 'konten_web.php' ? 'active' : '' ?>"
+    >
+        <span>Konten Web</span>
+    </a>
+
 <?php elseif ($role === 'barber'): ?>
 
     <!-- KASIR -->
