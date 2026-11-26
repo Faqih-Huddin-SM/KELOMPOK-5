@@ -118,14 +118,13 @@ if (!in_array($method, ['GET', 'POST', 'PUT', 'PATCH'], true)) {
 }
 
 try {
-    // GET: semua akun barber, termasuk yang nonaktif.
+        // GET: semua akun (owner dan barber), termasuk yang nonaktif. Urutan mengikuti data masuk.
     if ($method === 'GET') {
         $stmt = $pdo->query(
-         "SELECT id_user, username, nama, spesialisasi, foto, role, aktif
-          FROM users
-          ORDER BY (CASE WHEN role = 'owner' THEN 0 ELSE 1 END) ASC, nama ASC, id_user ASC"
-     );
-
+            "SELECT id_user, username, nama, spesialisasi, foto, role, aktif
+             FROM users
+             ORDER BY id_user ASC"
+        );
         kirimJsonAkun(200, [
             'success' => true,
             'data' => array_map('tampilkanAkun', $stmt->fetchAll(PDO::FETCH_ASSOC))

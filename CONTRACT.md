@@ -1545,7 +1545,7 @@ Akun yang dinonaktifkan tidak muncul di daftar ini. Pengelolaan akun barber (tam
 
 ### 10.1 Daftar akun barber
 
-`GET /api/barber/akun.php` → `200`, berisi semua akun `role = barber` (termasuk yang nonaktif), urut nama A–Z.
+`GET /api/barber/akun.php` → `200`, berisi semua akun (`role = owner` dan `barber`, termasuk yang nonaktif), urut `id_user` (urutan data masuk), sesuai tabel Data Barber. Frontend memakai `role` untuk badge "Owner" dan menyembunyikan tombol Ubah Profil, Reset Password, dan Nonaktifkan pada baris owner (endpoint tersebut hanya untuk barber).
 
 ```json
 {
