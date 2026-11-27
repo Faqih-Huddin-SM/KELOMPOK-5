@@ -20,7 +20,7 @@ include __DIR__ . '/../includes/header.php';
     <div class="barber-heading-row">
         <div class="barber-heading-text">
             <h1>Data Barber</h1>
-            <p>Daftar barber yang terdaftar aktif</p>
+            <p>Kelola data dan informasi barber Kataji Barber</p>
         </div>
         <button type="button" id="btnTambahBarber" class="barber-btn-tambah">
             + Tambah Barber
