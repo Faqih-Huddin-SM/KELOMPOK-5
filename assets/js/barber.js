@@ -38,6 +38,8 @@ document.addEventListener('DOMContentLoaded', function () {
     // DOM refs — pencarian & pagination
     const inputCari         = document.getElementById('barberSearch');
     const emptyText         = document.getElementById('barberEmptyText');
+    const emptySub          = document.getElementById('barberEmptySub');
+    const btnCariHapus      = document.getElementById('barberSearchClear');
     const footerTabel       = document.getElementById('barberTableFooter');
     const infoTabel         = document.getElementById('barberInfo');
     const btnPrev           = document.getElementById('barberPrev');
@@ -298,7 +300,20 @@ document.addEventListener('DOMContentLoaded', function () {
 
         if (filtered.length === 0) {
             if (emptyText) {
-                emptyText.textContent = kataKunci ? 'Barber tidak ditemukan' : 'Belum ada barber';
+                let judul = 'Belum ada barber';
+                let sub = 'Barber yang ditambahkan akan tampil di sini.';
+                if (kataKunci) {
+                    judul = 'Barber tidak ditemukan';
+                    sub = 'Coba kata kunci lain atau hapus pencarian.';
+                } else if (filterAktif === 'nonaktif') {
+                    judul = 'Belum ada barber nonaktif';
+                    sub = 'Barber yang dinonaktifkan akan tampil di sini.';
+                } else if (filterAktif === 'aktif') {
+                    judul = 'Belum ada barber aktif';
+                    sub = 'Barber yang diaktifkan akan tampil di sini.';
+                }
+                emptyText.textContent = judul;
+                if (emptySub) emptySub.textContent = sub;
             }
             setEmpty(true);
             renderPagination(0, 0);
@@ -362,8 +377,7 @@ document.addEventListener('DOMContentLoaded', function () {
         tdNo.className = 'barber-col-no';
         tdNo.textContent = nomor || '';
 
-        // Kolom Foto (disembunyikan lewat CSS sesuai desain; hapus aturan
-        // .barber-col-foto { display: none } di style.css untuk menampilkan lagi)
+        // Kolom Foto (avatar 40px; tanpa foto tampil inisial)
         const tdFoto = document.createElement('td');
         tdFoto.className = 'barber-col-foto';
         tdFoto.innerHTML = `<div class="barber-avatar-cell">${buatAvatarHTML(barber, 40)}</div>`;
@@ -404,11 +418,7 @@ document.addEventListener('DOMContentLoaded', function () {
         btnEdit.textContent = 'Ubah Profil';
         btnEdit.addEventListener('click', function () { bukaModalUbah(barber); });
 
-        const btnReset = document.createElement('button');
-        btnReset.type = 'button';
-        btnReset.className = 'barber-btn-aksi barber-btn-aksi--reset';
-        btnReset.textContent = 'Reset Password';
-        btnReset.addEventListener('click', function () { bukaModalReset(barber); });
+        // Tombol Reset Password dipindah ke dalam modal Ubah Profil (sesuai desain)
 
         // Tombol Nonaktifkan / Aktifkan (menggantikan toggle switch)
         const btnStatus = document.createElement('button');
@@ -425,7 +435,6 @@ document.addEventListener('DOMContentLoaded', function () {
         });
 
         grupAksi.appendChild(btnEdit);
-        grupAksi.appendChild(btnReset);
         grupAksi.appendChild(btnStatus);
         tdAksi.appendChild(grupAksi);
 
@@ -462,7 +471,20 @@ document.addEventListener('DOMContentLoaded', function () {
         inputCari.addEventListener('input', function () {
             kataKunci = inputCari.value.trim();
             halamanAktif = 1;
+            if (btnCariHapus) btnCariHapus.hidden = !inputCari.value;
             renderTabel();
+        });
+    }
+
+    // Tombol X untuk menghapus kata kunci pencarian
+    if (btnCariHapus && inputCari) {
+        btnCariHapus.addEventListener('click', function () {
+            inputCari.value = '';
+            kataKunci = '';
+            halamanAktif = 1;
+            btnCariHapus.hidden = true;
+            renderTabel();
+            inputCari.focus();
         });
     }
 
@@ -713,7 +735,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
     let fotoUbahDihapus = false;
 
+    let barberUbahSaatIni = null;   // barber yang sedang dibuka di modal Ubah Profil
+
     function bukaModalUbah(barber) {
+        barberUbahSaatIni = barber;
         resetSemua();
         fotoUbahDihapus = false;
         ubahIdUser.value = barber.id_user;
@@ -723,9 +748,19 @@ document.addEventListener('DOMContentLoaded', function () {
 
         // Preview foto
         aturPreviewFoto(previewFotoUbah, inisialUbah, imgPreviewUbah, barber, barber.nama);
+        isiNamaFileUbah(barber.foto || barber.foto_url);
 
         bukaModal(modalUbah);
         if (ubahNama) ubahNama.focus();
+    }
+
+    // Nama file foto di samping tombol Ganti/Hapus Foto
+    function isiNamaFileUbah(teks) {
+        const el = document.getElementById('namaFileUbah');
+        if (!el) return;
+        const nama = teks ? String(teks).split('?')[0].split('/').pop() : '';
+        el.textContent = nama;
+        el.title = nama;
     }
 
     function tutupModalUbah() {
@@ -751,6 +786,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 inputFotoUbah.value = '';
                 return;
             }
+            isiNamaFileUbah(file.name);
             const reader = new FileReader();
             reader.onload = function (e) {
                 imgPreviewUbah.src = e.target.result;
@@ -759,6 +795,17 @@ document.addEventListener('DOMContentLoaded', function () {
                 fotoUbahDihapus = false;
             };
             reader.readAsDataURL(file);
+        });
+    }
+
+    // Tombol Reset Password di dalam modal Ubah Profil
+    const btnResetDariUbah = document.getElementById('btnResetPasswordUbah');
+    if (btnResetDariUbah) {
+        btnResetDariUbah.addEventListener('click', function () {
+            const barber = barberUbahSaatIni;
+            if (!barber) return;
+            tutupModalUbah();
+            bukaModalReset(barber);
         });
     }
 
@@ -793,6 +840,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 inisialUbah.textContent = buatInisial(ubahNama.value);
                 inisialUbah.hidden = false;
                 fotoUbahDihapus = true;
+                isiNamaFileUbah('');
                 inputFotoUbah.value = '';
                 // Update data lokal
                 const idx = daftarBarber.findIndex(function (b) { return String(b.id_user) === String(idUser); });
@@ -950,16 +998,17 @@ document.addEventListener('DOMContentLoaded', function () {
             ? `Aktifkan akun ${namaBarber}?`
             : `Nonaktifkan akun ${namaBarber}?`;
         const pesan = aktifBaru
-            ? `${namaBarber} akan bisa login kembali dan namanya muncul di pilihan Nama Barber.`
+            ? `${namaBarber} akan bisa login kembali dan namanya muncul di pilihan nama barber.`
             : `${namaBarber} tidak akan bisa login dan namanya hilang dari pilihan Nama Barber. Riwayat transaksi tetap tersimpan.`;
-        const teksKonfirmasi = aktifBaru ? 'Ya, Aktifkan' : 'Ya, Nonaktifkan';
+        const teksKonfirmasi = aktifBaru ? 'Ya, aktif' : 'Ya, Nonaktifkan';
 
         const setuju = await katajiKonfirmasi({
             judul: judul,
             pesan: pesan,
             teksBatal: 'Batal',
             teksKonfirmasi: teksKonfirmasi,
-            tipe: 'danger'
+            tipe: aktifBaru ? 'primary' : 'danger',
+            ikon: !aktifBaru
         });
 
         if (!setuju) return;
@@ -988,18 +1037,20 @@ document.addEventListener('DOMContentLoaded', function () {
         pesan = 'Apakah Anda yakin?',
         teksBatal = 'Batal',
         teksKonfirmasi = 'Ya, Lanjutkan',
-        tipe = 'danger'
+        tipe = 'danger',
+        ikon = false
     }) {
         return new Promise(function (resolve) {
             let overlay = document.getElementById('katajiModalKonfirmasi');
             if (!overlay) {
                 overlay = document.createElement('div');
                 overlay.id = 'katajiModalKonfirmasi';
-                overlay.className = 'kataji-confirm-overlay';
+                overlay.className = 'kataji-confirm-overlay barber-confirm';
                 overlay.setAttribute('role', 'dialog');
                 overlay.setAttribute('aria-modal', 'true');
                 overlay.innerHTML = `
                     <div class="kataji-confirm-box">
+                        <div class="kataji-confirm-icon" id="katajiConfirmIcon" aria-hidden="true" hidden>!</div>
                         <h3 class="kataji-confirm-title" id="katajiConfirmTitle"></h3>
                         <p class="kataji-confirm-desc" id="katajiConfirmDesc"></p>
                         <div class="kataji-confirm-actions">
@@ -1015,6 +1066,10 @@ document.addEventListener('DOMContentLoaded', function () {
             const descEl  = overlay.querySelector('#katajiConfirmDesc');
             const btnBatal = overlay.querySelector('#btnConfirmBatal');
             const btnAksi  = overlay.querySelector('#btnConfirmAksi');
+
+            const ikonEl = overlay.querySelector('#katajiConfirmIcon');
+            if (ikonEl) ikonEl.hidden = !ikon;
+            overlay.querySelector('.kataji-confirm-box').classList.toggle('has-icon', !!ikon);
 
             titleEl.textContent = judul;
             descEl.textContent  = pesan;
