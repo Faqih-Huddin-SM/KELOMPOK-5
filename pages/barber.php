@@ -43,6 +43,9 @@ include __DIR__ . '/../includes/header.php';
                     <path d="M21 21l-4.3-4.3"/>
                 </svg>
                 <input type="search" id="barberSearch" placeholder="Cari nama, username, atau spesialisasi..." aria-label="Cari barber" autocomplete="off">
+                <button type="button" class="barber-search-clear" id="barberSearchClear" aria-label="Hapus pencarian" hidden>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" aria-hidden="true"><path d="M5 5l14 14M19 5L5 19"/></svg>
+                </button>
             </div>
         </div>
 
@@ -54,11 +57,12 @@ include __DIR__ . '/../includes/header.php';
 
         <!-- Empty State -->
         <div id="barberEmptyState" class="barber-empty-state" hidden>
-            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                <circle cx="12" cy="8" r="4"/>
-                <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
+            <svg class="barber-empty-icon" width="38" height="48" viewBox="0 0 38 48" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <circle cx="19" cy="10" r="8"/>
+                <path d="M3 46c0-9 7-15 16-15s16 6 16 15z"/>
             </svg>
-            <span id="barberEmptyText">Belum ada barber</span>
+            <span class="barber-empty-title" id="barberEmptyText">Belum ada barber</span>
+            <span class="barber-empty-sub" id="barberEmptySub">Barber yang ditambahkan akan tampil di sini.</span>
         </div>
 
         <!-- Table -->
@@ -212,10 +216,12 @@ include __DIR__ . '/../includes/header.php';
                         <img id="imgPreviewUbah" src="" alt="Foto barber" hidden>
                     </div>
                     <div class="barber-foto-actions">
+                        <span class="barber-foto-label">Foto Barber (opsional)</span>
                         <div class="barber-foto-btn-row">
                             <label for="inputFotoUbah" class="btn-unggah-foto">Ganti Foto</label>
                             <input type="file" id="inputFotoUbah" name="foto_barber" accept="image/jpeg,image/png" hidden>
                             <button type="button" class="btn-hapus-foto" id="btnHapusFoto">Hapus Foto</button>
+                            <span class="barber-foto-namafile" id="namaFileUbah"></span>
                         </div>
                         <p class="barber-modal-hint">JPG atau PNG, maksimal 10 MB.</p>
                         <p class="barber-modal-hint">Bila kosong, halaman publik memakai inisial.</p>
@@ -249,6 +255,16 @@ include __DIR__ . '/../includes/header.php';
                     <label for="ubahSpesialisasi"><strong>Spesialisasi <span style="font-weight:400;color:var(--text-secondary)">(opsional)</span></strong></label>
                     <input type="text" id="ubahSpesialisasi" name="spesialisasi" maxlength="100" placeholder="Contoh: Fade, Pompadour">
                     <span id="errorUbahSpesialisasi" class="barber-field-error"></span>
+                    <small class="barber-modal-hint">Maksimal 100 karakter</small>
+                </div>
+
+                <!-- Password (membuka modal Reset Password) -->
+                <div class="barber-password-row">
+                    <div class="barber-password-info">
+                        <strong>Password</strong>
+                        <span>Atur ulang password bila barber lupa.</span>
+                    </div>
+                    <button type="button" class="barber-btn-reset-pw" id="btnResetPasswordUbah">Reset Password</button>
                 </div>
 
             </div><!-- /barber-modal-body -->
@@ -297,6 +313,6 @@ include __DIR__ . '/../includes/header.php';
     </div>
 </div>
 
-<script src="/KELOMPOK-5/assets/js/barber.js?v=8"></script>
+<script src="/KELOMPOK-5/assets/js/barber.js?v=10"></script>
 
 <?php include __DIR__ . '/../includes/footer.php'; ?>
