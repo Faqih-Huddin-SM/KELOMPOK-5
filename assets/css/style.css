@@ -5858,10 +5858,6 @@ body .pengeluaran-toast[hidden] {
     background: #fff !important;
 }
 
-.pemasukan-page .pemasukan-card table.data-table th {
-    /* Jika ada kode bawaan di sini, biarkan saja */
-}
-
 /* 1. Hapus semua garis border bawaan pada seluruh sel tabel */
 .pemasukan-page .pemasukan-card table.data-table th,
 .pemasukan-page .pemasukan-card table.data-table td {
@@ -8865,4 +8861,1869 @@ body .pengeluaran-toast[hidden] {
         width: 100%;
         justify-content: flex-end;
     }
+}
+
+
+/* ======================================================
+   DATA BARBER PAGE
+   Tambahan untuk halaman manajemen barber (owner only)
+====================================================== */
+
+/* Layout utama halaman */
+.barber-page {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    padding: 8px 0 32px;
+    max-width: 1100px;
+}
+
+/* Heading row: judul kiri + tombol kanan */
+.barber-heading-row {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.barber-heading-text h1 {
+    margin: 0 0 4px;
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--text-main);
+    line-height: 1.2;
+}
+
+.barber-heading-text p {
+    margin: 0;
+    font-size: 14px;
+    color: var(--text-secondary);
+}
+
+/* Tombol "+ Tambah Barber" */
+.barber-btn-tambah {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 20px;
+    background: var(--primary-navy);
+    color: #ffffff;
+    border: none;
+    border-radius: 10px;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background-color 0.18s ease;
+}
+
+.barber-btn-tambah:hover {
+    background: var(--secondary-indigo);
+}
+
+/* Filter Tabs */
+.barber-filter-tabs {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.barber-tab {
+    padding: 7px 20px;
+    border: 1.5px solid var(--border-color);
+    border-radius: 999px;
+    background: transparent;
+    font-family: inherit;
+    font-size: 13.5px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.barber-tab:hover {
+    border-color: var(--primary-navy);
+    color: var(--primary-navy);
+}
+
+.barber-tab.active {
+    background: var(--primary-navy);
+    border-color: var(--primary-navy);
+    color: #ffffff;
+    font-weight: 600;
+}
+
+/* Card wrapper */
+.barber-card {
+    background: #ffffff;
+    border-radius: 16px;
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+}
+
+/* Table wrapper + scrollable */
+.barber-table-wrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* Tabel */
+.barber-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+}
+
+.barber-table thead th {
+    padding: 14px 16px;
+    text-align: left;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    background: var(--soft-bg);
+    border-bottom: 1px solid var(--border-color);
+    white-space: nowrap;
+}
+
+.barber-table tbody td {
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--border-color);
+    vertical-align: middle;
+    color: var(--text-main);
+}
+
+.barber-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.barber-table tbody tr:hover td {
+    background: var(--soft-bg);
+}
+
+/* Avatar cell wrapper */
+.barber-avatar-cell {
+    display: flex;
+    align-items: center;
+}
+
+/* Avatar (gambar bulat) */
+.barber-avatar {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    overflow: hidden;
+    flex-shrink: 0;
+    object-fit: cover;
+}
+
+.barber-avatar--inisial {
+    background: #B9BCFF;
+    color: var(--primary-navy);
+    font-weight: 700;
+}
+
+.barber-avatar--foto {
+    display: block;
+    object-fit: cover;
+}
+
+/* Badge status */
+.barber-status-badge {
+    display: inline-block;
+    padding: 3px 12px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.barber-status-badge--aktif {
+    background: var(--success-bg);
+    color: var(--success);
+}
+
+.barber-status-badge--nonaktif {
+    background: var(--error-bg);
+    color: var(--error);
+}
+
+/* Kolom Aksi */
+.barber-aksi {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    white-space: nowrap;
+}
+
+.barber-btn-aksi {
+    padding: 5px 14px;
+    border-radius: 6px;
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.barber-btn-aksi--edit {
+    background: transparent;
+    border: 1.5px solid var(--primary-navy);
+    color: var(--primary-navy);
+}
+
+.barber-btn-aksi--edit:hover {
+    background: var(--primary-navy);
+    color: #ffffff;
+}
+
+.barber-btn-aksi--reset {
+    background: transparent;
+    border: 1.5px solid #9CA3AF;
+    color: #6B7280;
+}
+
+.barber-btn-aksi--reset:hover {
+    background: #F3F4F6;
+    border-color: #6B7280;
+    color: #374151;
+}
+
+/* Toggle Switch */
+.barber-toggle {
+    position: relative;
+    display: inline-block;
+    width: 40px;
+    height: 22px;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+.barber-toggle input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+    position: absolute;
+}
+
+.barber-toggle-track {
+    position: absolute;
+    inset: 0;
+    border-radius: 999px;
+    background: #D1D5DB;
+    transition: background-color 0.2s ease;
+}
+
+.barber-toggle-track::after {
+    content: '';
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: #ffffff;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    transition: transform 0.2s ease;
+}
+
+.barber-toggle input:checked + .barber-toggle-track {
+    background: var(--primary-navy);
+}
+
+.barber-toggle input:checked + .barber-toggle-track::after {
+    transform: translateX(18px);
+}
+
+.barber-toggle input:focus-visible + .barber-toggle-track {
+    outline: 3px solid rgba(23, 24, 107, 0.3);
+    outline-offset: 2px;
+}
+
+/* Loading State */
+.barber-loading-state {
+    min-height: 360px;
+    margin-top: 8px;
+    padding: 32px 20px;
+    border-radius: 14px;
+    background: #F4F5FB;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    text-align: center;
+}
+
+.barber-loading-text {
+    font-size: 13px;
+    font-weight: 400;
+    color: #6B6B6B;
+}
+
+.barber-spinner {
+    width: 28px;
+    height: 28px;
+    border: 3px solid #DCE0F2;
+    border-top-color: var(--primary-navy);
+    border-radius: 50%;
+    animation: barberSpin 0.8s linear infinite;
+    flex-shrink: 0;
+}
+
+@keyframes barberSpin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes barberSkeletonShimmer {
+    0%   { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+/* Empty State */
+.barber-empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 56px 24px;
+    color: var(--text-secondary);
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.barber-empty-state svg {
+    color: #CBD5E1;
+}
+
+/* ======================================================
+   MODAL BARBER (Tambah / Ubah / Reset)
+====================================================== */
+
+.barber-modal-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 10000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    background: rgba(0, 0, 0, 0.55);
+    box-sizing: border-box;
+}
+
+.barber-modal-overlay.is-open {
+    display: flex;
+}
+
+body.barber-modal-open {
+    overflow: hidden;
+}
+
+.barber-modal {
+    width: 100%;
+    max-width: 480px;
+    max-height: 92vh;
+    display: flex;
+    flex-direction: column;
+    background: #ffffff;
+    border-radius: 20px;
+    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.22);
+    overflow: hidden;
+}
+
+.barber-modal--narrow {
+    max-width: 400px;
+}
+
+/* Modal Header */
+.barber-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 24px 16px;
+    border-bottom: 1px solid var(--border-color);
+    flex-shrink: 0;
+}
+
+.barber-modal-header h2 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text-main);
+}
+
+.barber-modal-close {
+    background: none;
+    border: none;
+    font-size: 22px;
+    line-height: 1;
+    color: var(--text-secondary);
+    cursor: pointer;
+    padding: 2px 6px;
+    border-radius: 6px;
+    transition: color 0.15s ease, background-color 0.15s ease;
+}
+
+.barber-modal-close:hover {
+    color: var(--text-main);
+    background: var(--soft-bg);
+}
+
+/* Banner error di atas modal */
+.barber-modal-banner-error {
+    margin: 0;
+    padding: 10px 24px;
+    background: var(--error-bg);
+    border-bottom: 1px solid #FECACA;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--error);
+    flex-shrink: 0;
+}
+
+/* Modal Body */
+.barber-modal-body {
+    padding: 20px 24px;
+    overflow-y: auto;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+/* Foto row */
+.barber-foto-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+}
+
+.barber-foto-preview {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    background: #B9BCFF;
+    color: var(--primary-navy);
+    font-size: 28px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    flex-shrink: 0;
+    position: relative;
+}
+
+.barber-foto-preview img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
+    display: block;
+}
+
+.barber-foto-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    justify-content: center;
+    flex: 1;
+}
+
+.barber-foto-btn-row {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+/* Tombol Unggah/Ganti Foto */
+.btn-unggah-foto {
+    display: inline-block;
+    padding: 7px 16px;
+    border: 1.5px solid var(--primary-navy);
+    border-radius: 999px;
+    color: var(--primary-navy);
+    background: transparent;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+    white-space: nowrap;
+}
+
+.btn-unggah-foto:hover {
+    background: var(--soft-bg);
+}
+
+/* Tombol Hapus Foto */
+.btn-hapus-foto {
+    display: inline-block;
+    padding: 7px 16px;
+    border: 1.5px solid #FBBEBE;
+    border-radius: 999px;
+    color: var(--error);
+    background: transparent;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+    white-space: nowrap;
+}
+
+.btn-hapus-foto:hover {
+    background: var(--error-bg);
+}
+
+.btn-hapus-foto:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* Hint teks */
+.barber-modal-hint {
+    margin: 2px 0 0;
+    font-size: 11.5px;
+    color: var(--text-secondary);
+    line-height: 1.4;
+}
+
+/* Field group */
+.barber-modal-group {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.barber-modal-group label {
+    font-size: 13.5px;
+    font-weight: 500;
+    color: var(--text-main);
+}
+
+.barber-modal-group input:not([type="file"]):not([type="checkbox"]) {
+    width: 100%;
+    padding: 9px 13px;
+    border: 1.5px solid var(--border-color);
+    border-radius: 10px;
+    font-family: inherit;
+    font-size: 14px;
+    color: var(--text-main);
+    background: #ffffff;
+    outline: none;
+    transition: border-color 0.18s ease, box-shadow 0.18s ease;
+    box-sizing: border-box;
+}
+
+.barber-modal-group input:not([type="file"]):not([type="checkbox"]):focus {
+    border-color: var(--primary-navy);
+    box-shadow: 0 0 0 3px rgba(23, 24, 107, 0.12);
+}
+
+.barber-modal-group input.is-invalid {
+    border-color: var(--error);
+}
+
+.barber-modal-group input.is-invalid:focus {
+    box-shadow: 0 0 0 3px rgba(214, 69, 69, 0.15);
+}
+
+.barber-modal-group input:disabled {
+    background: var(--soft-bg);
+    color: var(--text-secondary);
+    cursor: not-allowed;
+}
+
+/* Field error teks */
+.barber-field-error {
+    display: block;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--error);
+    min-height: 1em;
+}
+
+/* Username wrapper (dengan ikon gembok) */
+.barber-username-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.barber-username-wrapper input {
+    width: 100%;
+    padding-right: 38px !important;
+}
+
+.barber-lock-icon {
+    position: absolute;
+    right: 12px;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    pointer-events: none;
+}
+
+/* Reset subtitle */
+.barber-reset-subtitle {
+    margin: 0;
+    font-size: 14px;
+    color: var(--text-secondary);
+}
+
+/* Modal Footer */
+.barber-modal-footer {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 10px;
+    padding: 16px 24px;
+    border-top: 1px solid var(--border-color);
+    flex-shrink: 0;
+}
+
+.barber-btn-batal {
+    padding: 9px 24px;
+    border: 1.5px solid var(--primary-navy);
+    border-radius: 999px;
+    background: transparent;
+    color: var(--primary-navy);
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+}
+
+.barber-btn-batal:hover {
+    background: var(--soft-bg);
+}
+
+.barber-btn-simpan {
+    padding: 9px 28px;
+    border: none;
+    border-radius: 999px;
+    background: var(--primary-navy);
+    color: #ffffff;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+}
+
+.barber-btn-simpan:hover {
+    background: var(--secondary-indigo);
+}
+
+.barber-btn-simpan:disabled {
+    opacity: 0.65;
+    cursor: not-allowed;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+    .barber-heading-row {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .barber-modal-footer {
+        flex-direction: column-reverse;
+        align-items: stretch;
+    }
+
+    .barber-btn-batal,
+    .barber-btn-simpan {
+        width: 100%;
+        text-align: center;
+    }
+
+    .barber-foto-row {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
+
+    .barber-foto-actions {
+        align-items: center;
+    }
+}
+
+
+/* ======================================================
+   MODAL BARBER — PERBAIKAN LAYOUT (semua modal barber)
+   <form> berada di antara .barber-modal dan body/footer, jadi
+   harus ikut flex agar body bisa di-scroll dan tombol Batal/Simpan
+   di footer tidak terpotong pada layar pendek.
+====================================================== */
+.barber-modal > form {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+}
+
+/* Pastikan <img hidden> pada pratinjau foto benar-benar tersembunyi
+   (display:block di atas menimpa atribut hidden) */
+.barber-foto-preview img[hidden],
+.barber-foto-preview span[hidden] {
+    display: none;
+}
+
+/* ======================================================
+   MODAL TAMBAH BARBER — TAMPILAN SESUAI DESAIN FIGMA
+   Khusus #modalTambahBarber (Ubah Profil & Reset tidak berubah)
+====================================================== */
+#modalTambahBarber .barber-modal {
+    max-width: 480px;
+    border-radius: 24px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+}
+
+/* Header: judul saja, tanpa garis pemisah */
+#modalTambahBarber .barber-modal-header {
+    padding: 32px 32px 0;
+    border-bottom: none;
+}
+
+#modalTambahBarber .barber-modal-header h2 {
+    font-size: 22px;
+    line-height: 28px;
+    font-weight: 700;
+}
+
+#modalTambahBarber .barber-modal-banner-error {
+    margin: 16px 32px 0;
+    padding: 10px 14px;
+    border: 1px solid #FECACA;
+    border-radius: 10px;
+}
+
+/* Body: rapat, hint tepat di bawah input */
+#modalTambahBarber .barber-modal-body {
+    padding: 32px 32px 0;
+    gap: 4px;
+}
+
+/* Foto */
+#modalTambahBarber .barber-foto-row {
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 6px;
+}
+
+#modalTambahBarber .barber-foto-preview {
+    width: 64px;
+    height: 64px;
+    background: #E9EAF8;
+    font-size: 24px;
+}
+
+#modalTambahBarber .barber-foto-actions {
+    align-items: flex-start;
+    gap: 0;
+}
+
+#modalTambahBarber .barber-foto-label {
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 16px;
+    color: var(--text-main);
+    margin-bottom: 5px;
+}
+
+/* Tombol Unggah Foto: kecil, tidak melebar */
+#modalTambahBarber .btn-unggah-foto {
+    align-self: flex-start;
+    padding: 5px 18px;
+    border: 2px solid #CACDFF;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 17px;
+    margin-bottom: 4px;
+}
+
+/* Field */
+#modalTambahBarber .barber-modal-group {
+    gap: 5px;
+    margin-bottom: 4px;
+}
+
+#modalTambahBarber .barber-modal-group label {
+    font-size: 13px;
+    line-height: 18px;
+}
+
+#modalTambahBarber .barber-modal-group input:not([type="file"]) {
+    height: 45px;
+    padding: 0 16px;
+    border: 2px solid #BABABA;
+    border-radius: 12px;
+    font-size: 14px;
+}
+
+#modalTambahBarber .barber-modal-group input:not([type="file"]):focus {
+    border-color: var(--primary-navy);
+    box-shadow: none;
+}
+
+#modalTambahBarber .barber-modal-group input.is-invalid,
+#modalTambahBarber .barber-modal-group input.is-invalid:focus {
+    border-color: var(--error);
+}
+
+#modalTambahBarber .barber-modal-hint {
+    margin: 0;
+    font-size: 11.5px;
+}
+
+/* Pesan error tidak memakan ruang bila kosong */
+#modalTambahBarber .barber-field-error {
+    min-height: 0;
+}
+
+#modalTambahBarber .barber-field-error:empty {
+    display: none;
+}
+
+/* Footer: tanpa garis, tombol persegi membulat */
+#modalTambahBarber .barber-modal-footer {
+    padding: 12px 32px 32px;
+    border-top: none;
+    gap: 12px;
+}
+
+#modalTambahBarber .barber-btn-batal,
+#modalTambahBarber .barber-btn-simpan {
+    height: 45px;
+    padding: 0 24px;
+    border-radius: 12px;
+    font-weight: 700;
+}
+
+#modalTambahBarber .barber-btn-batal {
+    min-width: 110px;
+    border: 2px solid #CACDFF;
+}
+
+#modalTambahBarber .barber-btn-simpan {
+    min-width: 140px;
+}
+
+@media (max-width: 600px) {
+    #modalTambahBarber .barber-modal-header {
+        padding: 24px 24px 0;
+    }
+
+    #modalTambahBarber .barber-modal-body {
+        padding: 24px 24px 0;
+    }
+
+    #modalTambahBarber .barber-modal-footer {
+        padding: 12px 24px 24px;
+    }
+
+    #modalTambahBarber .barber-modal-banner-error {
+        margin: 16px 24px 0;
+    }
+
+    #modalTambahBarber .barber-foto-actions {
+        align-items: center;
+    }
+
+    #modalTambahBarber .btn-unggah-foto {
+        align-self: center;
+    }
+}
+
+
+/* ======================================================
+   DATA BARBER — TABEL SESUAI DESAIN FIGMA
+   Tab Semua/Aktif/Tidak aktif + pencarian, tabel, tombol aksi,
+   pagination. Semua aturan di-scope ke .barber-page dan
+   menimpa aturan lama tanpa menghapusnya.
+====================================================== */
+
+/* Card */
+.barber-page .barber-card {
+    /* Reset: .barber-card juga dipakai kartu "Barber hari ini" di dashboard
+       (width 185px, flex, text-align center) dan ikut menimpa kartu ini. */
+    width: 100%;
+    display: block;
+    text-align: left;
+    box-sizing: border-box;
+    padding: 18px 18px 20px;
+    border: none;
+    border-radius: 20px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.18);
+}
+
+/* Toolbar: tab di kiri, pencarian di kanan */
+.barber-page .barber-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-bottom: 14px;
+}
+
+.barber-page .barber-tab {
+    height: 38px;
+    padding: 0 18px;
+    border: 2px solid #CACDFF;
+    color: var(--text-main);
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.barber-page .barber-tab:hover {
+    border-color: var(--primary-navy);
+    color: var(--primary-navy);
+}
+
+.barber-page .barber-tab.active,
+.barber-page .barber-tab.active:hover {
+    background: var(--primary-navy);
+    border-color: var(--primary-navy);
+    color: #ffffff;
+}
+
+/* Pencarian */
+.barber-page .barber-search {
+    position: relative;
+    flex: 0 1 375px;
+    min-width: 220px;
+}
+
+.barber-page .barber-search svg {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #6B6B6B;
+    pointer-events: none;
+}
+
+.barber-page .barber-search input {
+    width: 100%;
+    height: 42px;
+    padding: 0 14px 0 44px;
+    border: 2px solid #BBBBBB;
+    border-radius: 12px;
+    background: #ffffff;
+    font-family: inherit;
+    font-size: 13px;
+    color: var(--text-main);
+    outline: none;
+    box-sizing: border-box;
+    transition: border-color 0.18s ease;
+}
+
+.barber-page .barber-search input::placeholder {
+    color: #8A8A8A;
+}
+
+.barber-page .barber-search input:focus {
+    border-color: var(--primary-navy);
+}
+
+/* Tabel */
+.barber-page .barber-table {
+    min-width: 820px;
+}
+
+.barber-page .barber-table thead th {
+    padding: 8px 12px;
+    font-size: 13px;
+    font-weight: 400;
+    text-transform: none;
+    letter-spacing: 0;
+    color: #6B6B6B;
+    background: transparent;
+    border-bottom: 1px solid #BABABA;
+}
+
+.barber-page .barber-table tbody td {
+    height: 44px;
+    padding: 2px 12px;
+    border-bottom: 1px solid #EEEFF9;
+    vertical-align: middle;
+}
+
+.barber-page .barber-table tbody tr:last-child td {
+    border-bottom: 1px solid #EEEFF9;
+}
+
+.barber-page .barber-col-no {
+    width: 48px;
+}
+
+/* Kolom Foto: avatar 40px (12px padding kiri + 40px + 12px padding kanan) */
+.barber-page .barber-col-foto {
+    width: 64px;
+}
+
+.barber-page .barber-col-foto .barber-avatar-cell {
+    width: 40px;
+    height: 40px;
+}
+
+.barber-page .barber-col-foto .barber-avatar {
+    width: 40px;
+    height: 40px;
+}
+
+/* Avatar inisial (tanpa foto) sesuai desain */
+.barber-page .barber-avatar--inisial {
+    background: #E9EAF8;
+    color: var(--primary-navy);
+    font-weight: 700;
+}
+
+/* Kolom Nama: Ellipsis (...) jika nama panjang */
+.barber-page .barber-col-nama {
+    max-width: 190px;
+    white-space: nowrap;
+}
+
+.barber-page .barber-nama-cell {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    max-width: 100%;
+    vertical-align: middle;
+}
+
+.barber-page .barber-nama-teks {
+    display: inline-block;
+    max-width: 180px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-weight: 700;
+    vertical-align: middle;
+}
+
+.barber-page .barber-nama-teks--owner {
+    max-width: 120px;
+}
+
+/* Kolom Spesialisasi: Ellipsis (...) jika teks panjang, sama seperti Nama */
+.barber-page .barber-col-spes {
+    max-width: 180px;
+    white-space: nowrap;
+    color: #6B6B6B;
+}
+
+.barber-page .barber-spes-cell {
+    display: inline-flex;
+    align-items: center;
+    max-width: 100%;
+    vertical-align: middle;
+}
+
+.barber-page .barber-spes-teks {
+    display: inline-block;
+    max-width: 180px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    vertical-align: middle;
+}
+
+.barber-page .barber-col-status,
+.barber-page .barber-col-aksi,
+.barber-page .barber-table td.barber-aksi {
+    text-align: center;
+}
+
+/* Badge Owner */
+.barber-owner-badge {
+    display: inline-block;
+    margin-left: 6px;
+    padding: 2px 10px;
+    border-radius: 999px;
+    background: #FFD900;
+    color: #1A1A1A;
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 1.4;
+    vertical-align: middle;
+    flex-shrink: 0;
+}
+
+/* Badge status */
+.barber-page .barber-status-badge {
+    min-width: 80px;
+    padding: 2px 0;
+    border-radius: 6px;
+    text-align: center;
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1.4;
+}
+
+/* Tombol aksi */
+.barber-page .barber-table td.barber-aksi {
+    display: table-cell;
+    white-space: nowrap;
+}
+
+.barber-page .barber-aksi-group {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.barber-page .barber-btn-aksi {
+    height: 28px;
+    line-height: 24px;
+    padding: 0 11px;
+    border: 2px solid transparent;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.barber-page .barber-btn-aksi--edit {
+    background: #ffffff;
+    border-color: #CACDFF;
+    color: var(--primary-navy);
+}
+
+.barber-page .barber-btn-aksi--edit:hover {
+    background: var(--soft-bg);
+    border-color: #CACDFF;
+    color: var(--primary-navy);
+}
+
+.barber-page .barber-btn-aksi--reset {
+    background: var(--primary-navy);
+    border-color: var(--primary-navy);
+    color: #ffffff;
+}
+
+.barber-page .barber-btn-aksi--reset:hover {
+    background: var(--secondary-indigo);
+    border-color: var(--secondary-indigo);
+    color: #ffffff;
+}
+
+.barber-page .barber-btn-aksi--nonaktif,
+.barber-page .barber-btn-aksi--aktif {
+    min-width: 112px;
+    color: #ffffff;
+}
+
+.barber-page .barber-btn-aksi--nonaktif {
+    background: var(--error);
+    border-color: var(--error);
+}
+
+.barber-page .barber-btn-aksi--nonaktif:hover {
+    background: #BF3A3A;
+    border-color: #BF3A3A;
+}
+
+.barber-page .barber-btn-aksi--aktif {
+    background: var(--success);
+    border-color: var(--success);
+}
+
+.barber-page .barber-btn-aksi--aktif:hover {
+    background: #268A4D;
+    border-color: #268A4D;
+}
+
+/* Footer tabel: info, pagination, per halaman */
+.barber-table-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-top: 28px;
+    padding: 0 4px;
+}
+
+.barber-table-footer[hidden] {
+    display: none;
+}
+
+.barber-info {
+    font-size: 12px;
+    color: #1A1A1A;
+}
+
+.barber-pager {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.barber-pager-nav {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 30px;
+    padding: 0 12px;
+    border: 1px solid var(--primary-navy);
+    border-radius: 8px;
+    background: #ffffff;
+    color: var(--primary-navy);
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+}
+
+.barber-pager-nav:not(:disabled):hover {
+    background: var(--soft-bg);
+}
+
+.barber-pager-nav:disabled {
+    border-color: var(--border-color);
+    color: #B9BCFF;
+    cursor: not-allowed;
+}
+
+.barber-page-numbers {
+    display: flex;
+    gap: 6px;
+}
+
+.barber-page-btn {
+    width: 30px;
+    height: 30px;
+    padding: 0;
+    border: 1px solid var(--border-color);
+    border-radius: 50%;
+    background: #ffffff;
+    color: #1A1A1A;
+    font-family: inherit;
+    font-size: 12px;
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+}
+
+.barber-page-btn:hover {
+    background: var(--soft-bg);
+}
+
+.barber-page-btn.is-active {
+    background: var(--primary-navy);
+    border-color: var(--primary-navy);
+    color: #ffffff;
+    font-weight: 600;
+}
+
+.barber-perpage {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 12px;
+    color: #1A1A1A;
+}
+
+.barber-perpage select {
+    -webkit-appearance: none;
+    appearance: none;
+    height: 30px;
+    padding: 0 32px 0 14px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background: #ffffff url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%231A1A1A' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>") no-repeat right 11px center;
+    font-family: inherit;
+    font-size: 13px;
+    color: #1A1A1A;
+    cursor: pointer;
+}
+
+@media (max-width: 600px) {
+    .barber-page .barber-search {
+        flex: 1 1 100%;
+    }
+
+    .barber-table-footer {
+        justify-content: center;
+    }
+}
+
+
+/* Pastikan elemen ber-atribut hidden benar-benar tersembunyi
+   (display:flex/block pada aturan lama menimpa atribut hidden) */
+.barber-page .barber-empty-state[hidden],
+.barber-page .barber-loading-state[hidden],
+.barber-page .barber-table-wrapper[hidden] {
+    display: none;
+}
+
+/* ======================================================
+   MODAL UBAH PROFIL — TAMPILAN SESUAI DESAIN FIGMA
+   Khusus #modalUbahProfil (Tambah & Reset tidak berubah)
+====================================================== */
+#modalUbahProfil .barber-modal {
+    max-width: 480px;
+    border-radius: 24px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+}
+
+/* Header: judul saja, tanpa garis pemisah */
+#modalUbahProfil .barber-modal-header {
+    padding: 32px 32px 0;
+    border-bottom: none;
+}
+
+#modalUbahProfil .barber-modal-header h2 {
+    font-size: 22px;
+    line-height: 28px;
+    font-weight: 700;
+}
+
+#modalUbahProfil .barber-modal-banner-error {
+    margin: 16px 32px 0;
+    padding: 10px 14px;
+    border: 1px solid #FECACA;
+    border-radius: 10px;
+}
+
+/* Body: rapat, hint tepat di bawah input */
+#modalUbahProfil .barber-modal-body {
+    padding: 32px 32px 0;
+    gap: 4px;
+}
+
+/* Foto */
+#modalUbahProfil .barber-foto-row {
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 6px;
+}
+
+#modalUbahProfil .barber-foto-preview {
+    width: 64px;
+    height: 64px;
+    background: #E9EAF8;
+    font-size: 24px;
+}
+
+#modalUbahProfil .barber-foto-actions {
+    align-items: flex-start;
+    gap: 0;
+}
+
+#modalUbahProfil .barber-foto-label {
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 16px;
+    color: var(--text-main);
+    margin-bottom: 5px;
+}
+
+/* Tombol Unggah Foto: kecil, tidak melebar */
+#modalUbahProfil .btn-unggah-foto {
+    align-self: flex-start;
+    padding: 5px 18px;
+    border: 2px solid #CACDFF;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 17px;
+    margin-bottom: 4px;
+}
+
+/* Field */
+#modalUbahProfil .barber-modal-group {
+    gap: 5px;
+    margin-bottom: 4px;
+}
+
+#modalUbahProfil .barber-modal-group label {
+    font-size: 13px;
+    line-height: 18px;
+}
+
+#modalUbahProfil .barber-modal-group input:not([type="file"]) {
+    height: 45px;
+    padding: 0 16px;
+    border: 2px solid #BABABA;
+    border-radius: 12px;
+    font-size: 14px;
+}
+
+#modalUbahProfil .barber-modal-group input:not([type="file"]):focus {
+    border-color: var(--primary-navy);
+    box-shadow: none;
+}
+
+#modalUbahProfil .barber-modal-group input.is-invalid,
+#modalUbahProfil .barber-modal-group input.is-invalid:focus {
+    border-color: var(--error);
+}
+
+#modalUbahProfil .barber-modal-hint {
+    margin: 0;
+    font-size: 11.5px;
+}
+
+/* Pesan error tidak memakan ruang bila kosong */
+#modalUbahProfil .barber-field-error {
+    min-height: 0;
+}
+
+#modalUbahProfil .barber-field-error:empty {
+    display: none;
+}
+
+/* Footer: tanpa garis, tombol persegi membulat */
+#modalUbahProfil .barber-modal-footer {
+    padding: 12px 32px 32px;
+    border-top: none;
+    gap: 12px;
+}
+
+#modalUbahProfil .barber-btn-batal,
+#modalUbahProfil .barber-btn-simpan {
+    height: 45px;
+    padding: 0 24px;
+    border-radius: 12px;
+    font-weight: 700;
+}
+
+#modalUbahProfil .barber-btn-batal {
+    min-width: 110px;
+    border: 2px solid #CACDFF;
+}
+
+#modalUbahProfil .barber-btn-simpan {
+    min-width: 140px;
+}
+
+@media (max-width: 600px) {
+    #modalUbahProfil .barber-modal-header {
+        padding: 24px 24px 0;
+    }
+
+    #modalUbahProfil .barber-modal-body {
+        padding: 24px 24px 0;
+    }
+
+    #modalUbahProfil .barber-modal-footer {
+        padding: 12px 24px 24px;
+    }
+
+    #modalUbahProfil .barber-modal-banner-error {
+        margin: 16px 24px 0;
+    }
+
+    #modalUbahProfil .barber-foto-actions {
+        align-items: center;
+    }
+
+    #modalUbahProfil .btn-unggah-foto {
+        align-self: center;
+    }
+}
+
+/* ---- Khusus Ubah Profil ---- */
+#modalUbahProfil .barber-modal {
+    max-width: 480px;
+}
+
+#modalUbahProfil .barber-modal-header {
+    align-items: center;
+    justify-content: space-between;
+}
+
+#modalUbahProfil .barber-modal-close {
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    font-size: 28px;
+    font-weight: 300;
+    line-height: 26px;
+    color: #6B6B6B;
+}
+
+/* Banner error: kotak merah muda, teks tebal di tengah */
+#modalUbahProfil .barber-modal-banner-error {
+    margin: 16px 32px 0;
+    padding: 10px 14px;
+    border: 2px solid #D64545;
+    border-radius: 12px;
+    background: #FAE8E8;
+    text-align: center;
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 20px;
+}
+
+#modalUbahProfil .barber-modal-body {
+    padding-top: 16px;
+}
+
+/* Foto: placeholder tanpa lingkaran besar, label + tombol ganti/hapus */
+#modalUbahProfil .barber-foto-row {
+    align-items: flex-start;
+    margin-bottom: 8px;
+}
+
+#modalUbahProfil .barber-foto-actions {
+    justify-content: flex-start;
+}
+
+#modalUbahProfil .barber-foto-btn-row {
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 4px;
+}
+
+#modalUbahProfil .btn-unggah-foto,
+#modalUbahProfil .btn-hapus-foto {
+    min-width: 100px;
+    padding: 5px 18px;
+    border-radius: 10px;
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 17px;
+    text-align: center;
+}
+
+#modalUbahProfil .btn-unggah-foto {
+    border: 2px solid #CACDFF;
+}
+
+#modalUbahProfil .btn-hapus-foto {
+    border: 2px solid #FAE8E8;
+    background: #FAE8E8;
+    color: #D64545;
+}
+
+#modalUbahProfil .btn-hapus-foto:hover {
+    background: #F6D5D5;
+    border-color: #F6D5D5;
+}
+
+#modalUbahProfil .barber-foto-namafile {
+    min-width: 0;
+    max-width: 140px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 12px;
+    color: #6B6B6B;
+}
+
+#modalUbahProfil .barber-foto-namafile:empty {
+    display: none;
+}
+
+/* Label "(opsional)" ikut tebal seperti desain */
+#modalUbahProfil .barber-modal-group label span {
+    font-weight: 700 !important;
+    color: inherit !important;
+}
+
+/* Username terkunci */
+#modalUbahProfil .barber-username-wrapper input:disabled,
+#modalUbahProfil .barber-modal-group input:disabled {
+    background: #F3F4FA;
+    border-color: #E5E5EC;
+    color: #1A1A1A;
+    opacity: 1;
+    -webkit-text-fill-color: #1A1A1A;
+}
+
+#modalUbahProfil .barber-lock-icon {
+    right: 14px;
+    color: #6B6B6B;
+}
+
+/* Bagian Password: garis pemisah, teks kiri, tombol Reset Password kanan */
+#modalUbahProfil .barber-password-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-top: 8px;
+    padding-top: 14px;
+    border-top: 2px solid #EEEFF9;
+}
+
+#modalUbahProfil .barber-password-info {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+#modalUbahProfil .barber-password-info strong {
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 20px;
+    color: #1A1A1A;
+}
+
+#modalUbahProfil .barber-password-info span {
+    font-size: 12px;
+    line-height: 16px;
+    color: #6B6B6B;
+}
+
+#modalUbahProfil .barber-btn-reset-pw {
+    flex: none;
+    width: 136px;
+    height: 40px;
+    padding: 0;
+    border: none;
+    border-radius: 10px;
+    background: var(--primary-navy);
+    color: #FFFFFF;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background-color 0.18s ease;
+}
+
+#modalUbahProfil .barber-btn-reset-pw:hover {
+    background: var(--secondary-indigo);
+}
+
+#modalUbahProfil .barber-modal-footer {
+    padding-top: 24px;
+}
+
+/* Border merah tetap tampil walau input sedang fokus */
+#modalUbahProfil .barber-modal-group input.is-invalid:not([type="file"]),
+#modalUbahProfil .barber-modal-group input.is-invalid:not([type="file"]):focus {
+    border-color: var(--error);
+}
+
+/* Rapatkan jarak antar field agar seluruh isi (termasuk Password) muat seperti desain */
+#modalUbahProfil .barber-modal {
+    max-height: 96vh;
+}
+
+#modalUbahProfil .barber-modal-body {
+    gap: 2px;
+}
+
+#modalUbahProfil .barber-modal-group {
+    gap: 3px;
+    margin-bottom: 2px;
+}
+
+@media (max-width: 600px) {
+    #modalUbahProfil .barber-foto-btn-row {
+        flex-wrap: wrap;
+    }
+
+    #modalUbahProfil .barber-password-row {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    #modalUbahProfil .barber-btn-reset-pw {
+        width: 100%;
+    }
+}
+
+/* ======================================================
+   DIALOG KONFIRMASI NONAKTIFKAN / AKTIFKAN (halaman Data Barber)
+   Hanya aktif pada overlay yang dibuat barber.js (.barber-confirm),
+   dialog konfirmasi di halaman lain tidak berubah.
+====================================================== */
+.kataji-confirm-overlay.barber-confirm {
+    background: rgba(0, 0, 0, 0.42);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+}
+
+.barber-confirm .kataji-confirm-box {
+    max-width: 440px;
+    padding: 20px 32px 18px;
+    border-radius: 24px;
+    text-align: center;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+}
+
+.barber-confirm .kataji-confirm-box.has-icon {
+    padding: 30px 32px 40px;
+}
+
+.barber-confirm .kataji-confirm-icon {
+    width: 64px;
+    height: 64px;
+    margin: 0 auto 16px;
+    border-radius: 50%;
+    background: #FAE8E8;
+    color: #D64545;
+    font-size: 34px;
+    font-weight: 700;
+    line-height: 64px;
+    text-align: center;
+}
+
+.barber-confirm .kataji-confirm-icon[hidden] {
+    display: none;
+}
+
+.barber-confirm .kataji-confirm-title {
+    margin: 0 0 8px;
+    font-size: 22px;
+    line-height: 28px;
+}
+
+.barber-confirm .kataji-confirm-desc {
+    margin: 0 auto 16px;
+    max-width: 340px;
+    font-size: 13px;
+    line-height: 20px;
+    color: #6B6B6B;
+}
+
+.barber-confirm .kataji-confirm-box.has-icon .kataji-confirm-desc {
+    max-width: none;
+}
+
+.barber-confirm .kataji-confirm-actions {
+    gap: 24px;
+}
+
+.barber-confirm .btn-confirm-cancel,
+.barber-confirm .btn-confirm-danger,
+.barber-confirm .btn-confirm-primary {
+    height: 44px;
+    padding: 0;
+    border-radius: 12px;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.barber-confirm .btn-confirm-cancel {
+    border: 2px solid #CACDFF;
+    color: var(--primary-navy);
+}
+
+.barber-confirm .btn-confirm-cancel:hover {
+    background: var(--soft-bg);
+}
+
+.barber-confirm .btn-confirm-danger {
+    background: #D64545;
+    border-color: #D64545;
+}
+
+.barber-confirm .btn-confirm-danger:hover {
+    background: #BF3A3A;
+    border-color: #BF3A3A;
+}
+
+/* ======================================================
+   DATA BARBER — STATE LOADING, DATA KOSONG, PENCARIAN TIDAK DITEMUKAN
+   Sesuai desain Figma. Di-scope ke .barber-page.
+====================================================== */
+
+/* Loading: panel abu muda dengan spinner di tengah */
+.barber-page .barber-loading-state {
+    min-height: 472px;
+    margin: 28px -2px 4px -1px;
+    padding: 0 20px 36px;
+    border-radius: 16px;
+    background: #F3F4FA;
+    gap: 11px;
+}
+
+.barber-page .barber-spinner {
+    width: 28px;
+    height: 28px;
+    border: 3px solid #E9EAF8;
+    border-top-color: var(--primary-navy);
+}
+
+.barber-page .barber-loading-text {
+    font-size: 12px;
+    line-height: 18px;
+    font-weight: 400;
+    color: #6B6B6B;
+}
+
+/* Kosong / tidak ditemukan: ikon, judul, subjudul di tengah */
+.barber-page .barber-empty-state {
+    gap: 0;
+    padding: 64px 24px 27px;
+    font-weight: 400;
+}
+
+.barber-page .barber-empty-icon {
+    width: 38px;
+    height: 48px;
+    margin-bottom: 23px;
+    color: #C9CEDF;
+}
+
+.barber-page .barber-empty-title {
+    font-size: 15px;
+    line-height: 22px;
+    font-weight: 400;
+    color: #6B6B6B;
+}
+
+.barber-page .barber-empty-sub {
+    margin-top: 4px;
+    font-size: 12.5px;
+    line-height: 18px;
+    font-weight: 400;
+    color: #9AA0B5;
+}
+
+/* Tombol X di kolom pencarian */
+.barber-page .barber-search-clear {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    padding: 0;
+    border: none;
+    background: transparent;
+    color: var(--primary-navy);
+    cursor: pointer;
+}
+
+.barber-page .barber-search-clear[hidden] {
+    display: none;
+}
+
+.barber-page .barber-search input[type="search"]::-webkit-search-cancel-button {
+    -webkit-appearance: none;
+    appearance: none;
+}
+
+.barber-page .barber-search input {
+    padding-right: 42px;
+}
+
+/* Pop up konfirmasi Nonaktifkan/Aktifkan: tengah atas halaman */
+.kataji-confirm-overlay.barber-confirm {
+    align-items: flex-start;
+    padding-top: 48px;
 }

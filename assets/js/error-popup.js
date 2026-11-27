@@ -63,6 +63,8 @@
             '  <h2 class="connection-modal-title" id="serverErrorTitle">Gagal Memuat Data</h2>' +
             '  <p class="connection-modal-description" id="serverErrorDescription">' +
             '    Server sedang bermasalah sehingga data gagal dimuat. Silakan coba lagi dalam beberapa saat.' +
+            '   Kode kesalahan: 500.' +
+            '  </p>' +
             '  <p class="status-modal-code" hidden>Kode kesalahan: <span></span></p>' +
             '  <div class="connection-modal-actions">' +
             '    <button type="button" class="connection-modal-retry">Coba Lagi</button>' +

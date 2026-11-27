@@ -1,0 +1,358 @@
+/* ======================================================
+   KATAJI BARBER - KONTEN WEB PAGE
+   Lokasi: pages/publik/konten_web/konten_web.css
+   Acuan desain: Figma KONTEN WEB.svg, Error State.svg, Kosong.svg
+====================================================== */
+
+.konten-web-page {
+    font-family: 'Poppins', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    color: #1A1A1A;
+    max-width: 1030px;
+    padding: 4px 0 36px;
+}
+
+/* Header Halaman */
+.kw-header {
+    margin-bottom: 22px;
+}
+
+.kw-title {
+    margin: 0 0 4px;
+    font-size: 32px;
+    font-weight: 700;
+    line-height: 1.2;
+    color: #1A1A1A;
+    letter-spacing: -0.01em;
+}
+
+.kw-subtitle {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 400;
+    line-height: 1.45;
+    color: #6B6B6B;
+}
+
+/* Form Layout */
+.kw-form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.kw-top-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 620fr) minmax(0, 372fr);
+    gap: 18px;
+    align-items: stretch;
+}
+
+/* Card */
+.kw-card {
+    background: #FFFFFF;
+    border-radius: 20px;
+    padding: 28px 32px;
+    box-shadow: 0 4px 4px rgba(0, 0, 0, 0.25);
+    display: flex;
+    flex-direction: column;
+}
+
+.kw-card-head {
+    margin-bottom: 20px;
+}
+
+.kw-card-title {
+    margin: 0 0 4px;
+    font-size: 20px;
+    font-weight: 700;
+    line-height: 1.3;
+    color: #1A1A1A;
+}
+
+.kw-card-desc {
+    margin: 0;
+    font-size: 12.5px;
+    font-weight: 400;
+    line-height: 1.4;
+    color: #6B6B6B;
+}
+
+/* Field */
+.kw-field {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 18px;
+}
+
+.kw-field:last-child {
+    margin-bottom: 0;
+}
+
+.kw-field--sosmed {
+    margin-bottom: 22px;
+}
+
+.kw-field--sosmed:last-child {
+    margin-bottom: 0;
+}
+
+.kw-label {
+    display: block;
+    margin-bottom: 7px;
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 1.35;
+    color: #1A1A1A;
+}
+
+.kw-required {
+    color: #D64545;
+    font-weight: 700;
+    margin-left: 2px;
+}
+
+.kw-optional {
+    font-size: 12.5px;
+    font-weight: 400;
+    color: #6B6B6B;
+    margin-left: 4px;
+}
+
+/* Inputs & Textareas */
+.kw-input,
+.kw-textarea,
+.kw-select {
+    width: 100%;
+    font-family: 'Poppins', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-size: 13.5px;
+    font-weight: 400;
+    line-height: 1.45;
+    color: #1A1A1A;
+    background: #FFFFFF;
+    border: 2px solid #BABABA;
+    border-radius: 12px;
+    outline: none;
+    transition: border-color 0.16s ease, box-shadow 0.16s ease;
+}
+
+.kw-input {
+    height: 44px;
+    padding: 0 14px;
+}
+
+.kw-textarea {
+    padding: 10px 14px;
+    resize: vertical;
+}
+
+.kw-textarea--alamat {
+    min-height: 76px;
+}
+
+.kw-textarea--tentang {
+    min-height: 110px;
+}
+
+.kw-input::placeholder,
+.kw-textarea::placeholder {
+    color: #8E8E8E;
+    opacity: 1;
+}
+
+.kw-input:focus,
+.kw-textarea:focus,
+.kw-select:focus {
+    border-color: #17186B;
+}
+
+/* Jam Buka Row */
+.kw-jam-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.kw-select-wrap {
+    position: relative;
+    width: 126px;
+    flex-shrink: 0;
+}
+
+.kw-select {
+    height: 44px;
+    padding: 0 32px 0 14px;
+    appearance: none;
+    -webkit-appearance: none;
+    cursor: pointer;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%231A1A1A' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+}
+
+.kw-select.is-placeholder {
+    color: #8E8E8E;
+}
+
+.kw-sep {
+    font-size: 13px;
+    font-weight: 400;
+    color: #6B6B6B;
+    white-space: nowrap;
+}
+
+.kw-input--time {
+    width: 84px;
+    flex-shrink: 0;
+    text-align: center;
+    padding: 0 10px;
+}
+
+/* Media Sosial Prefix @ */
+.kw-prefix-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.kw-prefix {
+    position: absolute;
+    left: 14px;
+    font-size: 13.5px;
+    font-weight: 400;
+    color: #6B6B6B;
+    pointer-events: none;
+    user-select: none;
+}
+
+.kw-input--prefixed {
+    padding-left: 34px;
+}
+
+/* Hints, Counters & Errors */
+.kw-hint {
+    margin: 6px 0 0;
+    font-size: 12px;
+    font-weight: 400;
+    line-height: 1.35;
+    color: #6B6B6B;
+}
+
+.kw-error {
+    margin: 6px 0 0;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1.35;
+    color: #D64545;
+}
+
+.kw-error[hidden],
+.kw-hint[hidden] {
+    display: none;
+}
+
+.kw-field-meta {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    margin-top: 6px;
+}
+
+.kw-field-meta .kw-error {
+    margin-top: 0;
+}
+
+.kw-counter {
+    margin-left: auto;
+    font-size: 12px;
+    font-weight: 400;
+    color: #6B6B6B;
+    white-space: nowrap;
+}
+
+/* Error State on Inputs */
+.kw-field.is-error .kw-input,
+.kw-field.is-error .kw-textarea,
+.kw-input.is-error,
+.kw-textarea.is-error,
+.kw-select.is-error {
+    border-color: #D64545;
+}
+
+/* Untuk Jam Buka, status merah dikontrol per input/select agar presisi */
+.kw-field[data-field="jam_buka"].is-error .kw-input:not(.is-error),
+.kw-field[data-field="jam_buka"].is-error .kw-select:not(.is-error) {
+    border-color: #BABABA;
+}
+
+/* Actions / Tombol Simpan */
+.kw-actions {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 4px;
+}
+
+.kw-btn-simpan {
+    min-width: 160px;
+    height: 46px;
+    padding: 0 28px;
+    border: none;
+    border-radius: 12px;
+    background: #17186B;
+    color: #FFFFFF;
+    font-family: 'Poppins', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background-color 0.16s ease, transform 0.12s ease;
+}
+
+.kw-btn-simpan:hover:not(:disabled) {
+    background: #3B3DA8;
+}
+
+.kw-btn-simpan:active:not(:disabled) {
+    transform: translateY(1px);
+}
+
+.kw-btn-simpan:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+/* Responsif */
+@media (max-width: 960px) {
+    .kw-top-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 600px) {
+    .kw-title {
+        font-size: 26px;
+    }
+
+    .kw-card {
+        padding: 20px;
+        border-radius: 16px;
+    }
+
+    .kw-select-wrap {
+        width: calc(50% - 28px);
+        min-width: 110px;
+    }
+
+    .kw-input--time {
+        width: calc(50% - 28px);
+        min-width: 80px;
+    }
+
+    .kw-actions {
+        justify-content: stretch;
+    }
+
+    .kw-btn-simpan {
+        width: 100%;
+    }
+}
