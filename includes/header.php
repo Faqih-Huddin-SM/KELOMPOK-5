@@ -38,7 +38,7 @@ unset($_SESSION['login_notification']);
     <!-- Custom Style -->
     <link
         rel="stylesheet"
-        href="/KELOMPOK-5/assets/css/style.css?v=57"
+        href="/KELOMPOK-5/assets/css/style.css?v=56"
     >
 </head>
 
@@ -143,6 +143,14 @@ unset($_SESSION['login_notification']);
         class="sidebar-link <?= $current_page === 'pelanggan.php' ? 'active' : '' ?>"
     >
         <span>Pelanggan</span>
+    </a>
+
+    <!-- KONTEN WEB -->
+    <a
+        href="/KELOMPOK-5/pages/publik/konten_web/konten_web.php"
+        class="sidebar-link <?= $current_page === 'konten_web.php' ? 'active' : '' ?>"
+    >
+        <span>Konten Web</span>
     </a>
 
 <?php elseif ($role === 'barber'): ?>

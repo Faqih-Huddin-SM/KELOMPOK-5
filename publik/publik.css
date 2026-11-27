@@ -1,0 +1,367 @@
+/* ==============================================================================
+   [Card 6.4] Frontend Developer (Faqih) - Halaman publik Kataji Barbershop (skeleton)
+   Mandiri (tidak memuat style.css/Bootstrap). Responsif: layar toko (>= 1024px,
+   huruf besar & kontras tinggi) dan HP (satu kolom). Semua ukuran memakai rem,
+   jadi cukup mengubah font-size <html> untuk memperbesar seluruh halaman.
+   ============================================================================== */
+
+:root {
+    --navy: #17186B;
+    --navy-dark: #0F104D;
+    --text: #111322;          /* teks utama: kontras tinggi di atas putih (~18:1) */
+    --text-soft: #3F4157;     /* teks sekunder: tetap > 9:1 di atas putih */
+    --bg: #F3F4FA;
+    --white: #FFFFFF;
+    --border: #D7D9F0;
+    --tag-bg: #EEF0FF;
+    --error: #B42323;
+    --error-bg: #FDECEC;
+    --radius: 1.25rem;
+}
+
+* { box-sizing: border-box; }
+
+html {
+    font-size: 16px;               /* HP */
+    -webkit-text-size-adjust: 100%;
+}
+
+/* [Card 6.4] Layar toko: huruf lebih besar agar terbaca dari jauh */
+@media (min-width: 1024px) { html { font-size: 18px; } }
+@media (min-width: 1700px) { html { font-size: 22px; } }
+
+.publik-body {
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    font-family: 'Poppins', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    color: var(--text);
+    background: var(--bg);
+    line-height: 1.5;
+    overflow-x: hidden;            /* jaga-jaga: tidak ada gulir samping */
+}
+
+.publik-container {
+    width: 100%;
+    max-width: 75rem;
+    margin: 0 auto;
+    padding-left: 1rem;
+    padding-right: 1rem;
+}
+
+@media (min-width: 1024px) {
+    .publik-container { padding-left: 2rem; padding-right: 2rem; }
+}
+
+/* ---------- Header ---------- */
+.publik-header {
+    background: var(--white);
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.publik-header-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 0.75rem 1.5rem;
+    padding-top: 0.75rem;
+    padding-bottom: 0.75rem;
+}
+
+.publik-brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+    color: var(--navy);
+    text-decoration: none;
+    min-width: 0;
+}
+
+.publik-brand-logo {
+    width: 3.25rem;
+    height: 3.25rem;
+    object-fit: contain;
+    flex-shrink: 0;
+}
+
+.publik-brand-name {
+    font-size: 1.35rem;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+    line-height: 1.2;
+}
+
+.publik-brand:focus-visible,
+.publik-retry-btn:focus-visible {
+    outline: 3px solid rgba(23, 24, 107, 0.45);
+    outline-offset: 3px;
+    border-radius: 0.5rem;
+}
+
+/* ---------- SLOT (diisi kartu 6.6.5) ----------
+   Slot kosong disembunyikan sehingga tidak meninggalkan celah / merusak susunan.
+   Syarat: tidak ada spasi atau teks di dalam elemen slot saat kosong. */
+.publik-slot:empty { display: none; }
+
+.publik-slot--header {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.5rem 1.25rem;
+}
+.publik-slot--header:empty { display: none; }
+
+.publik-slot--bawah-layanan:not(:empty) { margin-top: 3rem; }
+
+/* ---------- Konten ---------- */
+.publik-main {
+    flex: 1 0 auto;
+    padding-top: 1.75rem;
+    padding-bottom: 2.5rem;
+}
+
+.publik-section + .publik-section { margin-top: 3rem; }
+
+.publik-section-title {
+    margin: 0 0 1.25rem;
+    font-size: 1.6rem;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+    color: var(--navy);
+}
+
+@media (min-width: 1024px) {
+    .publik-main { padding-top: 2.25rem; }
+    .publik-section-title { font-size: 1.75rem; }
+}
+
+/* ---------- Profil barber ---------- */
+.publik-barber-grid {
+    display: grid;
+    grid-template-columns: 1fr;                /* HP: satu kolom */
+    gap: 1rem;
+}
+
+@media (min-width: 640px) {
+    .publik-barber-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.25rem; }
+}
+
+@media (min-width: 1024px) {
+    .publik-barber-grid { grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr)); gap: 1.5rem; }
+}
+
+.publik-barber-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 1.5rem 1.25rem;
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: 0 2px 6px rgba(23, 24, 107, 0.06);
+    min-width: 0;
+}
+
+.publik-avatar-wrap { margin-bottom: 1rem; }
+
+.publik-avatar {
+    display: block;
+    width: 8rem;
+    height: 8rem;
+    border-radius: 50%;
+    object-fit: cover;
+    background: var(--tag-bg);
+    border: 3px solid var(--white);
+    box-shadow: 0 0 0 2px var(--border);
+}
+
+/* Monogram: huruf pertama nama (kapital) bila barber belum punya foto */
+.publik-avatar--monogram {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--navy);
+    color: var(--white);
+    font-size: 3.25rem;
+    font-weight: 700;
+    line-height: 1;
+    user-select: none;
+}
+
+.publik-barber-info { width: 100%; min-width: 0; }
+
+.publik-barber-nama {
+    margin: 0 0 0.75rem;
+    font-size: 1.35rem;
+    font-weight: 700;
+    line-height: 1.3;
+    overflow-wrap: anywhere;          /* nama panjang tidak membuat gulir samping */
+}
+
+.publik-tags {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.5rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.publik-tag {
+    padding: 0.3rem 0.85rem;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    background: var(--tag-bg);
+    color: var(--navy);
+    font-size: 0.9rem;
+    font-weight: 600;
+    line-height: 1.4;
+    overflow-wrap: anywhere;
+}
+
+.publik-spesialisasi-kosong {
+    margin: 0;
+    color: var(--text-soft);
+    font-size: 0.95rem;
+    font-style: italic;
+}
+
+/* [Card 6.4] HP: kartu barber horizontal (foto kiri) agar tidak terlalu panjang */
+@media (max-width: 639px) {
+    .publik-barber-card {
+        flex-direction: row;
+        align-items: center;
+        text-align: left;
+        gap: 1rem;
+        padding: 1rem;
+    }
+
+    .publik-avatar-wrap { margin: 0; flex-shrink: 0; }
+    .publik-avatar { width: 4.75rem; height: 4.75rem; }
+    .publik-avatar--monogram { font-size: 2rem; }
+    .publik-barber-info { min-width: 0; flex: 1; }
+    .publik-barber-nama { font-size: 1.15rem; margin-bottom: 0.5rem; }
+    .publik-tags { justify-content: flex-start; }
+}
+
+/* ---------- Layanan dan harga ---------- */
+.publik-layanan-list {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+}
+
+@media (min-width: 768px) {
+    .publik-layanan-list { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem 1.5rem; }
+}
+
+.publik-layanan-item {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1rem 1.25rem;
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 1rem;
+    min-width: 0;
+}
+
+.publik-layanan-nama {
+    min-width: 0;
+    font-size: 1.1rem;
+    font-weight: 600;
+    overflow-wrap: anywhere;
+}
+
+.publik-layanan-harga {
+    flex-shrink: 0;
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: var(--navy);
+    white-space: nowrap;
+}
+
+/* ---------- Kondisi kosong / gagal / batas laju ---------- */
+.publik-state {
+    grid-column: 1 / -1;                 /* penuh lebar di dalam grid */
+    margin: 0;
+    padding: 2rem 1.25rem;
+    text-align: center;
+    background: var(--white);
+    border: 1px dashed var(--border);
+    border-radius: var(--radius);
+    color: var(--text-soft);
+    font-size: 1.05rem;
+}
+
+.publik-state--error {
+    background: var(--error-bg);
+    border: 1px solid #F3C3C3;
+    color: var(--error);
+    font-weight: 500;
+}
+
+.publik-state-text { margin: 0; }
+
+.publik-retry-btn {
+    margin-top: 1rem;
+    min-height: 2.75rem;
+    padding: 0.5rem 1.5rem;
+    border: 0;
+    border-radius: 0.6rem;
+    background: var(--navy);
+    color: var(--white);
+    font: inherit;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.publik-retry-btn:hover { background: var(--navy-dark); }
+
+/* ---------- Skeleton loading ---------- */
+.publik-skel {
+    border-radius: 0.5rem;
+    background: linear-gradient(90deg, #E4E6F5 25%, #F2F3FB 50%, #E4E6F5 75%);
+    background-size: 200% 100%;
+    animation: publikShimmer 1.4s ease-in-out infinite;
+}
+
+.publik-skel-avatar { width: 8rem; height: 8rem; border-radius: 50%; }
+.publik-skel-line { height: 1rem; }
+.publik-skel-line--nama { width: 60%; height: 1.35rem; margin-bottom: 0.75rem; }
+.publik-skel-line--tag { width: 40%; }
+.publik-skel-line--layanan { width: 55%; height: 1.2rem; }
+.publik-skel-line--harga { width: 22%; height: 1.2rem; }
+
+@media (max-width: 639px) {
+    .publik-skel-avatar { width: 4.75rem; height: 4.75rem; }
+}
+
+@keyframes publikShimmer {
+    from { background-position: 200% 0; }
+    to   { background-position: -200% 0; }
+}
+
+/* ---------- Footer ---------- */
+.publik-footer {
+    padding: 1.25rem 0;
+    background: var(--white);
+    border-top: 1px solid var(--border);
+    color: var(--text-soft);
+    text-align: center;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .publik-skel { animation: none; }
+    .publik-retry-btn { transition: none; }
+}
