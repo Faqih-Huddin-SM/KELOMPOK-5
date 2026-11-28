@@ -1,15 +1,14 @@
 /**
  * Kataji Barber - Halaman Status Saya (Role: Barber)
- * Menampilkan data profil barber secara riil terhubung ke API
- * Mendukung foto profil (/api/barber/publik.php), spesialisasi, nama, dan status akun
+ * Menampilkan data profil barber secara riil terhubung ke API /api/barber/profil.php
+ * Mendukung foto profil (/KELOMPOK-5/ + foto), spesialisasi, nama, dan status akun
  */
 
 document.addEventListener('DOMContentLoaded', function () {
     const statusPage = document.querySelector('.status-page');
     if (!statusPage) return;
 
-    const API_PUBLIK = '/KELOMPOK-5/api/barber/publik.php';
-    const API_ME = '/KELOMPOK-5/api/auth/me.php';
+    const API_PROFIL = '/KELOMPOK-5/api/barber/profil.php';
 
     const cardEl = document.getElementById('statusProfileCard');
     const loadingState = document.getElementById('statusLoadingState');
@@ -19,106 +18,96 @@ document.addEventListener('DOMContentLoaded', function () {
     const elSpesialisasi = document.getElementById('statusSpesialisasi');
     const elBadge = document.getElementById('statusAkunBadge');
 
-    let currentUserId = Number(statusPage.dataset.userId) || 0;
-    let fallbackNama = statusPage.dataset.userNama || 'Barber';
-
-    function escapeHtml(teks) {
-        const div = document.createElement('div');
-        div.textContent = String(teks ?? '');
-        return div.innerHTML;
-    }
+    const fallbackNama = statusPage.dataset.userNama || 'Barber';
+    const fallbackSpec = statusPage.dataset.userSpec || '-';
+    const fallbackFoto = statusPage.dataset.userFoto || null;
+    const fallbackAktif = statusPage.dataset.userAktif !== '0';
 
     function renderAvatar(foto, nama) {
         if (!avatarContainer) return;
 
         const initialChar = String(nama || 'B').trim().charAt(0).toUpperCase() || 'B';
 
-        if (foto) {
-            const fotoUrl = foto.startsWith('/') || foto.startsWith('http')
-                ? foto
-                : `/KELOMPOK-5/${foto}`;
+        if (foto && String(foto).trim() !== '') {
+            const fotoPath = String(foto).trim();
+            const fotoUrl = (fotoPath.startsWith('/') || fotoPath.startsWith('http'))
+                ? fotoPath
+                : `/KELOMPOK-5/${fotoPath.replace(/^\/+/, '')}`;
 
-            avatarContainer.innerHTML = `
-                <img
-                    src="${fotoUrl}"
-                    alt="${escapeHtml(nama)}"
-                    class="status-avatar-img"
-                    onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\\'status-avatar-initial\\'>${initialChar}</div>';"
-                >
-            `;
+            const img = document.createElement('img');
+            img.src = fotoUrl;
+            img.alt = String(nama || 'Barber');
+            img.className = 'status-avatar-img';
+            img.onerror = function () {
+                this.onerror = null;
+                avatarContainer.innerHTML = `<div class="status-avatar-initial">${initialChar}</div>`;
+            };
+            avatarContainer.innerHTML = '';
+            avatarContainer.appendChild(img);
         } else {
-            avatarContainer.innerHTML = `
-                <div class="status-avatar-initial">${initialChar}</div>
-            `;
+            avatarContainer.innerHTML = `<div class="status-avatar-initial">${initialChar}</div>`;
         }
     }
 
     async function muatProfilSaya() {
-        if (loadingState && profileContent && cardEl) {
+        // Tampilkan loading jika profil belum terbuka
+        if (loadingState && profileContent && cardEl && profileContent.style.display === 'none') {
             cardEl.classList.add('is-loading');
             loadingState.style.display = 'flex';
             profileContent.style.display = 'none';
         }
 
         try {
-            // 1. Pastikan id_user diketahui
-            if (!currentUserId) {
-                const respMe = await fetch(API_ME, {
-                    method: 'GET',
-                    credentials: 'same-origin',
-                    headers: { 'Accept': 'application/json' }
-                });
-                const hasilMe = await respMe.json().catch(() => ({}));
-                if (hasilMe.success && hasilMe.data?.id_user) {
-                    currentUserId = Number(hasilMe.data.id_user);
-                    if (hasilMe.data.nama) {
-                        fallbackNama = hasilMe.data.nama;
-                    }
-                }
-            }
-
-            // 2. Ambil data barber dari endpoint publik
-            const respons = await fetch(API_PUBLIK, {
+            const respons = await fetch(API_PROFIL, {
                 method: 'GET',
                 credentials: 'same-origin',
-                headers: { 'Accept': 'application/json' }
+                headers: { 'Accept': 'application/json' },
+                cache: 'no-store'
             });
+
+            if (respons.status === 401) {
+                // Sesi berakhir atau akun dinonaktifkan
+                window.location.href = '/KELOMPOK-5/pages/login.php?expired=1';
+                return;
+            }
 
             const hasil = await respons.json().catch(() => ({}));
 
-            let profil = null;
-            if (hasil.success && Array.isArray(hasil.data)) {
-                profil = hasil.data.find(b => Number(b.id_user) === currentUserId);
-            }
-
-            if (profil) {
+            if (hasil && hasil.success && hasil.data) {
+                const profil = hasil.data;
                 const nama = profil.nama || fallbackNama;
-                const spesialisasi = profil.spesialisasi ? profil.spesialisasi.trim() : '-';
+                const spesialisasi = (profil.spesialisasi && profil.spesialisasi.trim())
+                    ? profil.spesialisasi.trim()
+                    : '-';
+                const isAktif = Number(profil.aktif) === 1;
 
                 if (elNama) elNama.textContent = nama;
-                if (elSpesialisasi) elSpesialisasi.textContent = spesialisasi || '-';
+                if (elSpesialisasi) elSpesialisasi.textContent = spesialisasi;
                 if (elBadge) {
-                    elBadge.textContent = 'Aktif';
-                    elBadge.className = 'status-badge-aktif';
+                    elBadge.textContent = isAktif ? 'Aktif' : 'Nonaktif';
+                    elBadge.className = isAktif ? 'status-badge-aktif' : 'status-badge-nonaktif';
                 }
 
                 renderAvatar(profil.foto, nama);
             } else {
-                // Fallback jika tidak ditemukan di daftar publik
+                // Fallback menggunakan nilai awal dari server
                 if (elNama) elNama.textContent = fallbackNama;
-                if (elSpesialisasi) elSpesialisasi.textContent = '-';
+                if (elSpesialisasi) elSpesialisasi.textContent = fallbackSpec;
                 if (elBadge) {
-                    elBadge.textContent = 'Aktif';
-                    elBadge.className = 'status-badge-aktif';
+                    elBadge.textContent = fallbackAktif ? 'Aktif' : 'Nonaktif';
+                    elBadge.className = fallbackAktif ? 'status-badge-aktif' : 'status-badge-nonaktif';
                 }
-                renderAvatar(null, fallbackNama);
+                renderAvatar(fallbackFoto, fallbackNama);
             }
-
         } catch (error) {
-            console.error('Gagal memuat profil barber:', error);
+            console.error('Gagal memuat profil barber dari API:', error);
             if (elNama) elNama.textContent = fallbackNama;
-            if (elSpesialisasi) elSpesialisasi.textContent = '-';
-            renderAvatar(null, fallbackNama);
+            if (elSpesialisasi) elSpesialisasi.textContent = fallbackSpec;
+            if (elBadge) {
+                elBadge.textContent = fallbackAktif ? 'Aktif' : 'Nonaktif';
+                elBadge.className = fallbackAktif ? 'status-badge-aktif' : 'status-badge-nonaktif';
+            }
+            renderAvatar(fallbackFoto, fallbackNama);
         } finally {
             if (loadingState && profileContent && cardEl) {
                 cardEl.classList.remove('is-loading');
@@ -133,12 +122,19 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Sinkronisasi otomatis saat ada pembaruan data
     window.addEventListener('storage', function (e) {
-        if (e.key === 'kataji:data-changed') {
+        if (e.key === 'kataji:data-changed' || e.key === 'kataji:barber-changed') {
             muatProfilSaya();
         }
     });
 
     window.addEventListener('kataji:data-changed', function () {
         muatProfilSaya();
+    });
+
+    // Auto-refresh saat tab kembali aktif
+    document.addEventListener('visibilitychange', function () {
+        if (document.visibilityState === 'visible') {
+            muatProfilSaya();
+        }
     });
 });
