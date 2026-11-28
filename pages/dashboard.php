@@ -147,7 +147,7 @@ $display_role = ($role === 'owner') ? 'Owner Kataji' : ($nama ?: 'Barber');
     <!-- BAGIAN: PEMASUKAN PER BARBER -->
     <!-- ======================================== -->
     <section class="dashboard-section rekap-barber-section">
-        <h2 class="dashboard-card-title">Pemasukan per Barber</h2>
+        <h2 class="dashboard-card-title">Pemasukkan per Barber</h2>
 
         <div class="table-responsive rekap-barber-table" id="tabelPemasukanWrapper">
             <table class="data-table">
@@ -209,14 +209,14 @@ $display_role = ($role === 'owner') ? 'Owner Kataji' : ($nama ?: 'Barber');
                 <div class="trend-summary-grid">
                     <div class="trend-summary-card trend-summary-status-box" id="trenStatusCard">
                         <div class="trend-badge-icon" id="trenBadgeIcon">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                                <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline>
-                                <polyline points="17 6 23 6 23 12"></polyline>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#17186B" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <line x1="5" y1="12" x2="19" y2="12"></line>
+                                <polyline points="12 5 19 12 12 19"></polyline>
                             </svg>
                         </div>
                         <div class="trend-badge-info">
                             <strong id="trenStatusRingkas">Stabil 0%</strong>
-                            <small id="trenStatusSub">dibanding periode sebelumnya</small>
+                            <small id="trenStatusSub">dibanding 7 hari sebelumnya</small>
                         </div>
                     </div>
                     <div class="trend-summary-card trend-summary-neutral">
@@ -234,7 +234,7 @@ $display_role = ($role === 'owner') ? 'Owner Kataji' : ($nama ?: 'Barber');
                 <!-- GRAFIK SVG LINE DENGAN TOOLTIP -->
                 <div class="line-chart-container">
                     <div class="line-chart" id="dashboardLineChart" aria-label="Grafik tren pemasukan" aria-live="polite">
-                        <div class="chart-empty-state">Memuat grafik pemasukan...</div>
+                        <div class="dashboard-empty-centered" id="trenEmptyState">Belum ada data untuk ditampilkan</div>
                     </div>
                 </div>
             </div>

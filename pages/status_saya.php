@@ -5,12 +5,33 @@ require_role(['barber']);
 $id_user = (int) ($_SESSION['id_user'] ?? 0);
 $nama_user = $_SESSION['nama'] ?? 'Barber';
 
+$barberData = null;
+try {
+    $stmt = $pdo->prepare("SELECT nama, spesialisasi, foto, aktif FROM users WHERE id_user = ? AND role = 'barber' LIMIT 1");
+    $stmt->execute([$id_user]);
+    $barberData = $stmt->fetch(PDO::FETCH_ASSOC);
+    if ($barberData && !empty($barberData['nama'])) {
+        $nama_user = $barberData['nama'];
+    }
+} catch (Throwable $e) {
+    error_log('Status Saya DB query: ' . $e->getMessage());
+}
+
+$spesialisasi_user = $barberData['spesialisasi'] ?? null;
+$foto_user = $barberData['foto'] ?? null;
+$aktif_user = isset($barberData['aktif']) ? (int) $barberData['aktif'] : 1;
+
 include __DIR__ . '/../includes/header.php';
 ?>
 
-<link rel="stylesheet" href="/KELOMPOK-5/assets/css/status_saya.css?v=6">
+<link rel="stylesheet" href="/KELOMPOK-5/assets/css/status_saya.css?v=7">
 
-<div class="status-page" data-user-id="<?= $id_user ?>" data-user-nama="<?= htmlspecialchars($nama_user) ?>">
+<div class="status-page"
+     data-user-id="<?= $id_user ?>"
+     data-user-nama="<?= htmlspecialchars($nama_user) ?>"
+     data-user-spec="<?= htmlspecialchars($spesialisasi_user ?? '') ?>"
+     data-user-foto="<?= htmlspecialchars($foto_user ?? '') ?>"
+     data-user-aktif="<?= $aktif_user ?>">
 
     <!-- Heading Halaman Sesuai Desain Figma -->
     <header class="status-heading">
@@ -40,9 +61,18 @@ include __DIR__ . '/../includes/header.php';
 
             <!-- Foto Avatar / Inisial Profil -->
             <div class="status-avatar-container" id="statusAvatarContainer">
-                <div class="status-avatar-initial" id="statusAvatarInitial">
-                    <?= strtoupper(mb_substr($nama_user, 0, 1)) ?>
-                </div>
+                <?php if (!empty($foto_user)): ?>
+                    <img
+                        src="/KELOMPOK-5/<?= htmlspecialchars(ltrim($foto_user, '/')) ?>"
+                        alt="<?= htmlspecialchars($nama_user) ?>"
+                        class="status-avatar-img"
+                        onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\'status-avatar-initial\'><?= strtoupper(mb_substr($nama_user, 0, 1)) ?></div>';"
+                    >
+                <?php else: ?>
+                    <div class="status-avatar-initial" id="statusAvatarInitial">
+                        <?= strtoupper(mb_substr($nama_user, 0, 1)) ?>
+                    </div>
+                <?php endif; ?>
             </div>
 
             <!-- Rincian Data Barber -->
@@ -57,14 +87,16 @@ include __DIR__ . '/../includes/header.php';
                 <div class="status-info-row">
                     <div class="status-info-label">Spesialisasi</div>
                     <div class="status-info-spec" id="statusSpesialisasi">
-                        -
+                        <?= !empty($spesialisasi_user) ? htmlspecialchars($spesialisasi_user) : '-' ?>
                     </div>
                 </div>
 
                 <div class="status-info-row">
                     <div class="status-info-label">Status Akun</div>
                     <div>
-                        <span class="status-badge-aktif" id="statusAkunBadge">Aktif</span>
+                        <span class="<?= $aktif_user === 1 ? 'status-badge-aktif' : 'status-badge-nonaktif' ?>" id="statusAkunBadge">
+                            <?= $aktif_user === 1 ? 'Aktif' : 'Nonaktif' ?>
+                        </span>
                     </div>
                 </div>
             </div>
@@ -88,6 +120,6 @@ include __DIR__ . '/../includes/header.php';
 
 </div>
 
-<script src="/KELOMPOK-5/assets/js/status_saya.js?v=3"></script>
+<script src="/KELOMPOK-5/assets/js/status_saya.js?v=4"></script>
 
 <?php include __DIR__ . '/../includes/footer.php'; ?>

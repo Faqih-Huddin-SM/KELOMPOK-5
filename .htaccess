@@ -1,0 +1,16 @@
+# ==============================================================================
+# Kataji Barber - Apache Configuration
+# ==============================================================================
+
+# Matikan directory listing agar folder tidak bisa diintip langsung
+Options -Indexes
+
+# Custom Error Pages (Otomatis tampil saat halaman tidak ditemukan atau ada typo)
+ErrorDocument 404 /KELOMPOK-5/pages/404.php
+ErrorDocument 403 /KELOMPOK-5/pages/404.php
+ErrorDocument 500 /KELOMPOK-5/pages/500.php
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteBase /KELOMPOK-5/
+</IfModule>
